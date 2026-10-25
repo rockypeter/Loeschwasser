@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full w-full overflow-hidden select-none">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#d32f2f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Ccircle cx=%27256%27 cy=%27256%27 r=%27240%27 fill=%27%23d32f2f%27/%3E%3Cpath d=%27M256 110c-60 80-96 128-96 180a96 96 0 0 0 192 0c0-52-36-100-96-180z%27 fill=%27%23fff%27/%3E%3C/svg%3E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>FFW Schmogrow - Löschwasserkarte & OSM Sync</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ffw: {
+              red: '#D32F2F',
+              darkred: '#9A0007',
+              bright: '#EF4444',
+              yellow: '#F59E0B',
+              dark: '#0f172a',
+              panel: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+  <style>
+    * { touch-action: manipulation; }
+    html, body { height: 100%; width: 100%; margin: 0; padding: 0; background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; }
+    
+    #map {
+      position: absolute;
+      top: 56px;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      z-index: 1;
+      background: #0f172a;
+    }
+
+    /* Pulsierende Animation für GPS-Ortung */
+    .gps-pulse {
+      animation: pulse-ring 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
+      70% { box-shadow: 0 0 0 16px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Leaflet Popups Anpassung */
+    .leaflet-popup-content-wrapper {
+      background: #1e293b !important;
+      color: #f8fafc !important;
+      border: 1px solid #475569;
+      border-radius: 16px !important;
+      padding: 0 !important;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.7) !important;
+    }
+    .leaflet-popup-content {
+      margin: 12px 14px !important;
+      line-height: 1.4 !important;
+    }
+    .leaflet-popup-tip { background: #1e293b !important; }
+    .leaflet-container a.leaflet-popup-close-button { color: #94a3b8 !important; padding: 8px !important; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  </style>
+</head>
+<body class="flex flex-col h-full w-full relative">
+
+  <!-- TOP HEADER WITH FFW SCHMOGROW LOGO -->
+  <header class="h-14 bg-slate-900 border-b border-red-700/60 px-3 flex items-center justify-between z-30 shadow-2xl shrink-0">
+    <div class="flex items-center gap-2.5">
+      <!-- Exaktes FFW Schmogrow Vektor-Wappen -->
+      <div class="w-11 h-11 rounded-full bg-white p-0.5 border-2 border-red-600 shadow-lg flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 320 320" class="w-full h-full">
+          <path id="archTextPath" d="M 35,160 A 125,125 0 0,1 285,160" fill="none" />
+          <text font-size="20" font-weight="900" fill="#d32f2f" font-family="sans-serif">
+            <textPath href="#archTextPath" startOffset="50%" text-anchor="middle">Freiwillige Feuerwehr Schmogrow</textPath>
+          </text>
+          
+          <g transform="translate(160, 155) scale(0.85)">
+            <path d="M-80,-40 L60,80 M-80,-40 L-100,-25 L-60,0 Z" stroke="#d32f2f" stroke-width="8" fill="#d32f2f" stroke-linecap="round"/>
+            <path d="M60,-40 L-80,80 M60,-40 L75,-25 L40,0 Z" stroke="#d32f2f" stroke-width="8" fill="#d32f2f" stroke-linecap="round"/>
+            <path d="M-45,-10 C-45,-55 0,-65 45,-10 C50,5 -50,5 -45,-10 Z" fill="#d32f2f"/>
+            <path d="M-55,-10 C-55,-10 0,-25 55,-10 C60,-5 -60,-5 -55,-10 Z" fill="#b71c1c"/>
+            <rect x="-25" y="25" width="50" height="30" rx="6" fill="none" stroke="#d32f2f" stroke-width="7"/>
+            <circle cx="0" cy="40" r="8" fill="#d32f2f"/>
+          </g>
+
+          <text x="160" y="285" font-family="cursive, Georgia, serif" font-weight="900" font-size="36" text-anchor="middle" font-style="italic" fill="#d32f2f">
+            seit 1922
+          </text>
+        </svg>
+      </div>
+
+      <div>
+        <h1 class="font-black text-xs sm:text-sm tracking-wide text-white leading-tight uppercase">
+          FFW Schmogrow
+        </h1>
+        </div>
+    </div>
+
+    <!-- Right Header Actions -->
+    <div class="flex items-center gap-2">
+      <button onclick="toggleModal('syncModal')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow backdrop-blur">
+        <i class="fa-solid fa-arrows-rotate text-cyan-400"></i>
+        <span class="hidden sm:inline">OSM Sync</span>
+        <span id="queueBadge" class="hidden px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[10px] font-bold">0</span>
+      </button>
+
+      <button id="btnNewPointToggle" onclick="startNewPointMode()" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-lg flex items-center gap-1.5 transition border border-red-400/30">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>Neu Erfassen</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAP CONTAINER -->
+  <div id="map"></div>
+
+  <!-- FLOATING MAP CONTROLS -->
+  <div class="absolute top-16 right-3 z-[400] flex flex-col gap-2">
+    <!-- GPS Button -->
+    <button id="btnGps" onclick="triggerGPS()" title="GPS Ortung" class="w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur">
+      <i id="gpsIcon" class="fa-solid fa-crosshairs text-xl text-emerald-400"></i>
+    </button>
+
+    <!-- OSM Reload Button -->
+    <button onclick="loadAmtBurgData(true)" title="Daten manuell neu laden" class="w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur">
+      <i id="reloadIcon" class="fa-solid fa-arrows-rotate text-xl text-amber-400"></i>
+    </button>
+
+    <!-- Map Layer Switcher (Satellit / Karte) -->
+    <button onclick="toggleMapLayer()" title="Kartentyp wechseln" class="w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur">
+      <i id="layerIcon" class="fa-solid fa-earth-europe text-xl text-blue-400"></i>
+    </button>
+
+    <!-- Nächste Entnahmestellen -->
+    <button onclick="showNearest()" title="Nächste Entnahmestellen" class="w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur">
+      <i class="fa-solid fa-compass text-xl text-red-400"></i>
+    </button>
+  </div>
+
+  <!-- STATUS OVERLAY -->
+  <div id="legend" class="absolute top-16 left-3 z-[400] max-w-[210px] sm:max-w-xs pointer-events-none">
+    <div class="bg-slate-900/95 backdrop-blur-md border border-slate-700/90 rounded-2xl p-2.5 shadow-2xl text-xs space-y-1.5 pointer-events-auto">
+      <div id="legendHandle" style="touch-action:none;cursor:grab" class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+        <span class="font-bold text-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-grip-vertical text-slate-500 text-[10px]"></i><span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="statusText">Initialisiere...</span>
+        </span>
+        <span id="pointCount" class="bg-slate-800 px-2 py-0.5 rounded-md text-[10px] text-slate-300 font-mono font-bold">0 Punkte</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate-300 pt-0.5">
+        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span> Unterflurhydrant</div>
+        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span> Überflurhydrant</div>
+        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0"></span> Flachspiegelbrunnen</div>
+        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-teal-400 shrink-0"></span> Tiefbrunnen</div>
+        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span> Zisterne/Tank</div>
+        <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span> Löschteich/Saugst.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAP ON MAP BANNER -->
+  <div id="newPointBanner" class="hidden absolute top-20 left-1/2 -translate-x-1/2 z-[450] bg-red-600 text-white px-4 py-2 rounded-full shadow-2xl border-2 border-white flex items-center gap-3 animate-bounce">
+    <i class="fa-solid fa-hand-pointer text-lg text-yellow-300"></i>
+    <span class="text-xs font-black uppercase tracking-wide">Tippe den Standort auf der Karte an!</span>
+    <button onclick="cancelNewPointMode()" class="bg-red-950 hover:bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">✕</button>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[700] bg-slate-900 border border-slate-700 text-slate-100 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2">
+    <i id="toastIcon" class="fa-solid fa-info-circle text-cyan-400"></i>
+    <span id="toastMsg">Hinweis</span>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="h-6 bg-slate-950 border-t border-slate-800 px-3 flex items-center justify-between text-[10px] text-slate-400 z-30 shrink-0">
+    <div class="truncate font-medium">
+      <span class="text-red-500 font-bold">FFW Schmogrow</span>
+    </div>
+    <div class="font-mono text-slate-500">
+      © Freiwillige Feuerwehr Schmogrow
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- NÄCHSTE ENTNAHMESTELLEN -->
+  <div id="nearbyModal" class="hidden fixed inset-0 z-[550] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-slate-900 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-gradient-to-r from-red-900 to-red-800 px-4 py-3 flex items-center justify-between shrink-0 border-b border-red-700/50">
+        <h2 class="font-extrabold text-sm sm:text-base text-white flex items-center gap-2"><i class="fa-solid fa-compass text-yellow-300"></i>Nächste Entnahmestellen</h2>
+        <button onclick="toggleModal('nearbyModal')" class="w-8 h-8 rounded-full bg-black/30 text-slate-300 hover:text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+      <p id="nearbyInfo" class="px-4 pt-3 text-[11px] text-slate-400"></p>
+      <div id="nearbyList" class="p-4 overflow-y-auto space-y-2 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- 1. DUBLETTEN WARNUNG MODAL -->
+  <div id="duplicateModal" class="hidden fixed inset-0 z-[600] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-400 flex items-center justify-center shrink-0 text-2xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-white">Mögliche Doppelung erkannt!</h3>
+          <p class="text-xs text-slate-300 mt-0.5">
+            Im Umkreis von <strong id="dupDistance" class="text-amber-400 font-mono font-bold">0m</strong> wurde bereits eine Entnahmestelle gefunden:
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-2xl space-y-1 text-xs">
+        <div class="flex justify-between font-bold text-slate-200">
+          <span id="dupType" class="text-red-400">Unterflurhydrant</span>
+          <span id="dupId" class="text-slate-500 font-mono">OSM #---</span>
+        </div>
+        <p id="dupDetails" class="text-slate-400">Nennweite: k.A.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 pt-1">
+        <button onclick="resolveDuplicateUseExisting()" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-bold shadow-lg flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-pen-to-square"></i>
+          Vorhandenen Punkt prüfen
+        </button>
+        <button onclick="resolveDuplicateCreateNew()" class="py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-plus"></i>
+          Trotzdem neu anlegen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. FORMULAR ERFASSUNG / STATUSPRÜFUNG -->
+  <div id="formModal" class="hidden fixed inset-0 z-[550] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-slate-900 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="bg-gradient-to-r from-red-900 to-red-800 px-4 py-3 flex items-center justify-between shrink-0 border-b border-red-700/50">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-check text-yellow-300 text-lg"></i>
+          <h2 id="formModalTitle" class="font-extrabold text-sm sm:text-base text-white">Löschwasserstelle erfassen / prüfen</h2>
+        </div>
+        <button onclick="toggleModal('formModal')" class="w-8 h-8 rounded-full bg-black/30 text-slate-300 hover:text-white flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <form id="waterPointForm" onsubmit="handleFormSubmit(event)" class="p-4 overflow-y-auto space-y-4 text-xs">
+        
+        <input type="hidden" id="formOsmId" value="">
+        <input type="hidden" id="formLat" value="">
+        <input type="hidden" id="formLng" value="">
+
+        <!-- Entnahmeart mit exakter Tagging-Unterscheidung -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5">Entnahmeart / Typ <span class="text-red-500">*</span></label>
+          <select id="formType" required class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 font-medium focus:outline-none focus:border-red-500">
+            <option value="underground">Unterflurhydrant</option>
+            <option value="pillar">Überflurhydrant</option>
+            <option value="shallow_well">Flachspiegelbrunnen</option>
+            <option value="deep_well">Tiefbrunnen</option>
+            <option value="suction_point">Saugstelle / Saugschacht</option>
+            <option value="water_tank">Löschwasserbehälter / Zisterne</option>
+            <option value="fire_water_pond">Löschteich</option>
+          </select>
+        </div>
+
+        <!-- Nennweiten ab DN 32 & Ertrag -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Nennweite (DN)</label>
+            <select id="formDiameter" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
+              <option value="">Unbekannt / k.A.</option>
+              <option value="32">DN 32</option>
+              <option value="50">DN 50</option>
+              <option value="80">DN 80 (Standard)</option>
+              <option value="100">DN 100</option>
+              <option value="125">DN 125</option>
+              <option value="150">DN 150</option>
+              <option value="200">DN 200</option>
+              <option value="250">DN 250</option>
+              <option value="300">DN 300+</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Volumen / Ertrag</label>
+            <input type="text" id="formFlow" placeholder="z.B. 800 l/min oder 100m³" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
+          </div>
+        </div>
+
+        <!-- Kamera Foto Upload Button -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5">Foto der Entnahmestelle</label>
+          <div class="flex items-center gap-3">
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageCapture(event)">
+            <button type="button" onclick="document.getElementById('cameraInput').click()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl font-bold text-cyan-400 flex items-center gap-2 transition">
+              <i class="fa-solid fa-camera text-base"></i>
+              <span>Foto aufnehmen / wählen</span>
+            </button>
+            <div id="imagePreviewContainer" class="hidden relative">
+              <img id="imagePreview" class="w-11 h-11 object-cover rounded-xl border border-slate-600 shadow">
+              <button type="button" onclick="removeImage()" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anschlüsse Checkboxes -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1.5">Vorhandene Anschlüsse / Kupplungen</label>
+          <div class="grid grid-cols-4 gap-2 bg-slate-950 p-2.5 rounded-2xl border border-slate-800">
+            <label class="flex items-center gap-1.5 text-slate-200 font-medium cursor-pointer">
+              <input type="checkbox" id="couplA" class="w-4 h-4 rounded text-red-600 bg-slate-800 border-slate-700">
+              <span>Storz A</span>
+            </label>
+            <label class="flex items-center gap-1.5 text-slate-200 font-medium cursor-pointer">
+              <input type="checkbox" id="couplB" class="w-4 h-4 rounded text-red-600 bg-slate-800 border-slate-700">
+              <span>Storz B</span>
+            </label>
+            <label class="flex items-center gap-1.5 text-slate-200 font-medium cursor-pointer">
+              <input type="checkbox" id="couplC" class="w-4 h-4 rounded text-red-600 bg-slate-800 border-slate-700">
+              <span>Storz C</span>
+            </label>
+            <label class="flex items-center gap-1.5 text-slate-200 font-medium cursor-pointer">
+              <input type="checkbox" id="couplD" class="w-4 h-4 rounded text-red-600 bg-slate-800 border-slate-700">
+              <span>Storz D</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Zustand & Beschilderung -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Einsatzbereitschaft</label>
+            <select id="formOperational" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
+              <option value="yes">Einsatzbereit</option>
+              <option value="limited">Eingeschränkt nutzbar</option>
+              <option value="no">Defekt / Außer Betrieb</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">Hinweisschild</label>
+            <select id="formSign" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
+              <option value="yes">Vorhanden & Lesbar</option>
+              <option value="damaged">Beschädigt / Fehlt</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Freitext Besonderheiten -->
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Besonderheiten / Mängel / Zufahrt</label>
+          <textarea id="formNotes" rows="2" placeholder="z.B. Zufahrt über Feldweg, Schild beschädigt..." class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2 text-slate-100 focus:outline-none focus:border-red-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Geprüft von (Name) <span class="text-red-500">*</span></label>
+          <input type="text" id="formInspector" required autocomplete="name" placeholder="Vor- und Nachname" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="toggleModal('formModal')" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl transition">
+            Abbrechen
+          </button>
+          <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-2xl shadow-lg shadow-red-950/60 flex items-center gap-2 transition">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Lokale Erfassung Speichern
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. OSM SYNC & EXPORT MODAL -->
+  <div id="syncModal" class="hidden fixed inset-0 z-[550] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-arrows-rotate text-cyan-400"></i>
+          OSM Synchronisation & Export
+        </h3>
+        <button onclick="toggleModal('syncModal')" class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        
+        <!-- Option A: Direct OSM Note POST -->
+        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between font-bold text-slate-100">
+            <span class="flex items-center gap-2">
+              <i class="fa-solid fa-note-sticky text-amber-400 text-sm"></i>
+              1. OSM-Notizen direkt erstellen
+            </span>
+            <span id="syncQueueBadge" class="bg-red-600 text-white px-2 py-0.5 rounded-full text-[10px]">0</span>
+          </div>
+          <p class="text-slate-400 leading-relaxed text-[11px]">
+            Sendet für jeden erfassten Punkt direkt eine offizielle <strong>OSM Note</strong> an den OpenStreetMap-Server.
+          </p>
+          <button onclick="postOsmNotesDirectly()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition shadow">
+            <i class="fa-solid fa-paper-plane"></i>
+            Notizen an OpenStreetMap senden
+          </button>
+        </div>
+
+        <!-- Option B: JOSM / iD XML Export -->
+        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="font-bold text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-file-code text-cyan-400 text-sm"></i>
+            2. OSM XML / JOSM Change File
+          </div>
+          <p class="text-slate-400 leading-relaxed text-[11px]">
+            Generiert eine `.osm` Datei mit exakten Tags (Flachspiegelbrunnen, Tiefbrunnen, Hydranten) für JOSM/iD.
+          </p>
+          <button onclick="downloadOsmXml()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 transition shadow">
+            <i class="fa-solid fa-download"></i>
+            .OSM XML Datei herunterladen
+          </button>
+        </div>
+
+        <!-- Option C: E-Mail & CSV/JSON Export -->
+        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="font-bold text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-envelope text-emerald-400 text-sm"></i>
+            3. E-Mail & Daten-Export
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button onclick="sendMailExport()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-envelope"></i>
+              Per E-Mail
+            </button>
+            <button onclick="downloadJsonExport()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-file-json"></i>
+              JSON Export
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>Gesendete Notizen prüfen</div>
+          <p class="text-slate-400 text-[11px]">Notizen liegen auf openstreetmap.org (Kartenebene „Notizen“). Sie werden von Mappern geprüft und nicht automatisch in die Karte übernommen.</p>
+          <div id="sentNotesList" class="max-h-28 overflow-y-auto space-y-1 text-[11px]"></div>
+          <a href="https://www.openstreetmap.org/#map=13/51.88/14.215&layers=N" target="_blank" rel="noopener" class="block text-cyan-400 underline text-[11px]">Alle Notizen im Gebiet auf der OSM-Karte ansehen</a>
+        </div>
+
+        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-envelope-circle-check text-emerald-400 text-sm"></i>Bericht per E-Mail</div>
+          <p class="text-slate-400 text-[11px]">Beim Beenden oder Wegdrücken der App werden offene Erfassungen als OSM-Notizen gesendet und gesammelt an feuerwehr.Schmogrow@gmail.com gemeldet, mit Links zu den OSM-Seiten. <span id="digestInfo" class="text-amber-400"></span></p>
+          <button onclick="sendDigest(true)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 transition shadow"><i class="fa-solid fa-envelope"></i>Tagesbericht jetzt senden</button>
+        </div>
+
+        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
+          <div class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-stethoscope text-cyan-400 text-sm"></i>Kartendaten & Verbindung</div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="runDiagnose()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Server testen</button>
+            <button onclick="clearPointCache()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Cache leeren</button>
+          </div>
+          <label class="block w-full py-2.5 text-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition cursor-pointer"><i class="fa-solid fa-file-import mr-1.5"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="importPoints(event)"></label>
+          <div id="diagOut" class="text-[11px] text-slate-400 font-mono break-all"></div>
+        </div>
+
+        <!-- Erfassungsliste -->
+        <div class="pt-2 border-t border-slate-800 space-y-1.5">
+          <div class="flex justify-between items-center font-bold text-slate-200">
+            <span>Erfasste lokale Punkte:</span>
+            <span id="queueListCount" class="text-amber-400 font-mono">0</span>
+          </div>
+          <div id="queueList" class="max-h-32 overflow-y-auto space-y-1 text-[11px] text-slate-400 border border-slate-800 rounded-xl p-2 bg-slate-950">
+            <p class="italic text-slate-500 text-center">Keine ungesendeten Erfassungen.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN SCRIPT -->
+  <script>
+    const SCHMOGROW_LAT = 51.8598;
+    const SCHMOGROW_LNG = 14.1360;
+    
+    // Bounding Box erweitert bis Drachhausen
+    const BBOX_AMT_BURG_DRACHHAUSEN = "51.78,14.05,51.98,14.38";
+    const DUP_RADIUS_METERS = 35; 
+
+    let map;
+    let osmTileLayer, satTileLayer;
+    let activeLayerType = 'sat';
+
+    let userMarker = null;
+    let userCircle = null;
+    let watchGpsId = null;
+
+    let existingWaterPoints = [];
+    let loadedPointIds = new Set();
+    let loadedTiles = new Set();
+    let mapMarkersGroup;
+    let isNewPointMode = false;
+    let pendingCoords = null;
+    let pendingDuplicate = null;
+    let capturedImageBase64 = null;
+    let fetchDebounceTimer = null;
+
+    let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
+    let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
+    function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
+    const MAIL_TO = 'feuerwehr.Schmogrow@gmail.com';
+    const WEB3FORMS_KEY = '3811682d-6504-47e2-85aa-c93fe4568d6a'; // Access Key von web3forms.com (für MAIL_TO erstellt) hier eintragen => Versand ohne Rückfrage
+    const OSMW = 'https://www.openstreetmap.org/';
+    let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
+    const dayKey = d => new Date(d).toLocaleDateString('sv-SE');
+    function saveDigest(){ try { localStorage.setItem('ffw_schmogrow_digest', JSON.stringify(digestLog)); } catch(e){} }
+    function digestAdd(r){ digestLog.push({ id:r.id, ts:r.timestamp, type:r.type, lat:r.lat, lng:r.lng, osmId:r.osmId, by:r.inspectedBy, diameter:r.diameter, flow:r.flow, operational:r.operational, notes:r.notes, noteId:null }); saveDigest(); renderDigestInfo(); }
+    function digestSetNote(id, noteId){ const e = digestLog.find(x => x.id === id); if (e) { e.noteId = noteId; saveDigest(); } }
+    function renderDigestInfo(){ const el = document.getElementById('digestInfo'); if (el) el.textContent = digestLog.length ? `Offen: ${digestLog.length} Eintrag/Einträge.` : 'Nichts offen.'; }
+    function osmLinks(e){
+      const la = e.lat.toFixed(6), lo = e.lng.toFixed(6), out = [];
+      out.push(e.noteId ? 'OSM-Notiz: ' + OSMW + 'note/' + e.noteId : e.viaLeave ? 'OSM-Notiz (beim Beenden gesendet, auf der Karte ansehen): ' + OSMW + '?mlat=' + la + '&mlon=' + lo + '#map=19/' + la + '/' + lo + '&layers=N' : 'OSM-Notiz: noch nicht gesendet');
+      if (e.osmId) { const [t,i] = e.osmId.split('/'); out.push('OSM-Objekt: ' + OSMW + e.osmId, 'Änderungsverlauf: ' + OSMW + e.osmId + '/history', 'Im Editor bearbeiten: ' + OSMW + 'edit?editor=id&' + t + '=' + i); }
+      else out.push('Im Editor an dieser Stelle: ' + OSMW + 'edit?editor=id#map=20/' + la + '/' + lo);
+      out.push('Karte: ' + OSMW + '?mlat=' + la + '&mlon=' + lo + '#map=19/' + la + '/' + lo);
+      return out;
+    }
+    function digestText(){
+      const ops = { yes:'einsatzbereit', limited:'eingeschränkt', no:'defekt' };
+      let t = `FFW Schmogrow – Löschwasser-Tagesbericht ${new Date().toLocaleDateString('de-DE')}\n${digestLog.length} Erfassung(en) über die App:\n`;
+      digestLog.forEach((e,i) => {
+        t += `\n${i+1}. ${getReadableType(e.type)} (${e.osmId ? 'Prüfung ' + e.osmId : 'neu'}) – ${new Date(e.ts).toLocaleString('de-DE')}\n`;
+        if (e.by) t += `   Geprüft von: ${e.by}\n`;
+        t += `   DN ${e.diameter || 'k.A.'} | ${e.flow || 'Ertrag k.A.'} | ${ops[e.operational] || ''}\n`;
+        if (e.notes) t += `   Hinweis: ${e.notes}\n`;
+        osmLinks(e).forEach(l => t += `   ${l}\n`);
+      });
+      return t;
+    }
+    async function sendDigest(manual){
+      if (!digestLog.length) { if (manual) showToast('Keine offenen Erfassungen.', 'fa-info-circle'); return; }
+      const subject = `FFW Schmogrow Löschwasser-Tagesbericht ${new Date().toLocaleDateString('de-DE')}`, text = digestText();
+      const done = () => { digestLog = []; saveDigest(); renderDigestInfo(); try { localStorage.setItem('ffw_digest_last', dayKey(Date.now())); } catch(e){} };
+      if (WEB3FORMS_KEY) {
+        try {
+          const r = await fetch('https://api.web3forms.com/submit', { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject, from_name:'FFW Schmogrow App', message: text }) });
+          const j = await r.json(); if (!j.success) throw new Error(j.message);
+          done(); showToast('Tagesbericht per E-Mail gesendet', 'fa-envelope-circle-check');
+        } catch(e) { showToast('E-Mail-Versand fehlgeschlagen – später erneut', 'fa-triangle-exclamation'); }
+      } else if (manual || confirm('Tagesbericht jetzt an ' + MAIL_TO + ' senden? (Mail-App öffnet sich)')) {
+        done(); location.href = `mailto:${MAIL_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+      } else { try { localStorage.setItem('ffw_digest_last', dayKey(Date.now())); } catch(e){} }
+    }
+    function checkDigest(){
+      if (!digestLog.length) return;
+      if (!WEB3FORMS_KEY && localStorage.getItem('ffw_digest_last') === dayKey(Date.now())) return;
+      sendDigest(false);
+    }
+    // Beim Beenden / Wegdrücken: erst OSM-Notizen, dann Bericht (beides keepalive, überlebt das Schließen)
+    function leaveSync(){
+      if (!navigator.onLine) return;
+      const recs = offlineQueue.slice();
+      recs.forEach(rec => { const d = digestLog.find(x => x.id === rec.id); if (d && !d.noteId) d.viaLeave = true; });
+      saveDigest();
+      sendDigestOnLeave();
+      recs.forEach(sendNoteKeepalive);
+    }
+    function sendNoteKeepalive(rec){
+      offlineQueue = offlineQueue.filter(q => q.id !== rec.id); saveQueue();
+      fetch('https://api.openstreetmap.org/api/0.6/notes.json', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ lat: rec.lat, lon: rec.lng, text: buildNoteText(rec) }) })
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(j => { const id = j.properties && j.properties.id; sentNotes.unshift({ id, ts: Date.now() }); try { localStorage.setItem('ffw_schmogrow_sent', JSON.stringify(sentNotes.slice(0, 100))); } catch(e){} digestSetNote(rec.id, id); updateQueueBadge(); })
+        .catch(() => { offlineQueue.push(rec); saveQueue(); updateQueueBadge(); });
+    }
+    // Beim Beenden / Wegdrücken: Versand im Hintergrund (keepalive überlebt das Schließen der Seite)
+    function sendDigestOnLeave(){
+      if (!WEB3FORMS_KEY || !digestLog.length || !navigator.onLine) return;
+      const snap = digestLog.slice();
+      const body = JSON.stringify({ access_key: WEB3FORMS_KEY, subject: `FFW Schmogrow Löschwasser-Bericht ${new Date().toLocaleDateString('de-DE')}`, from_name: 'FFW Schmogrow App', message: digestText() });
+      digestLog = []; saveDigest(); renderDigestInfo();
+      const restore = () => { digestLog = snap.concat(digestLog); saveDigest(); renderDigestInfo(); };
+      fetch('https://api.web3forms.com/submit', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body })
+        .then(r => r.json()).then(j => { if (!j.success) restore(); }).catch(restore);
+    }
+    function renderSentNotes(){ renderDigestInfo(); const el=document.getElementById('sentNotesList'); if(!el) return; el.innerHTML = sentNotes.length ? sentNotes.slice(0,30).map(n=>`<a href="https://www.openstreetmap.org/note/${n.id}" target="_blank" rel="noopener" class="block text-cyan-400 underline">Notiz #${n.id} – ${new Date(n.ts).toLocaleString('de-DE')}</a>`).join('') : '<p class="italic text-slate-500">Noch keine Notizen gesendet.</p>'; }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap(); initLegendDrag(); loadAmtBurgData(false); updateQueueBadge();
+      setTimeout(checkDigest, 3000);
+      document.addEventListener('visibilitychange', () => { if (document.hidden) leaveSync(); });
+      window.addEventListener('pagehide', leaveSync);
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+
+    // ==================== VERSCHIEBBARE LEGENDE ====================
+    function initLegendDrag(){
+      const box=document.getElementById('legend'), h=document.getElementById('legendHandle'), KEY='ffw_legend_pos';
+      const place=(x,y)=>{ x=Math.min(Math.max(0,x),innerWidth-box.offsetWidth); y=Math.min(Math.max(56,y),innerHeight-24-box.offsetHeight); box.style.left=x+'px'; box.style.top=y+'px'; };
+      try { const p=JSON.parse(localStorage.getItem(KEY)); if(p) place(p.x,p.y); } catch(e){}
+      let dx=0,dy=0,drag=false;
+      h.addEventListener('pointerdown',e=>{ drag=true; const r=box.getBoundingClientRect(); dx=e.clientX-r.left; dy=e.clientY-r.top; h.setPointerCapture(e.pointerId); h.style.cursor='grabbing'; });
+      h.addEventListener('pointermove',e=>{ if(drag) place(e.clientX-dx,e.clientY-dy); });
+      const end=()=>{ if(!drag) return; drag=false; h.style.cursor='grab'; const r=box.getBoundingClientRect(); try{ localStorage.setItem(KEY,JSON.stringify({x:r.left,y:r.top})); }catch(e){} };
+      h.addEventListener('pointerup',end); h.addEventListener('pointercancel',end);
+      addEventListener('resize',()=>{ const r=box.getBoundingClientRect(); place(r.left,r.top); });
+    }
+
+    function initMap() {
+      map = L.map('map', {
+        center: [SCHMOGROW_LAT, SCHMOGROW_LNG],
+        zoom: 15,
+        maxZoom: 22,
+        zoomControl: false
+      });
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // Esri World Imagery Satellitenkarte
+      satTileLayer = L.tileLayer.wms('https://isk.geobasis-bb.de/mapproxy/dop20c/service/wms', {
+        layers: 'bebb_dop20c', version: '1.3.0', format: 'image/png', transparent: false,
+        maxNativeZoom: 19, maxZoom: 22,
+        attribution: '&copy; GeoBasis-DE/LGB, dl-de/by-2-0'
+      }).addTo(map);
+
+      // OSM Standard Vektorkarte
+      osmTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxNativeZoom: 19,
+        maxZoom: 22,
+        attribution: '&copy; OpenStreetMap'
+      });
+
+      mapMarkersGroup = L.layerGroup().addTo(map);
+
+      map.on('click', function(e) {
+        if (isNewPointMode) {
+          handleMapClickForNewPoint(e.latlng);
+        }
+      });
+
+      // Entprelltes Nachladen beim Zoomen / Verschieben
+      map.on('moveend zoomend', function() {
+        clearTimeout(fetchDebounceTimer);
+        fetchDebounceTimer = setTimeout(() => {
+          loadCurrentViewportData();
+        }, 600);
+      });
+    }
+
+    function toggleMapLayer() {
+      const layerIcon = document.getElementById('layerIcon');
+      if (activeLayerType === 'sat') {
+        map.removeLayer(satTileLayer);
+        map.addLayer(osmTileLayer);
+        activeLayerType = 'osm';
+        layerIcon.className = "fa-solid fa-map text-xl text-amber-400";
+        showToast("OpenStreetMap Strassenkarte aktiviert", "fa-map");
+      } else {
+        map.removeLayer(osmTileLayer);
+        map.addLayer(satTileLayer);
+        activeLayerType = 'sat';
+        layerIcon.className = "fa-solid fa-earth-europe text-xl text-blue-400";
+        showToast("Luftbild Brandenburg (LGB) aktiviert", "fa-earth-europe");
+      }
+    }
+
+    // ==================== CACHE: SOFORT AUS SPEICHER, UPDATE IM HINTERGRUND ====================
+    const OVERPASS_MIRRORS = ['https://overpass-api.de/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter','https://overpass.private.coffee/api/interpreter'];
+    const [BB_S,BB_W,BB_N,BB_E] = BBOX_AMT_BURG_DRACHHAUSEN.split(',').map(Number);
+    const markerByUid = new Map();
+    let saveTimer = null, fullLoadDone = false;
+
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const sig = pt => JSON.stringify([pt.lat, pt.lon, pt.tags]);
+    const inBB = pt => pt.lat>=BB_S && pt.lat<=BB_N && pt.lon>=BB_W && pt.lon<=BB_E;
+
+    function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('ffw_schmogrow',1); r.onupgradeneeded=()=>r.result.createObjectStore('kv'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+    async function cacheGet(k){ try { const db=await idb(); return await new Promise(res=>{ const q=db.transaction('kv').objectStore('kv').get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>res(null); }); } catch(e){ return null; } }
+    async function cacheSet(k,v){ try { const db=await idb(); db.transaction('kv','readwrite').objectStore('kv').put(v,k); } catch(e){} }
+    function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>cacheSet('points_v3',{ts:Date.now(),points:existingWaterPoints}),1000); }
+
+    function setStatus(txt,color){
+      document.getElementById('statusText').textContent = txt;
+      document.getElementById('statusDot').className = `w-2.5 h-2.5 rounded-full bg-${color}-500 animate-pulse`;
+    }
+
+    function buildQuery(bbox,t){
+      return `[out:json][timeout:${t}];nwr["emergency"~"^(fire_hydrant|suction_point|water_well|water_tank|fire_water_pond)$"](${bbox});out body center qt;`;
+    }
+    function normalize(el){
+      const b = el.bounds, g = el.geometry && el.geometry[0];
+      const lat = el.lat ?? el.center?.lat ?? (b ? (b.minlat + b.maxlat) / 2 : g?.lat), lon = el.lon ?? el.center?.lon ?? (b ? (b.minlon + b.maxlon) / 2 : g?.lon);
+      if (lat == null || lon == null) return null;
+      return { uid: el.type+'/'+el.id, id: el.id, osmType: el.type, lat, lon, tags: el.tags || {} };
+    }
+
+    let staticInfo = '';
+    async function loadStaticList(cacheTs){
+      try {
+        const r = await withTimeout(fetch('points.json', { cache: 'no-cache' }), 8000);
+        if (!r || !r.ok) return false;
+        const d = await r.json();
+        if (!d.points || !d.points.length) return false;
+        const gen = Date.parse(d.generated);
+        if (cacheTs && gen < cacheTs) return false;
+        addPointsToMap(d.points, [BB_S, BB_W, BB_N, BB_E]);
+        fullLoadDone = true;
+        staticInfo = new Date(gen).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        return true;
+      } catch (e) { return false; }
+    }
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+    let loadingFull = false, fullRetries = 0;
+
+    async function loadAmtBurgData(forceRefresh = false) {
+      if (loadingFull) { if (forceRefresh) showToast('Aktualisierung läuft bereits…', 'fa-info-circle'); return; }
+      loadingFull = true;
+      const reloadIcon = document.getElementById('reloadIcon');
+      const cached = await withTimeout(cacheGet('points_v3'), 1500);
+      if (cached && cached.points && cached.points.length && !forceRefresh) {
+        addPointsToMap(cached.points);
+        setStatus(`${existingWaterPoints.length} Punkte (Cache vom ${new Date(cached.ts).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}) – aktualisiere…`, 'amber');
+      } else {
+        setStatus('Lade Amt Burg & Drachhausen...', 'amber');
+      }
+      if (await loadStaticList(cached && cached.ts)) setStatus(`${existingWaterPoints.length} Punkte (Liste vom ${staticInfo}) – aktualisiere live…`, 'amber');
+      reloadIcon.classList.add('fa-spin');
+
+      const rows = 2, cols = 3, cells = [];
+      for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) cells.push([
+        BB_S + (BB_N - BB_S) * i / rows, BB_W + (BB_E - BB_W) * j / cols,
+        BB_S + (BB_N - BB_S) * (i + 1) / rows, BB_W + (BB_E - BB_W) * (j + 1) / cols ]);
+      let ok = 0, errMsg = '';
+      for (const c of cells) {
+        let done = false;
+        for (let attempt = 0; attempt < 2 && !done; attempt++) {
+          try {
+            const els = await new Promise((res, rej) => fetchOverpass(buildQuery(c.map(v => v.toFixed(5)).join(','), 25), res, rej));
+            const pts = els.map(normalize).filter(Boolean);
+            if (els.length && !pts.length) throw new Error('Antwort ohne Koordinaten');
+            addPointsToMap(pts, pts.length ? c : false);
+            ok++; done = true;
+            setStatus(`Lade… ${ok}/${cells.length} Gebiete, ${existingWaterPoints.length} Punkte`, 'amber');
+          } catch (e) { errMsg = e.message; await sleep(3000); }
+        }
+      }
+      reloadIcon.classList.remove('fa-spin');
+      loadingFull = false;
+      if (ok === cells.length) {
+        fullLoadDone = true; fullRetries = 0;
+        setStatus(`${existingWaterPoints.length} Punkte aktuell`, 'emerald');
+        if (forceRefresh) showToast(`${existingWaterPoints.length} Punkte aktualisiert!`, 'fa-check-circle');
+      } else {
+        setStatus(staticInfo ? `${existingWaterPoints.length} Punkte (Liste vom ${staticInfo})` : existingWaterPoints.length ? `${existingWaterPoints.length} Punkte (${ok}/${cells.length} Gebiete aktuell)` : 'Keine Verbindung', staticInfo ? 'emerald' : existingWaterPoints.length ? 'amber' : 'red');
+        document.getElementById('statusText').title = errMsg;
+        if (forceRefresh || !existingWaterPoints.length) showToast('Laden unvollständig: ' + errMsg.slice(0, 140), 'fa-triangle-exclamation');
+        if (fullRetries++ < 3) setTimeout(() => loadAmtBurgData(false), 300000);
+      }
+    }
+
+    function loadCurrentViewportData() {
+      const b = map.getBounds();
+      if (fullLoadDone && b.getSouth()>=BB_S && b.getNorth()<=BB_N && b.getWest()>=BB_W && b.getEast()<=BB_E) return;
+      const key = [Math.floor(b.getSouth()*20)/20, Math.floor(b.getWest()*20)/20, Math.ceil(b.getNorth()*20)/20, Math.ceil(b.getEast()*20)/20].join(',');
+      if (loadedTiles.has(key)) return;
+      loadedTiles.add(key);
+      const bbox = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
+      fetchOverpass(buildQuery(bbox,20), (elements) => {
+        const n = addPointsToMap(elements.map(normalize).filter(Boolean));
+        if (n > 0) showToast(`${n} weitere Punkte nachgeladen`, 'fa-cloud-arrow-down');
+      }, () => loadedTiles.delete(key));
+    }
+
+    let ovChain = Promise.resolve();
+    function overpassTry(query) {
+      return new Promise((resolve, reject) => {
+        const errs = [], ctls = []; let started = 0, failed = 0, done = false, timer;
+        const finish = (fn, v) => { if (done) return; done = true; clearTimeout(timer); ctls.forEach(c => c.abort()); fn(v); };
+        timer = setTimeout(() => finish(reject, new Error(errs.join(' | ') || 'Timeout (40 s)')), 40000);
+        const launch = () => {
+          if (done || started >= OVERPASS_MIRRORS.length) return;
+          const url = OVERPASS_MIRRORS[started++], ctl = new AbortController(), host = new URL(url).host;
+          ctls.push(ctl);
+          if (started < OVERPASS_MIRRORS.length) setTimeout(launch, 6000);
+          fetch(url + '?data=' + encodeURIComponent(query), { signal: ctl.signal })
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(d => { if (d.remark && /runtime error|timed out|out of memory/i.test(d.remark)) throw new Error('Server-Limit'); finish(resolve, d.elements || []); })
+            .catch(e => {
+              if (done) return;
+              errs.push(host + ': ' + (e.name === 'AbortError' ? 'Timeout' : e.message));
+              if (++failed >= OVERPASS_MIRRORS.length) finish(reject, new Error(errs.join(' | '))); else launch();
+            });
+        };
+        launch();
+      });
+    }
+    function fetchOverpass(query, ok, fail) {
+      ovChain = ovChain.then(() => overpassTry(query)).then(ok, err => { if (fail) fail(err); }).catch(e => console.warn(e));
+    }
+
+    // Upsert: neue Punkte hinzufügen, geänderte aktualisieren; bei Vollladung gelöschte Punkte im Gebiet entfernen
+    function addPointsToMap(list, replace = false) {
+      let added = 0; const seen = new Set();
+      list.forEach(pt => {
+        seen.add(pt.uid);
+        const old = markerByUid.get(pt.uid);
+        if (old) {
+          if (old.sig === sig(pt)) return;
+          mapMarkersGroup.removeLayer(old.marker);
+          existingWaterPoints = existingWaterPoints.map(p => p.uid === pt.uid ? pt : p);
+        } else { existingWaterPoints.push(pt); added++; }
+        renderSinglePointMarker(pt);
+      });
+      if (replace) existingWaterPoints = existingWaterPoints.filter(p => {
+        if (seen.has(p.uid) || !(p.lat >= replace[0] && p.lat <= replace[2] && p.lon >= replace[1] && p.lon <= replace[3])) return true;
+        const o = markerByUid.get(p.uid); if (o) mapMarkersGroup.removeLayer(o.marker);
+        markerByUid.delete(p.uid); return false;
+      });
+      document.getElementById('pointCount').textContent = `${existingWaterPoints.length} Punkte`;
+      scheduleSave();
+      return added;
+    }
+
+    function renderSinglePointMarker(pt) {
+      const tags = pt.tags || {};
+      const style = getMarkerStyle(tags);
+      const marker = L.circleMarker([pt.lat, pt.lon], { radius: 9, fillColor: style.color, color: '#FFFFFF', weight: 2.5, fillOpacity: 0.95 });
+      const st = tags['operational_status'];
+      const popupHtml = `
+        <div class="space-y-2 p-1 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-1">
+            <span class="font-extrabold text-red-400 text-sm">${esc(style.title)}</span>
+            <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">OSM ${esc(pt.uid)}</span>
+          </div>
+          <div class="space-y-1 text-slate-300">
+            <p><strong>Nennweite:</strong> ${tags['fire_hydrant:diameter'] || tags['diameter'] ? 'DN ' + esc(tags['fire_hydrant:diameter'] || tags['diameter']) : 'k.A.'}</p>
+            <p><strong>Ertrag/Volumen:</strong> ${esc(tags['fire_hydrant:flow_rate'] || tags['capacity'] || 'k.A.')}</p>
+            <p><strong>Zustand:</strong> ${st === 'no' ? '<span class="text-red-400 font-bold">Defekt</span>' : st === 'yes' ? 'Einsatzbereit' : 'k.A.'}</p>
+          </div>
+          <button onclick="openEditFormForExisting('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition">
+            <i class="fa-solid fa-clipboard-check"></i> Gegebenheiten prüfen
+          </button>
+        </div>`;
+      marker.bindPopup(popupHtml);
+      mapMarkersGroup.addLayer(marker);
+      markerByUid.set(pt.uid, { marker, sig: sig(pt) });
+    }
+
+    function getMarkerStyle(tags) {
+      const emergency = tags.emergency;
+      const type = tags['fire_hydrant:type'];
+      const wellType = tags['well:type'];
+
+      if (emergency === 'fire_hydrant') {
+        if (type === 'pillar') return { color: '#F59E0B', title: 'Überflurhydrant' };
+        return { color: '#EF4444', title: 'Unterflurhydrant' };
+      } else if (emergency === 'water_well') {
+        if (wellType === 'shallow') return { color: '#22D3EE', title: 'Flachspiegelbrunnen' };
+        if (wellType === 'deep') return { color: '#2DD4BF', title: 'Tiefbrunnen' };
+        return { color: '#22D3EE', title: 'Wasserbrunnen' };
+      } else if (emergency === 'water_tank') {
+        return { color: '#3B82F6', title: 'Löschwasserbehälter / Zisterne' };
+      } else if (emergency === 'fire_water_pond' || emergency === 'suction_point') {
+        return { color: '#818CF8', title: 'Saugstelle / Löschteich' };
+      }
+      return { color: '#EAB308', title: 'Löschwasserstelle' };
+    }
+
+    // ==================== NÄCHSTE ENTNAHMESTELLEN ====================
+    function prefillInspector(){ try { document.getElementById('formInspector').value = localStorage.getItem('ffw_inspector') || ''; } catch(e){} }
+    function bearingDeg(la1, lo1, la2, lo2){
+      const r = Math.PI / 180, y = Math.sin((lo2 - lo1) * r) * Math.cos(la2 * r);
+      const x = Math.cos(la1 * r) * Math.sin(la2 * r) - Math.sin(la1 * r) * Math.cos(la2 * r) * Math.cos((lo2 - lo1) * r);
+      return (Math.atan2(y, x) / r + 360) % 360;
+    }
+    const COMPASS = ['N','NO','O','SO','S','SW','W','NW'];
+    const fmtDist = m => m < 1000 ? Math.round(m) + ' m' : (m / 1000).toFixed(1).replace('.', ',') + ' km';
+    const navUrl = (la, lo) => /iPhone|iPad|iPod/.test(navigator.userAgent)
+      ? `https://maps.apple.com/?daddr=${la},${lo}&dirflg=d`
+      : `https://www.google.com/maps/dir/?api=1&destination=${la},${lo}&travelmode=driving`;
+    function getPosition(){
+      return new Promise(res => {
+        if (!navigator.geolocation) return res(null);
+        navigator.geolocation.getCurrentPosition(p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, gps: true }), () => res(null), { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 });
+      });
+    }
+    async function showNearest(){
+      toggleModal('nearbyModal', true);
+      const list = document.getElementById('nearbyList'), info = document.getElementById('nearbyInfo');
+      list.innerHTML = '<p class="text-center text-slate-400 py-6">Ermittle Standort…</p>';
+      let pos = await getPosition(), note;
+      if (pos) { updateUserLocationMarker(pos.lat, pos.lng, pos.acc); note = 'Ab deinem Standort, Luftlinie'; }
+      else if (userMarker) { const ll = userMarker.getLatLng(); pos = { lat: ll.lat, lng: ll.lng }; note = 'GPS nicht verfügbar – ab letztem bekannten Standort, Luftlinie'; }
+      else { const c = map.getCenter(); pos = { lat: c.lat, lng: c.lng }; note = 'Kein GPS – ab Kartenmitte, Luftlinie'; }
+      info.textContent = note + '. Pfeil = Himmelsrichtung (Norden oben).';
+      const items = existingWaterPoints.map(pt => ({ pt, d: haversineDistance(pos.lat, pos.lng, pt.lat, pt.lon) })).sort((a, b) => a.d - b.d).slice(0, 10);
+      if (!items.length) { list.innerHTML = '<p class="text-center text-slate-400 py-6">Noch keine Punkte geladen.</p>'; return; }
+      list.innerHTML = items.map(({ pt, d }) => {
+        const t = pt.tags || {}, st = getMarkerStyle(t), b = bearingDeg(pos.lat, pos.lng, pt.lat, pt.lon);
+        const dn = t['fire_hydrant:diameter'] || t['diameter'], fl = t['fire_hydrant:flow_rate'] || t['capacity'];
+        return `<div class="p-2.5 bg-slate-950 border border-slate-800 rounded-2xl flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style="background:${st.color}33;border:2px solid ${st.color}"><i class="fa-solid fa-arrow-up text-sm" style="color:${st.color};transform:rotate(${Math.round(b)}deg)"></i></div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-slate-100 truncate">${esc(st.title)}</div>
+            <div class="text-[11px] text-slate-400">${fmtDist(d)} Richtung ${COMPASS[Math.round(b / 45) % 8]}${dn ? ' | DN ' + esc(dn) : ''}${fl ? ' | ' + esc(fl) : ''}</div>
+          </div>
+          <button onclick="focusPoint('${esc(pt.uid)}')" title="Auf Karte zeigen" class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 text-cyan-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-map-pin"></i></button>
+          <a href="${navUrl(pt.lat, pt.lon)}" target="_blank" rel="noopener" title="Navigation starten" class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-diamond-turn-right"></i></a>
+        </div>`;
+      }).join('');
+    }
+    function focusPoint(uid){
+      const o = markerByUid.get(uid), pt = existingWaterPoints.find(p => p.uid === uid);
+      if (!o || !pt) return;
+      toggleModal('nearbyModal', false);
+      map.setView([pt.lat, pt.lon], 19);
+      o.marker.openPopup();
+    }
+
+    // ==================== DIAGNOSE ====================
+    async function runDiagnose(){
+      const out = document.getElementById('diagOut'), rows = [];
+      out.textContent = 'Teste…';
+      rows.push(`Seite: ${location.protocol}//${location.host || 'lokale Datei'}, online: ${navigator.onLine ? 'ja' : 'nein'}`);
+      const q = encodeURIComponent('[out:json][timeout:10];node["emergency"="fire_hydrant"](51.85,14.12,51.87,14.15);out body;');
+      for (const url of OVERPASS_MIRRORS) {
+        const t0 = performance.now(); let msg;
+        const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 40000);
+        try {
+          const r = await fetch(url + '?data=' + q, { signal: ctl.signal });
+          msg = r.ok ? 'OK' : 'HTTP ' + r.status;
+          if (r.ok) { const d = await r.json(); msg += `, ${(d.elements || []).length} Treffer` + (d.remark ? ' (' + d.remark.slice(0, 40) + ')' : ''); }
+        } catch (e) { msg = e.name === 'AbortError' ? 'Timeout' : 'nicht erreichbar (' + e.message + ')'; }
+        clearTimeout(to);
+        rows.push(`${new URL(url).host}: ${msg}, ${Math.round(performance.now() - t0)} ms`);
+        out.innerHTML = rows.map(esc).join('<br>');
+      }
+    }
+    function importPoints(ev){
+      const f = ev.target.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const d = JSON.parse(rd.result);
+          const pts = (d.elements || []).filter(e => e.tags && /^(fire_hydrant|suction_point|water_well|water_tank|fire_water_pond)$/.test(e.tags.emergency || '')).map(normalize).filter(Boolean);
+          if (!pts.length) throw new Error('keine passenden Punkte gefunden');
+          const n = addPointsToMap(pts);
+          setStatus(`${existingWaterPoints.length} Punkte (Import)`, 'amber');
+          showToast(`${pts.length} Punkte importiert (${n} neu)`, 'fa-file-import');
+        } catch (e) { showToast('Import fehlgeschlagen: ' + e.message, 'fa-triangle-exclamation'); }
+      };
+      rd.readAsText(f); ev.target.value = '';
+    }
+    async function clearPointCache(){
+      await cacheSet('points_v3', null);
+      showToast('Cache geleert – lade neu…', 'fa-trash');
+      setTimeout(() => location.reload(), 800);
+    }
+
+    // ==================== GPS ENGINE ====================
+    function triggerGPS() {
+      const btn = document.getElementById('btnGps');
+      const icon = document.getElementById('gpsIcon');
+
+      if (!navigator.geolocation) {
+        showToast("Geolocation wird im Browser nicht unterstützt.", "fa-triangle-exclamation");
+        return;
+      }
+
+      showToast("Ermittle GPS Standort...", "fa-location-crosshairs");
+      
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const accuracy = pos.coords.accuracy;
+
+          updateUserLocationMarker(lat, lng, accuracy);
+          map.setView([lat, lng], 18);
+          
+          btn.classList.add('gps-pulse');
+          icon.className = "fa-solid fa-location-arrow text-xl text-emerald-400";
+          showToast(`Standort zentriert (Genauigkeit: ${Math.round(accuracy)}m)`, "fa-check-circle");
+
+          const dup = findNearestDuplicate(lat, lng, DUP_RADIUS_METERS);
+          if (dup) {
+            showToast(`Achtung: ${dup.distance}m bis zur nächsten Entnahmestelle!`, "fa-triangle-exclamation");
+          }
+
+          if (!watchGpsId) {
+            watchGpsId = navigator.geolocation.watchPosition(
+              (p) => updateUserLocationMarker(p.coords.latitude, p.coords.longitude, p.coords.accuracy),
+              (err) => console.warn("GPS Stream Error", err),
+              { enableHighAccuracy: true }
+            );
+          }
+        },
+        () => {
+          showToast("GPS Zugriff fehlgeschlagen. Standortrechte prüfen.", "fa-triangle-exclamation");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    function updateUserLocationMarker(lat, lng, accuracy) {
+      if (!userMarker) {
+        userMarker = L.circleMarker([lat, lng], {
+          radius: 9,
+          fillColor: '#10B981',
+          color: '#FFFFFF',
+          weight: 3,
+          fillOpacity: 1
+        }).addTo(map);
+
+        userCircle = L.circle([lat, lng], {
+          radius: accuracy,
+          color: '#10B981',
+          weight: 1,
+          fillOpacity: 0.15
+        }).addTo(map);
+      } else {
+        userMarker.setLatLng([lat, lng]);
+        userCircle.setLatLng([lat, lng]);
+        userCircle.setRadius(accuracy);
+      }
+    }
+
+    // ==================== DUBLETTEN-PRÜFUNG (35m) ====================
+    function startNewPointMode() {
+      isNewPointMode = true;
+      document.getElementById('newPointBanner').classList.remove('hidden');
+    }
+
+    function cancelNewPointMode() {
+      isNewPointMode = false;
+      document.getElementById('newPointBanner').classList.add('hidden');
+    }
+
+    function handleMapClickForNewPoint(latlng) {
+      cancelNewPointMode();
+      pendingCoords = latlng;
+
+      const dup = findNearestDuplicate(latlng.lat, latlng.lng, DUP_RADIUS_METERS);
+      if (dup) {
+        pendingDuplicate = dup;
+        showDuplicateModal(dup);
+      } else {
+        openNewPointForm(latlng.lat, latlng.lng);
+      }
+    }
+
+    function findNearestDuplicate(lat, lng, maxMeters) {
+      let nearest = null;
+      let minDist = Infinity;
+
+      existingWaterPoints.forEach(pt => {
+        const d = haversineDistance(lat, lng, pt.lat, pt.lon);
+        if (d <= maxMeters && d < minDist) {
+          minDist = d;
+          nearest = { point: pt, distance: Math.round(d) };
+        }
+      });
+      return nearest;
+    }
+
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function showDuplicateModal(dup) {
+      const tags = dup.point.tags || {};
+      const style = getMarkerStyle(tags);
+
+      document.getElementById('dupDistance').textContent = `${dup.distance}m`;
+      document.getElementById('dupType').textContent = style.title;
+      document.getElementById('dupId').textContent = `OSM ${dup.point.uid}`;
+      document.getElementById('dupDetails').textContent = `Nennweite: DN ${tags['fire_hydrant:diameter'] || tags['diameter'] || 'k.A.'} | Ertrag: ${tags['fire_hydrant:flow_rate'] || 'k.A.'}`;
+
+      toggleModal('duplicateModal', true);
+    }
+
+    function resolveDuplicateUseExisting() {
+      toggleModal('duplicateModal', false);
+      if (pendingDuplicate) openEditFormForExisting(pendingDuplicate.point.uid);
+    }
+
+    function resolveDuplicateCreateNew() {
+      toggleModal('duplicateModal', false);
+      if (pendingCoords) openNewPointForm(pendingCoords.lat, pendingCoords.lng);
+    }
+
+    // ==================== KAMERA & FORMULAR ====================
+    function handleImageCapture(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const sc = Math.min(1, 1280 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        capturedImageBase64 = c.toDataURL('image/jpeg', 0.7);
+        document.getElementById('imagePreview').src = capturedImageBase64;
+        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+      };
+      img.src = url;
+    }
+
+    function removeImage() {
+      capturedImageBase64 = null;
+      document.getElementById('imagePreviewContainer').classList.add('hidden');
+      document.getElementById('cameraInput').value = '';
+    }
+
+    function openNewPointForm(lat, lng) {
+      document.getElementById('formModalTitle').textContent = "Neue Entnahmestelle erfassen";
+      document.getElementById('formOsmId').value = "";
+      document.getElementById('formLat').value = lat;
+      document.getElementById('formLng').value = lng;
+      document.getElementById('waterPointForm').reset(); prefillInspector();
+      removeImage();
+      toggleModal('formModal', true);
+    }
+
+    function openEditFormForExisting(osmId) {
+      const pt = existingWaterPoints.find(p => p.uid === osmId);
+      if (!pt) return;
+      document.getElementById('waterPointForm').reset(); prefillInspector();
+
+      const tags = pt.tags || {};
+      document.getElementById('formModalTitle').textContent = `Prüfung: OSM ${osmId}`;
+      document.getElementById('formOsmId').value = osmId;
+      document.getElementById('formLat').value = pt.lat;
+      document.getElementById('formLng').value = pt.lon;
+
+      if (tags.emergency === 'fire_hydrant' && tags['fire_hydrant:type'] === 'pillar') {
+        document.getElementById('formType').value = 'pillar';
+      } else if (tags.emergency === 'water_well' && tags['well:type'] === 'shallow') {
+        document.getElementById('formType').value = 'shallow_well';
+      } else if (tags.emergency === 'water_well' && tags['well:type'] === 'deep') {
+        document.getElementById('formType').value = 'deep_well';
+      } else if (tags.emergency === 'water_tank') {
+        document.getElementById('formType').value = 'water_tank';
+      } else if (tags.emergency === 'fire_water_pond') {
+        document.getElementById('formType').value = 'fire_water_pond';
+      } else if (tags.emergency === 'suction_point') {
+        document.getElementById('formType').value = 'suction_point';
+      } else {
+        document.getElementById('formType').value = 'underground';
+      }
+
+      document.getElementById('formDiameter').value = tags['fire_hydrant:diameter'] || tags['diameter'] || '';
+      document.getElementById('formFlow').value = tags['fire_hydrant:flow_rate'] || tags['capacity'] || '';
+      document.getElementById('formNotes').value = tags['note'] || '';
+      removeImage();
+
+      toggleModal('formModal', true);
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const record = {
+        id: 'FFW-' + Date.now(),
+        timestamp: new Date().toISOString(),
+        osmId: document.getElementById('formOsmId').value || null,
+        lat: parseFloat(document.getElementById('formLat').value),
+        lng: parseFloat(document.getElementById('formLng').value),
+        type: document.getElementById('formType').value,
+        diameter: document.getElementById('formDiameter').value,
+        flow: document.getElementById('formFlow').value,
+        operational: document.getElementById('formOperational').value,
+        sign: document.getElementById('formSign').value,
+        couplings: {
+          a: document.getElementById('couplA').checked,
+          b: document.getElementById('couplB').checked,
+          c: document.getElementById('couplC').checked,
+          d: document.getElementById('couplD').checked
+        },
+        image: capturedImageBase64,
+        notes: document.getElementById('formNotes').value,
+        inspectedBy: document.getElementById('formInspector').value.trim()
+      };
+
+      try { localStorage.setItem('ffw_inspector', record.inspectedBy); } catch(e){}
+      offlineQueue.push(record);
+      if (!saveQueue()) { offlineQueue.pop(); return; }
+      digestAdd(record);
+
+      updateQueueBadge();
+      toggleModal('formModal', false);
+
+      L.circleMarker([record.lat, record.lng], {
+        radius: 11,
+        fillColor: '#10B981',
+        color: '#FFFFFF',
+        weight: 3,
+        fillOpacity: 1
+      }).addTo(map).bindPopup('<b>Erfassung Gespeichert!</b><br>Bereit zur OSM-Synchronisation.').openPopup();
+
+      showToast("Erfassung lokal für FFW Schmogrow gespeichert", "fa-check");
+    }
+
+    // ==================== EXAKTE OSM SYNCHRONISATION ====================
+    function updateQueueBadge() {
+      renderSentNotes();
+      const badge = document.getElementById('queueBadge');
+      const syncBadge = document.getElementById('syncQueueBadge');
+      const queueListCount = document.getElementById('queueListCount');
+      
+      const count = offlineQueue.length;
+      badge.textContent = count;
+      syncBadge.textContent = count;
+      queueListCount.textContent = count;
+
+      if (count > 0) badge.classList.remove('hidden');
+      else badge.classList.add('hidden');
+
+      const queueList = document.getElementById('queueList');
+      if (count === 0) {
+        queueList.innerHTML = '<p class="italic text-slate-500 text-center">Keine ungesendeten Erfassungen.</p>';
+      } else {
+        queueList.innerHTML = offlineQueue.map((item, i) => `
+          <div class="p-1.5 bg-slate-900 border border-slate-800 rounded-lg flex justify-between items-center text-[11px]">
+            <div>
+              <span class="font-bold text-slate-200">#${i+1} ${getReadableType(item.type)}</span>
+              <span class="text-slate-500 block text-[10px]">DN ${item.diameter || 'k.A.'} | ${item.osmId ? 'Update '+item.osmId : 'Neuer Punkt'}</span>
+            </div>
+            <button onclick="removeQueueItem(${i})" class="text-red-400 hover:text-red-300 font-bold px-2">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function removeQueueItem(index) {
+      offlineQueue.splice(index, 1);
+      saveQueue();
+      updateQueueBadge();
+      showToast("Eintrag entfernt", "fa-trash");
+    }
+
+    function getReadableType(type) {
+      switch(type) {
+        case 'underground': return 'Unterflurhydrant';
+        case 'pillar': return 'Überflurhydrant';
+        case 'shallow_well': return 'Flachspiegelbrunnen';
+        case 'deep_well': return 'Tiefbrunnen';
+        case 'water_tank': return 'Zisterne / Tank';
+        case 'suction_point': return 'Saugstelle';
+        case 'fire_water_pond': return 'Löschteich';
+        default: return 'Löschwasserstelle';
+      }
+    }
+
+    // 1. Direkt: anonyme OSM-Notizen (Eingang prüfbar unter https://www.openstreetmap.org/note/<ID>)
+    const TAGS_BY_TYPE = {
+      underground:'emergency=fire_hydrant\nfire_hydrant:type=underground', pillar:'emergency=fire_hydrant\nfire_hydrant:type=pillar',
+      shallow_well:'emergency=water_well\nwell:type=shallow', deep_well:'emergency=water_well\nwell:type=deep',
+      suction_point:'emergency=suction_point', water_tank:'emergency=water_tank', fire_water_pond:'emergency=fire_water_pond'
+    };
+    function buildNoteText(rec) {
+      const c = Object.entries(rec.couplings || {}).filter(([,v]) => v).map(([k]) => k.toUpperCase()).join(', ');
+      return [
+        '[FFW Schmogrow - Löschwassererfassung]', `Typ: ${getReadableType(rec.type)}`, TAGS_BY_TYPE[rec.type] || '',
+        rec.diameter && `fire_hydrant:diameter=${rec.diameter}`, rec.flow && `fire_hydrant:flow_rate=${rec.flow}`,
+        `operational_status=${rec.operational}`, c && `Storz-Anschlüsse: ${c}`,
+        `Hinweisschild: ${rec.sign === 'yes' ? 'vorhanden' : 'beschädigt/fehlt'}`, rec.notes && `Hinweis: ${rec.notes}`,
+        rec.osmId && `Prüfung bestehender Punkt: https://www.openstreetmap.org/${rec.osmId}`,
+        rec.image && '(Foto liegt bei der FFW Schmogrow vor)'
+      ].filter(Boolean).join('\n');
+    }
+
+    async function postOsmNotesDirectly() {
+      if (!offlineQueue.length) return showToast('Keine ausstehenden Daten vorhanden.', 'fa-info-circle');
+      if (!navigator.onLine) return showToast('Kein Internet – später erneut senden.', 'fa-triangle-exclamation');
+      showToast('Sende Notizen an OpenStreetMap...', 'fa-paper-plane');
+      let ok = 0, failed = 0;
+      for (const rec of offlineQueue.slice()) {
+        try {
+          const r = await fetch('https://api.openstreetmap.org/api/0.6/notes.json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ lat: rec.lat, lon: rec.lng, text: buildNoteText(rec) })
+          });
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          const j = await r.json();
+          sentNotes.unshift({ id: j.properties && j.properties.id, ts: Date.now() });
+          digestSetNote(rec.id, j.properties && j.properties.id);
+          offlineQueue = offlineQueue.filter(q => q.id !== rec.id);
+          ok++;
+        } catch (e) { failed++; }
+      }
+      saveQueue();
+      try { localStorage.setItem('ffw_schmogrow_sent', JSON.stringify(sentNotes.slice(0, 100))); } catch (e) {}
+      updateQueueBadge();
+      showToast(failed ? `${ok} gesendet, ${failed} fehlgeschlagen (bleiben gespeichert)` : `${ok} Notizen an OpenStreetMap gesendet!`, failed ? 'fa-triangle-exclamation' : 'fa-check-circle');
+    }
+
+    // 2. JOSM / iD OSM XML Change Export
+    function downloadOsmXml() {
+      if (offlineQueue.length === 0) return showToast("Keine ausstehenden Daten.", "fa-info-circle");
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<osm version="0.6" generator="FFW Schmogrow PWA">\n`;
+      let tempId = -1;
+
+      offlineQueue.filter(r => !r.osmId).forEach(rec => {
+        xml += `  <node id="${tempId--}" lat="${rec.lat}" lon="${rec.lng}">\n`;
+        
+        // Strikte Tagging Logik
+        if (rec.type === 'shallow_well') {
+          xml += `    <tag k="emergency" v="water_well"/>\n    <tag k="well:type" v="shallow"/>\n`;
+        } else if (rec.type === 'deep_well') {
+          xml += `    <tag k="emergency" v="water_well"/>\n    <tag k="well:type" v="deep"/>\n`;
+        } else if (rec.type === 'underground') {
+          xml += `    <tag k="emergency" v="fire_hydrant"/>\n    <tag k="fire_hydrant:type" v="underground"/>\n`;
+        } else if (rec.type === 'pillar') {
+          xml += `    <tag k="emergency" v="fire_hydrant"/>\n    <tag k="fire_hydrant:type" v="pillar"/>\n`;
+        } else {
+          xml += `    <tag k="emergency" v="${rec.type}"/>\n`;
+        }
+
+        if (rec.diameter) xml += `    <tag k="fire_hydrant:diameter" v="${rec.diameter}"/>\n`;
+        if (rec.flow) xml += `    <tag k="fire_hydrant:flow_rate" v="${rec.flow}"/>\n`;
+        if (rec.notes) xml += `    <tag k="note" v="${escapeXml(rec.notes)}"/>\n`;
+        xml += `    <tag k="source" v="FFW Schmogrow Vor-Ort Erfassung"/>\n`;
+        xml += `  </node>\n`;
+      });
+
+      xml += `</osm>`;
+
+      downloadBlob(xml, `FFW_Schmogrow_OSM_Export_${Date.now()}.osm`, 'application/xml');
+      showToast(".OSM XML Datei heruntergeladen", "fa-file-code");
+    }
+
+    function escapeXml(unsafe) {
+      return unsafe.replace(/[<>&'"]/g, function (c) {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    // 3. E-Mail & JSON
+    function sendMailExport() {
+      if (offlineQueue.length === 0) return showToast("Keine Daten zum Versenden.", "fa-info-circle");
+
+      let body = "FFW Schmogrow - Löschwasser Erfassungsdaten:\n\n";
+      offlineQueue.forEach((item, i) => {
+        body += `${i+1}. ${getReadableType(item.type)} (DN ${item.diameter || 'k.A.'})\n`;
+        body += `   Geprüft von: ${item.inspectedBy || 'k.A.'}\n`;
+        body += `   Koord: ${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}\n`;
+        body += `   Mängel/Notiz: ${item.notes || 'Keine'}\n\n`;
+      });
+
+      window.location.href = `mailto:wehrleitung@feuerwehr-schmogrow.de?subject=Löschwasser Erfassung Schmogrow&body=${encodeURIComponent(body)}`;
+    }
+
+    function downloadJsonExport() {
+      if (offlineQueue.length === 0) return showToast("Keine Daten vorhanden.", "fa-info-circle");
+      downloadBlob(JSON.stringify(offlineQueue, null, 2), `FFW_Schmogrow_Data_${Date.now()}.json`, 'application/json');
+    }
+
+    function downloadBlob(content, filename, contentType) {
+      const blob = new Blob([content], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ==================== UTILS ====================
+    function toggleModal(modalId, show) {
+      const el = document.getElementById(modalId);
+      if (show === undefined) el.classList.toggle('hidden');
+      else if (show) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function showToast(msg, icon = 'fa-info-circle') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastIcon').className = `fa-solid ${icon} text-cyan-400`;
+      toast.classList.remove('hidden');
+      clearTimeout(window._tt); window._tt = setTimeout(() => toast.classList.add('hidden'), 3500);
+    }
+  </script>
+</body>
+</html>
