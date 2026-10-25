@@ -855,6 +855,7 @@
             <p><strong>Ertrag/Volumen:</strong> ${esc(tags['fire_hydrant:flow_rate'] || tags['capacity'] || 'k.A.')}</p>
             <p><strong>Zustand:</strong> ${st === 'no' ? '<span class="text-red-400 font-bold">Defekt</span>' : st === 'yes' ? 'Einsatzbereit' : 'k.A.'}</p>
           </div>
+          <details class="mt-1"><summary class="cursor-pointer text-[10px] text-slate-500">OSM-Tags anzeigen</summary><pre class="text-[10px] text-slate-400 whitespace-pre-wrap break-all mt-1">${esc(Object.entries(tags).map(([k, v]) => k + '=' + v).join('\n'))}</pre></details>
           <button onclick="openEditFormForExisting('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition">
             <i class="fa-solid fa-clipboard-check"></i> Gegebenheiten prüfen
           </button>
@@ -868,6 +869,12 @@
       const emergency = tags.emergency;
       const type = tags['fire_hydrant:type'];
       const wellType = tags['well:type'];
+      const txt = [tags.name, tags.description, tags.note].join(' ').toLowerCase();
+      const wellHint = tags.water_source === 'well' || tags.man_made === 'water_well' || type === 'well' || /brunnen/.test(txt);
+      if (wellHint && ['suction_point', 'water_tank', 'fire_water_pond'].includes(emergency)) {
+        if (wellType === 'deep' || /tiefbrunnen/.test(txt)) return { color: '#2DD4BF', title: 'Tiefbrunnen' };
+        return { color: '#22D3EE', title: 'Flachspiegelbrunnen' };
+      }
 
       if (emergency === 'fire_hydrant') {
         if (type === 'pillar') return { color: '#F59E0B', title: 'Überflurhydrant' };
