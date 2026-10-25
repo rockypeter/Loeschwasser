@@ -21,6 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Dateien prüfen
+        run: |
+          ls -la
+          test -f index.html || { echo "::error::index.html fehlt im Repository - bitte hochladen"; exit 1; }
+
       - name: Löschwasserpunkte von Overpass holen
         continue-on-error: true
         run: |
@@ -75,8 +80,8 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add points.json
             if ! git diff --cached --quiet; then
-              git commit -m "Punkte aktualisiert"
-              git push
+              git commit -m "Punkte aktualisiert" || true
+              git push || echo "::warning::points.json konnte nicht gespeichert werden"
             fi
           fi
 
@@ -85,8 +90,9 @@ jobs:
       - name: Seite zusammenstellen
         run: |
           mkdir _site
-          cp index.html sw.js manifest.webmanifest icon-192.png icon-512.png _site/
-          if [ -f points.json ]; then cp points.json _site/; fi
+          for f in index.html sw.js manifest.webmanifest icon-192.png icon-512.png points.json; do
+            if [ -f "$f" ]; then cp "$f" _site/; else echo "::warning::$f fehlt"; fi
+          done
 
       - uses: actions/upload-pages-artifact@v3
         with:
