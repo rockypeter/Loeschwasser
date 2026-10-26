@@ -38,7 +38,8 @@ jobs:
           UA = "FFW-Schmogrow-Loeschwasser-Karte/1.0 (GitHub Actions, taeglicher Abruf)"
           TYPES = "fire_hydrant|suction_point|water_well|water_tank|fire_water_pond"
           def fetch(bbox):
-              q = f'[out:json][timeout:120];nwr["emergency"~"^({TYPES})$"]({bbox});out body center qt;'
+              return run(f'[out:json][timeout:120];nwr["emergency"~"^({TYPES})$"]({bbox});out body center qt;')
+          def run(q):
               errs = []
               for attempt in range(3):
                   for url in MIRRORS:
@@ -68,6 +69,18 @@ jobs:
                   time.sleep(3)
           if not pts:
               raise SystemExit("keine Punkte erhalten")
+          try:
+              for g in run(f'[out:json][timeout:60];rel["boundary"="administrative"]["admin_level"="8"]({S},{W},{N},{E});out tags;'):
+                  name = (g.get("tags") or {}).get("name")
+                  if not name:
+                      continue
+                  for el in run(f'[out:json][timeout:90];area(id:{3600000000 + g["id"]})->.a;nwr["emergency"~"^({TYPES})$"](area.a);out ids;'):
+                      uid = f'{el["type"]}/{el["id"]}'
+                      if uid in pts:
+                          pts[uid]["gemeinde"] = name
+                  time.sleep(3)
+          except BaseException as e:
+              print("Gemeinden nicht ermittelt:", e)
           out = {"generated": datetime.datetime.now(datetime.timezone.utc).isoformat(), "points": list(pts.values())}
           json.dump(out, open("points.json", "w"), ensure_ascii=False, separators=(",", ":"))
           print(len(pts), "Punkte gespeichert")
