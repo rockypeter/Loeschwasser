@@ -30,7 +30,7 @@ jobs:
         continue-on-error: true
         run: |
           python3 - <<'PY'
-          import json, time, datetime, urllib.request, urllib.parse
+          import json, time, math, datetime, urllib.request, urllib.parse
           S, W, N, E = 51.78, 14.05, 51.98, 14.38
           MIRRORS = ["https://overpass-api.de/api/interpreter",
                      "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
@@ -81,6 +81,32 @@ jobs:
                   time.sleep(3)
           except BaseException as e:
               print("Gemeinden nicht ermittelt:", e)
+          def hav(a, b, c, d):
+              k = math.pi / 180
+              x = math.sin((c - a) * k / 2) ** 2 + math.cos(a * k) * math.cos(c * k) * math.sin((d - b) * k / 2) ** 2
+              return 12742000 * math.asin(math.sqrt(x))
+          try:
+              for g in run(f'[out:json][timeout:60];rel["boundary"="administrative"]["admin_level"~"^(9|10)$"]({S},{W},{N},{E});out tags;'):
+                  name = (g.get("tags") or {}).get("name")
+                  if not name:
+                      continue
+                  for el in run(f'[out:json][timeout:90];area(id:{3600000000 + g["id"]})->.a;nwr["emergency"~"^({TYPES})$"](area.a);out ids;'):
+                      uid = f'{el["type"]}/{el["id"]}'
+                      if uid in pts:
+                          pts[uid]["ortsteil"] = name
+                  time.sleep(3)
+          except BaseException as e:
+              print("Ortsteil-Grenzen nicht ermittelt:", e)
+          try:
+              places = [(e["lat"], e["lon"], e["tags"]["name"]) for e in run(f'[out:json][timeout:60];node["place"~"^(village|hamlet|suburb|town)$"]["name"]({S-0.05},{W-0.05},{N+0.05},{E+0.05});out body;')]
+              for p in pts.values():
+                  if "ortsteil" in p or not places:
+                      continue
+                  b = min(places, key=lambda q: hav(p["lat"], p["lon"], q[0], q[1]))
+                  if hav(p["lat"], p["lon"], b[0], b[1]) <= 3000:
+                      p["ortsteil"] = b[2]
+          except BaseException as e:
+              print("Ortsnamen nicht ermittelt:", e)
           out = {"generated": datetime.datetime.now(datetime.timezone.utc).isoformat(), "points": list(pts.values())}
           json.dump(out, open("points.json", "w"), ensure_ascii=False, separators=(",", ":"))
           print(len(pts), "Punkte gespeichert")
