@@ -211,19 +211,20 @@
 
   <!-- PRÜFPROTOKOLL FLACHSPIEGELBRUNNEN -->
   <div id="protoModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2">
-    <div id="protoSheet" class="bg-white text-slate-900 rounded-2xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+    <div id="protoSheet" class="bg-white text-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
         <button onclick="window.print()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
         <button onclick="protoCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
-        <span class="text-[11px] text-slate-500 flex-1 min-w-[140px]">Eingaben werden automatisch auf diesem Gerät gespeichert.</span>
+        <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="protoOtSel" onchange="protoSwitch(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
+        <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert.</span>
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
       <div class="overflow-auto p-3 text-xs">
         <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
-        <table class="w-full border-collapse min-w-[780px]">
+        <table class="w-full border-collapse min-w-[860px]">
           <thead><tr class="bg-slate-200 text-left">
-            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400">Aufbau</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="no-print border border-slate-400 w-8"></th>
+            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400">Aufbau</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="no-print border border-slate-400 w-8"></th>
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
@@ -385,6 +386,11 @@
         <div>
           <label class="block text-slate-300 font-bold mb-1">Besonderheiten / Mängel / Zufahrt</label>
           <textarea id="formNotes" rows="2" placeholder="z.B. Zufahrt über Feldweg, Schild beschädigt..." class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2 text-slate-100 focus:outline-none focus:border-red-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">Ortsangabe für das Prüfprotokoll <span class="text-slate-500 font-normal">(nur intern, z. B. Wendeplatz, Katzenberg)</span></label>
+          <input type="text" id="formLoc" placeholder="z. B. Wendeplatz" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
         </div>
 
         <div>
@@ -840,8 +846,8 @@
         const old = markerByUid.get(pt.uid);
         if (old) {
           const prev = existingWaterPoints.find(p => p.uid === pt.uid);
-          if (old.sig === sig(pt)) { if (pt.gemeinde && prev) prev.gemeinde = pt.gemeinde; return; }
-          if (!pt.gemeinde && prev && prev.gemeinde) pt.gemeinde = prev.gemeinde;
+          if (old.sig === sig(pt)) { if (prev) { if (pt.gemeinde) prev.gemeinde = pt.gemeinde; if (pt.ortsteil) prev.ortsteil = pt.ortsteil; } return; }
+          if (prev) { if (!pt.gemeinde && prev.gemeinde) pt.gemeinde = prev.gemeinde; if (!pt.ortsteil && prev.ortsteil) pt.ortsteil = prev.ortsteil; }
           mapMarkersGroup.removeLayer(old.marker);
           existingWaterPoints = existingWaterPoints.map(p => p.uid === pt.uid ? pt : p);
         } else { existingWaterPoints.push(pt); added++; }
@@ -886,7 +892,7 @@
             <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">OSM ${esc(pt.uid)}</span>
           </div>
           <div class="space-y-1 text-slate-300">${popupRows(tags)}</div>
-          ${style.title === 'Flachspiegelbrunnen' ? `<button onclick="openProtocol('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Gemeinde</button>` : ''}
+          ${style.title === 'Flachspiegelbrunnen' ? `<button onclick="openProtocol('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Ortsteil</button>` : ''}
           <details class="mt-1"><summary class="cursor-pointer text-[10px] text-slate-500">OSM-Tags anzeigen</summary><pre class="text-[10px] text-slate-400 whitespace-pre-wrap break-all mt-1">${esc(Object.entries(tags).map(([k, v]) => k + '=' + v).join('\n'))}</pre></details>
           <button onclick="openEditFormForExisting('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition">
             <i class="fa-solid fa-clipboard-check"></i> Gegebenheiten prüfen
@@ -903,7 +909,7 @@
       const wellType = tags['well:type'];
       const txt = [tags.name, tags.description, tags.note].join(' ').toLowerCase();
       const wellHint = tags.water_source === 'well' || tags.man_made === 'water_well' || type === 'well' || /brunnen/.test(txt);
-      if (wellHint && ['suction_point', 'water_tank', 'fire_water_pond'].includes(emergency)) {
+      if (wellHint && (['suction_point', 'water_tank', 'fire_water_pond'].includes(emergency) || (emergency === 'fire_hydrant' && type === 'well'))) {
         if (wellType === 'deep' || /tiefbrunnen/.test(txt)) return { color: '#2DD4BF', title: 'Tiefbrunnen' };
         return { color: '#22D3EE', title: 'Flachspiegelbrunnen' };
       }
@@ -914,7 +920,7 @@
       } else if (emergency === 'water_well') {
         if (wellType === 'shallow') return { color: '#22D3EE', title: 'Flachspiegelbrunnen' };
         if (wellType === 'deep') return { color: '#2DD4BF', title: 'Tiefbrunnen' };
-        return { color: '#22D3EE', title: 'Wasserbrunnen' };
+        return { color: '#22D3EE', title: 'Flachspiegelbrunnen' };
       } else if (emergency === 'water_tank') {
         return { color: '#3B82F6', title: 'Löschwasserbehälter / Zisterne' };
       } else if (emergency === 'fire_water_pond' || emergency === 'suction_point') {
@@ -923,33 +929,68 @@
       return { color: '#EAB308', title: 'Löschwasserstelle' };
     }
 
-    // ==================== PRÜFPROTOKOLL FLACHSPIEGELBRUNNEN ====================
+    // ==================== PRÜFPROTOKOLL FLACHSPIEGELBRUNNEN (je Ortsteil) ====================
     function prefillInspector(){ try { document.getElementById('formInspector').value = localStorage.getItem('ffw_inspector') || ''; } catch(e){} }
-    const PUMPS = ['Magirus TS', 'Ziegler TS', 'Fahrzeugpumpe', 'Sonstiges'];
-    let protoGem = '', protoData = {}, protoWells = [], protoFocus = '';
-    const protoKey = g => 'ffw_proto_' + (g || 'gesamt');
+    const PUMPS = ['Magirus TS', 'Ziegler TS', 'Fahrzeugpumpe', 'Andere'];
+    let protoOt = '', protoData = {}, protoWells = [], protoFocus = '';
+    const protoKey = o => 'ffw_proto_' + (o || 'ohne_zuordnung');
     const todayISO = () => new Date().toLocaleDateString('sv-SE');
+    const isShallow = p => getMarkerStyle(p.tags || {}).title === 'Flachspiegelbrunnen';
+
+    // Eigene Ortsangaben (nur auf diesem Gerät), je Brunnen oder je Position
+    const LOC_KEY = 'ffw_loc_v1';
+    const locMap = () => { try { return JSON.parse(localStorage.getItem(LOC_KEY) || '{}'); } catch(e) { return {}; } };
+    const posKey = (la, lo) => `pos:${la.toFixed(5)},${lo.toFixed(5)}`;
+    function getLoc(pt){
+      const m = locMap();
+      if (pt.uid in m) return m[pt.uid];
+      const pk = posKey(pt.lat, pt.lon);
+      if (pk in m) return m[pk];
+      let best = '', bd = 15;
+      Object.keys(m).forEach(k => {
+        if (!k.startsWith('pos:')) return;
+        const [la, lo] = k.slice(4).split(',').map(Number), d = haversineDistance(pt.lat, pt.lon, la, lo);
+        if (d < bd) { bd = d; best = m[k]; }
+      });
+      return best;
+    }
+    function setLocFor(pt, text){ const m = locMap(); m[pt.uid] = text; try { localStorage.setItem(LOC_KEY, JSON.stringify(m)); } catch(e){} }
+    function saveLoc(rec, text){
+      if (!text) return;
+      const m = locMap(); m[rec.osmId || posKey(rec.lat, rec.lng)] = text;
+      try { localStorage.setItem(LOC_KEY, JSON.stringify(m)); } catch(e){}
+    }
+
     function wellLabel(pt){
       const t = pt.tags || {};
       return [t.ref, t.name].filter(Boolean).join(' – ') || ((t['addr:street'] || '') + ' ' + (t['addr:housenumber'] || '')).trim() || 'Brunnen';
     }
-    function gemeindeOf(pt){
-      if (pt.gemeinde) return pt.gemeinde;
+    function ortsteilOf(pt){
+      if (pt.ortsteil) return pt.ortsteil;
       let best = '', bd = Infinity;
-      existingWaterPoints.forEach(p => { if (!p.gemeinde) return; const d = haversineDistance(pt.lat, pt.lon, p.lat, p.lon); if (d < bd) { bd = d; best = p.gemeinde; } });
+      existingWaterPoints.forEach(p => { if (!p.ortsteil) return; const d = haversineDistance(pt.lat, pt.lon, p.lat, p.lon); if (d < bd) { bd = d; best = p.ortsteil; } });
       return bd < 3000 ? best : '';
     }
     function openProtocol(uid){
       const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
-      protoGem = gemeindeOf(pt); protoFocus = uid;
-      protoWells = existingWaterPoints.filter(p => getMarkerStyle(p.tags || {}).title === 'Flachspiegelbrunnen' && gemeindeOf(p) === protoGem)
-        .sort((a, b) => wellLabel(a).localeCompare(wellLabel(b), 'de', { numeric: true }) || a.lat - b.lat);
-      try { protoData = JSON.parse(localStorage.getItem(protoKey(protoGem)) || '{}'); } catch(e) { protoData = {}; }
-      map.closePopup(); renderProtocol(); toggleModal('protoModal', true);
+      protoFocus = uid; map.closePopup();
+      loadProtocol(ortsteilOf(pt)); toggleModal('protoModal', true);
       const row = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (row) row.scrollIntoView({ block: 'center' });
     }
+    function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
+    function loadProtocol(ot){
+      protoOt = ot;
+      protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
+        .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
+      try { protoData = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e) { protoData = {}; }
+      renderProtocol();
+    }
     function renderProtocol(){
-      document.getElementById('protoTitle').textContent = 'Gemeinde ' + (protoGem || '(gesamtes Gebiet)');
+      const ots = [...new Set(existingWaterPoints.filter(isShallow).map(ortsteilOf))].sort((a, b) => a.localeCompare(b, 'de'));
+      if (!ots.includes(protoOt)) ots.push(protoOt);
+      document.getElementById('protoOtSel').innerHTML = ots.map(o => `<option value="${esc(o)}"${o === protoOt ? ' selected' : ''}>${esc(o || '(ohne Zuordnung)')}</option>`).join('');
+      const gem = (protoWells[0] || {}).gemeinde;
+      document.getElementById('protoTitle').textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '');
       document.getElementById('protoStand').textContent = new Date().toLocaleDateString('de-DE');
       const cell = 'p-1 border border-slate-400', inp = 'w-full bg-white border border-slate-300 rounded px-1 py-1';
       document.getElementById('protoBody').innerHTML = protoWells.map((pt, i) => {
@@ -957,37 +998,46 @@
         const opts = '<option value=""></option>' + PUMPS.map(x => `<option${d.pump === x ? ' selected' : ''}>${x}</option>`).join('');
         return `<tr data-uid="${esc(pt.uid)}" class="${pt.uid === protoFocus ? 'bg-yellow-100' : ''}">
           <td class="${cell} text-center">${i + 1}</td>
-          <td class="${cell}"><div class="font-bold">${esc(wellLabel(pt))}</div><div class="text-[10px] text-slate-500">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}</div></td>
+          <td class="${cell}"><div class="font-bold">${esc(wellLabel(pt))}</div>
+            <input type="text" data-f="loc" placeholder="Ortsangabe (z. B. Wendeplatz)" value="${esc(getLoc(pt))}" class="${inp} mt-1">
+            <div class="text-[10px] text-slate-500 mt-0.5">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}</div></td>
           <td class="${cell}"><input type="date" data-f="date" value="${esc(d.date || '')}" class="${inp}"></td>
-          <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Sonstiges' ? '' : 'hidden'}"></td>
+          <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe eintragen" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Andere' ? '' : 'hidden'}"></td>
           <td class="${cell}"><input type="text" data-f="aufbau" value="${esc(d.aufbau || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"></td>
+          <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" value="${esc(d.leistung || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"></td>
           <td class="no-print ${cell} text-center"><button onclick="protoClear('${esc(pt.uid)}')" title="Zeile leeren" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="8" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Gebiet gefunden.</td></tr>';
+      }).join('') || '<tr><td colspan="9" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
     }
-    function protoSave(){ try { localStorage.setItem(protoKey(protoGem), JSON.stringify(protoData)); } catch(e){} }
+    function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} }
     function protoEdit(e){
       const el = e.target, tr = el.closest('tr');
       if (!tr || !el.dataset.f) return;
-      const d = protoData[tr.dataset.uid] || (protoData[tr.dataset.uid] = {});
+      const uid = tr.dataset.uid;
+      if (el.dataset.f === 'loc') { const pt = existingWaterPoints.find(p => p.uid === uid); if (pt) setLocFor(pt, el.value.trim()); return; }
+      const d = protoData[uid] || (protoData[uid] = {});
       d[el.dataset.f] = el.value;
       if (el.dataset.f !== 'date' && !d.date) { d.date = todayISO(); tr.querySelector('[data-f=date]').value = d.date; }
       if (el.dataset.f !== 'pruefer' && !d.pruefer) { try { d.pruefer = localStorage.getItem('ffw_inspector') || ''; } catch(x){} tr.querySelector('[data-f=pruefer]').value = d.pruefer; }
-      if (el.dataset.f === 'pump') tr.querySelector('[data-f=pumpOther]').classList.toggle('hidden', el.value !== 'Sonstiges');
+      if (el.dataset.f === 'pump') {
+        const o = tr.querySelector('[data-f=pumpOther]');
+        o.classList.toggle('hidden', el.value !== 'Andere');
+        if (el.value === 'Andere') o.focus();
+      }
       protoSave();
     }
     function protoClear(uid){ delete protoData[uid]; protoSave(); renderProtocol(); }
     function protoCsv(){
-      const rows = [['Nr', 'Flachspiegelbrunnen', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Prüfer']].concat(protoWells.map((pt, i) => {
+      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Prüfer']].concat(protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return [i + 1, wellLabel(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Sonstiges' ? 'Sonstiges: ' + (d.pumpOther || '') : (d.pump || ''), d.aufbau || '', d.zeit || '', d.pruefer || ''];
+        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), d.aufbau || '', d.zeit || '', d.leistung || '', d.pruefer || ''];
       }));
       const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-      a.download = `Pruefprotokoll_${(protoGem || 'Gebiet').replace(/\W+/g, '_')}_${todayISO()}.csv`;
+      a.download = `Pruefprotokoll_${(protoOt || 'Ortsteil').replace(/\W+/g, '_')}_${todayISO()}.csv`;
       a.click();
     }
 
@@ -1211,6 +1261,7 @@
 
       const tags = pt.tags || {};
       document.getElementById('formModalTitle').textContent = `Prüfung: OSM ${osmId}`;
+      document.getElementById('formLoc').value = getLoc(pt);
       document.getElementById('formOsmId').value = osmId;
       document.getElementById('formLat').value = pt.lat;
       document.getElementById('formLng').value = pt.lon;
@@ -1265,6 +1316,7 @@
       };
 
       try { localStorage.setItem('ffw_inspector', record.inspectedBy); } catch(e){}
+      saveLoc(record, document.getElementById('formLoc').value.trim());
       offlineQueue.push(record);
       if (!saveQueue()) { offlineQueue.pop(); return; }
       digestAdd(record);
