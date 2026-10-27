@@ -716,7 +716,7 @@
     function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('ffw_schmogrow',1); r.onupgradeneeded=()=>r.result.createObjectStore('kv'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
     async function cacheGet(k){ try { const db=await idb(); return await new Promise(res=>{ const q=db.transaction('kv').objectStore('kv').get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>res(null); }); } catch(e){ return null; } }
     async function cacheSet(k,v){ try { const db=await idb(); db.transaction('kv','readwrite').objectStore('kv').put(v,k); } catch(e){} }
-    function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>cacheSet('points_v3',{ts:Date.now(),points:existingWaterPoints}),1000); }
+    function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>cacheSet('points_v3',{ts:Date.now(),dataTs,points:existingWaterPoints}),1000); }
 
     function setStatus(txt,color){
       document.getElementById('statusText').textContent = txt;
@@ -733,20 +733,20 @@
       return { uid: el.type+'/'+el.id, id: el.id, osmType: el.type, lat, lon, tags: el.tags || {} };
     }
 
-    let staticInfo = '';
-    async function loadStaticList(cacheTs){
+    let staticInfo = '', dataTs = 0;
+    async function fetchStaticList(){
       try {
         const r = await withTimeout(fetch('points.json', { cache: 'no-cache' }), 8000);
-        if (!r || !r.ok) return false;
-        const d = await r.json();
-        if (!d.points || !d.points.length) return false;
-        const gen = Date.parse(d.generated);
-        if (cacheTs && gen < cacheTs) return false;
-        addPointsToMap(d.points, [BB_S, BB_W, BB_N, BB_E]);
-        fullLoadDone = true;
-        staticInfo = new Date(gen).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-        return true;
-      } catch (e) { return false; }
+        if (!r || !r.ok) return null;
+        const d = await r.json(), gen = Date.parse(d.generated);
+        return d.points && d.points.length && gen ? { points: d.points, gen } : null;
+      } catch (e) { return null; }
+    }
+    function applyStatic(st){
+      addPointsToMap(st.points, [BB_S, BB_W, BB_N, BB_E]);
+      fullLoadDone = true; dataTs = st.gen;
+      staticInfo = new Date(st.gen).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      scheduleSave();
     }
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
@@ -756,14 +756,22 @@
       if (loadingFull) { if (forceRefresh) showToast('Aktualisierung läuft bereits…', 'fa-info-circle'); return; }
       loadingFull = true;
       const reloadIcon = document.getElementById('reloadIcon');
+      const staticP = fetchStaticList();
       const cached = await withTimeout(cacheGet('points_v3'), 1500);
-      if (cached && cached.points && cached.points.length && !forceRefresh) {
-        addPointsToMap(cached.points);
-        setStatus(`${existingWaterPoints.length} Punkte (Cache vom ${new Date(cached.ts).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}) – aktualisiere…`, 'amber');
+      if (cached && cached.dataTs && !dataTs) dataTs = cached.dataTs;
+      const early = await Promise.race([staticP, sleep(1200).then(() => null)]);
+      if (early && early.gen > dataTs) {
+        applyStatic(early);
+        setStatus(`${existingWaterPoints.length} Punkte (Liste vom ${staticInfo}) – aktualisiere live…`, 'amber');
       } else {
-        setStatus('Lade Amt Burg & Drachhausen...', 'amber');
+        if (cached && cached.points && cached.points.length && !forceRefresh) {
+          addPointsToMap(cached.points);
+          setStatus(`${existingWaterPoints.length} Punkte (gespeichert) – prüfe auf neuere Daten…`, 'amber');
+        } else {
+          setStatus('Lade Amt Burg & Drachhausen...', 'amber');
+        }
+        staticP.then(st => { if (st && st.gen > dataTs) { applyStatic(st); setStatus(`${existingWaterPoints.length} Punkte (Liste vom ${staticInfo}) – aktualisiere live…`, 'amber'); } });
       }
-      if (await loadStaticList(cached && cached.ts)) setStatus(`${existingWaterPoints.length} Punkte (Liste vom ${staticInfo}) – aktualisiere live…`, 'amber');
       reloadIcon.classList.add('fa-spin');
 
       const rows = 2, cols = 3, cells = [];
@@ -787,7 +795,7 @@
       reloadIcon.classList.remove('fa-spin');
       loadingFull = false;
       if (ok === cells.length) {
-        fullLoadDone = true; fullRetries = 0;
+        fullLoadDone = true; fullRetries = 0; dataTs = Date.now(); scheduleSave();
         setStatus(`${existingWaterPoints.length} Punkte aktuell`, 'emerald');
         if (forceRefresh) showToast(`${existingWaterPoints.length} Punkte aktualisiert!`, 'fa-check-circle');
       } else {
@@ -1266,7 +1274,12 @@
       document.getElementById('formLat').value = pt.lat;
       document.getElementById('formLng').value = pt.lon;
 
-      if (tags.emergency === 'fire_hydrant' && tags['fire_hydrant:type'] === 'pillar') {
+      const stTitle = getMarkerStyle(tags).title;
+      if (stTitle === 'Flachspiegelbrunnen') {
+        document.getElementById('formType').value = 'shallow_well';
+      } else if (stTitle === 'Tiefbrunnen') {
+        document.getElementById('formType').value = 'deep_well';
+      } else if (tags.emergency === 'fire_hydrant' && tags['fire_hydrant:type'] === 'pillar') {
         document.getElementById('formType').value = 'pillar';
       } else if (tags.emergency === 'water_well' && tags['well:type'] === 'shallow') {
         document.getElementById('formType').value = 'shallow_well';
