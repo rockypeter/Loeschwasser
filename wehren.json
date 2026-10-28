@@ -1,0 +1,99 @@
+{
+  "zentral": {
+    "name": "FFW Schmogrow",
+    "key": "3811682d-6504-47e2-85aa-c93fe4568d6a"
+  },
+  "wehren": [
+    {
+      "id": "briesen",
+      "name": "FFW Briesen",
+      "ortsteile": [
+        "Briesen"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "burg",
+      "name": "FFW Burg",
+      "ortsteile": [
+        "Burg"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "dissen",
+      "name": "FFW Dissen",
+      "ortsteile": [
+        "Dissen"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "fehrow",
+      "name": "FFW Fehrow",
+      "ortsteile": [
+        "Fehrow"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "guhrow",
+      "name": "FFW Guhrow",
+      "ortsteile": [
+        "Guhrow"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "mueschen",
+      "name": "FFW Müschen",
+      "ortsteile": [
+        "Müschen"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "ruben",
+      "name": "FFW Ruben",
+      "ortsteile": [
+        "Ruben"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "schmogrow",
+      "name": "FFW Schmogrow",
+      "ortsteile": [
+        "Schmogrow"
+      ],
+      "gps": true,
+      "zentral": true,
+      "reportKey": "3811682d-6504-47e2-85aa-c93fe4568d6a"
+    },
+    {
+      "id": "striesow",
+      "name": "FFW Striesow",
+      "ortsteile": [
+        "Striesow"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "werben",
+      "name": "FFW Werben",
+      "ortsteile": [
+        "Werben"
+      ],
+      "gps": true,
+      "reportKey": ""
+    }
+  ]
+}

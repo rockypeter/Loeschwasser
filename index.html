@@ -99,7 +99,7 @@
   <header class="h-14 bg-slate-900 border-b border-red-700/60 px-3 flex items-center justify-between z-30 shadow-2xl shrink-0">
     <div class="flex items-center gap-2.5">
       <!-- Exaktes FFW Schmogrow Vektor-Wappen -->
-      <div class="w-11 h-11 rounded-full bg-white p-0.5 border-2 border-red-600 shadow-lg flex items-center justify-center shrink-0">
+      <div id="headerLogo" class="w-11 h-11 rounded-full bg-white p-0.5 border-2 border-red-600 shadow-lg flex items-center justify-center shrink-0">
         <svg viewBox="0 0 320 320" class="w-full h-full">
           <path id="archTextPath" d="M 35,160 A 125,125 0 0,1 285,160" fill="none" />
           <text font-size="20" font-weight="900" fill="#d32f2f" font-family="sans-serif">
@@ -204,7 +204,7 @@
       
     </div>
     <div class="font-mono text-slate-500">
-      © Freiwillige Feuerwehr Schmogrow
+      © <span id="footerOwner">Freiwillige Feuerwehr Schmogrow</span>
     </div>
   </footer>
 
@@ -216,6 +216,7 @@
       <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
         <button onclick="printSheet('protoModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
         <button onclick="protoCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
+        <button onclick="protoRelocate()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-location-crosshairs"></i>Standort prüfen</button>
         <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="protoOtSel" onchange="protoSwitch(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
         <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert.</span>
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
@@ -230,6 +231,16 @@
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- FEUERWEHR WÄHLEN -->
+  <div id="wehrModal" class="hidden fixed inset-0 z-[570] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl">
+      <h2 class="font-extrabold text-white text-base flex items-center gap-2"><i class="fa-solid fa-fire-extinguisher text-red-500"></i>Welche Feuerwehr?</h2>
+      <p class="text-xs text-slate-400">Bearbeiten kannst du nur Stellen in den Ortsteilen deiner Feuerwehr und nur direkt vor Ort. Alle anderen siehst du nur an.</p>
+      <select id="wehrSel" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100"></select>
+      <button onclick="chooseWehr()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-extrabold">Übernehmen</button>
     </div>
   </div>
 
@@ -523,6 +534,7 @@
             <button onclick="clearPointCache()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Cache leeren</button>
           </div>
           <label class="block w-full py-2.5 text-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition cursor-pointer"><i class="fa-solid fa-file-import mr-1.5"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="importPoints(event)"></label>
+          <button onclick="openWehrDialog()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-fire-extinguisher mr-1.5"></i>Feuerwehr wechseln</button>
           <div id="verInfo" class="text-[11px] text-slate-400 font-mono"></div>
           <div id="diagOut" class="text-[11px] text-slate-400 font-mono break-all"></div>
         </div>
@@ -555,7 +567,7 @@
     let osmTileLayer, satTileLayer;
     let activeLayerType = 'osm';
     const DEFAULT_START = [51.85, 14.2167]; // vorläufig Ortsmitte Schmogrow-Fehrow, Gerätehaus per Button speicherbar
-    function getStart(){ try { const v = JSON.parse(localStorage.getItem('ffw_start')); if (v && v.lat) return [v.lat, v.lng]; } catch(e){} return DEFAULT_START; }
+    function getStart(){ try { const v = JSON.parse(localStorage.getItem('ffw_start')); if (v && v.lat) return [v.lat, v.lng]; } catch(e){} const w = currentWehr(); if (w && w.start) return w.start; return DEFAULT_START; }
     function saveStart(){ const c = map.getCenter(); try { localStorage.setItem('ffw_start', JSON.stringify({ lat: c.lat, lng: c.lng })); showToast('Startpunkt gespeichert', 'fa-location-dot'); } catch(e){} }
 
     let userMarker = null;
@@ -575,8 +587,8 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-10-28 b';
-    const WEB3FORMS_KEY = '3811682d-6504-47e2-85aa-c93fe4568d6a'; // Access Key von web3forms.com (für die Wehr-Adresse erstellt) hier eintragen => Versand ohne Rückfrage
+    const APP_VERSION = '2026-10-28 c';
+    const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
     const dayKey = d => new Date(d).toLocaleDateString('sv-SE');
@@ -594,7 +606,7 @@
     }
     function digestText(){
       const ops = { yes:'einsatzbereit', limited:'eingeschränkt', no:'defekt' };
-      let t = `FFW Schmogrow – Löschwasser-Tagesbericht ${new Date().toLocaleDateString('de-DE')}\n${digestLog.length} Erfassung(en) über die App:\n`;
+      let t = `${(currentWehr() || {}).name || 'FFW'} – Löschwasser-Tagesbericht ${new Date().toLocaleDateString('de-DE')}\n${digestLog.length} Erfassung(en) über die App:\n`;
       digestLog.forEach((e,i) => {
         t += `\n${i+1}. ${getReadableType(e.type)} (${e.osmId ? 'Prüfung ' + e.osmId : 'neu'}) – ${new Date(e.ts).toLocaleString('de-DE')}\n`;
         if (e.by) t += `   Geprüft von: ${e.by}\n`;
@@ -606,11 +618,11 @@
     }
     async function sendDigest(manual){
       if (!digestLog.length) { if (manual) showToast('Keine offenen Erfassungen.', 'fa-info-circle'); return; }
-      const subject = `FFW Schmogrow Löschwasser-Tagesbericht ${new Date().toLocaleDateString('de-DE')}`, text = digestText();
+      const subject = `${(currentWehr() || {}).name || 'FFW'} Löschwasser-Tagesbericht ${new Date().toLocaleDateString('de-DE')}`, text = digestText();
       const done = () => { digestLog = []; saveDigest(); renderDigestInfo(); try { localStorage.setItem('ffw_digest_last', dayKey(Date.now())); } catch(e){} };
-      if (WEB3FORMS_KEY) {
+      if (reportKey()) {
         try {
-          const r = await fetch('https://api.web3forms.com/submit', { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify({ access_key: WEB3FORMS_KEY, subject, from_name:'FFW Schmogrow App', message: text }) });
+          const r = await fetch('https://api.web3forms.com/submit', { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify({ access_key: reportKey(), subject, from_name:((currentWehr() || {}).name || 'FFW') + ' App', message: text }) });
           const j = await r.json(); if (!j.success) throw new Error(j.message);
           done(); showToast('Tagesbericht per E-Mail gesendet', 'fa-envelope-circle-check');
         } catch(e) { showToast('E-Mail-Versand fehlgeschlagen – später erneut', 'fa-triangle-exclamation'); }
@@ -620,7 +632,7 @@
     }
     function checkDigest(){
       if (!digestLog.length) return;
-      if (!WEB3FORMS_KEY && localStorage.getItem('ffw_digest_last') === dayKey(Date.now())) return;
+      if (!reportKey() && localStorage.getItem('ffw_digest_last') === dayKey(Date.now())) return;
       sendDigest(false);
     }
     // Beim Beenden / Wegdrücken: erst OSM-Notizen, dann Bericht (beides keepalive, überlebt das Schließen)
@@ -633,6 +645,7 @@
       recs.forEach(sendNoteKeepalive);
     }
     function sendNoteKeepalive(rec){
+      sendCentral(rec);
       offlineQueue = offlineQueue.filter(q => q.id !== rec.id); saveQueue();
       fetch('https://api.openstreetmap.org/api/0.6/notes.json', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ lat: rec.lat, lon: rec.lng, text: buildNoteText(rec) }) })
         .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -641,11 +654,11 @@
     }
     // Beim Beenden / Wegdrücken: Versand im Hintergrund (keepalive überlebt das Schließen der Seite)
     function sendDigestOnLeave(){
-      if (!WEB3FORMS_KEY || !digestLog.length || !navigator.onLine) return;
+      if (!reportKey() || !digestLog.length || !navigator.onLine) return;
       if (Date.now() - (window._lastLeave || 0) < 120000) return;
       window._lastLeave = Date.now();
       const snap = digestLog.slice();
-      const body = JSON.stringify({ access_key: WEB3FORMS_KEY, subject: `FFW Schmogrow Löschwasser-Bericht ${new Date().toLocaleDateString('de-DE')}`, from_name: 'FFW Schmogrow App', message: digestText() });
+      const body = JSON.stringify({ access_key: reportKey(), subject: `${(currentWehr() || {}).name || 'FFW'} Löschwasser-Bericht ${new Date().toLocaleDateString('de-DE')}`, from_name: ((currentWehr() || {}).name || 'FFW') + ' App', message: digestText() });
       digestLog = []; saveDigest(); renderDigestInfo();
       const restore = () => { digestLog = snap.concat(digestLog); saveDigest(); renderDigestInfo(); };
       fetch('https://api.web3forms.com/submit', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body })
@@ -654,7 +667,7 @@
     function renderSentNotes(){ renderDigestInfo(); const el=document.getElementById('sentNotesList'); if(!el) return; el.innerHTML = sentNotes.length ? sentNotes.slice(0,30).map(n=>`<a href="https://www.openstreetmap.org/note/${n.id}" target="_blank" rel="noopener" class="block text-cyan-400 underline">Notiz #${n.id} – ${new Date(n.ts).toLocaleString('de-DE')}</a>`).join('') : '<p class="italic text-slate-500">Noch keine Notizen gesendet.</p>'; }
 
     window.addEventListener('DOMContentLoaded', () => {
-      initMap(); initLegendDrag(); loadAmtBurgData(false); updateQueueBadge();
+      initMap(); initLegendDrag(); initWehr(); loadAmtBurgData(false); updateQueueBadge();
       setTimeout(checkDigest, 3000);
       document.addEventListener('visibilitychange', () => { if (document.hidden) leaveSync(); });
       window.addEventListener('pagehide', leaveSync);
@@ -898,6 +911,7 @@
       });
       document.getElementById('pointCount').textContent = `${existingWaterPoints.length} Punkte`;
       scheduleSave();
+      if (!window._centered && existingWaterPoints.length && currentWehr()) { window._centered = true; centerOnWehr(false); }
       return added;
     }
 
@@ -970,7 +984,7 @@
     // ==================== PRÜFPROTOKOLL FLACHSPIEGELBRUNNEN (je Ortsteil) ====================
     function prefillInspector(){ try { document.getElementById('formInspector').value = localStorage.getItem('ffw_inspector') || ''; } catch(e){} }
     const PUMPS = ['Magirus TS', 'Ziegler TS', 'Fahrzeugpumpe', 'Andere'];
-    let protoOt = '', protoData = {}, protoWells = [], protoFocus = '';
+    let protoOt = '', protoData = {}, protoWells = [], protoFocus = '', protoPos = null;
     const protoKey = o => 'ffw_proto_' + (o || 'ohne_zuordnung');
     const todayISO = () => new Date().toLocaleDateString('sv-SE');
     const isShallow = p => getMarkerStyle(p.tags || {}).title === 'Flachspiegelbrunnen';
@@ -1004,20 +1018,22 @@
       return [t.ref, t.name].filter(Boolean).join(' – ') || ((t['addr:street'] || '') + ' ' + (t['addr:housenumber'] || '')).trim() || 'Brunnen';
     }
     function ortsteilOf(pt){
-      if (pt.ortsteil) return pt.ortsteil;
+      if (pt.ortsteil) return canonOt(pt.ortsteil);
       let best = '', bd = Infinity;
-      existingWaterPoints.forEach(p => { if (!p.ortsteil) return; const d = haversineDistance(pt.lat, pt.lon, p.lat, p.lon); if (d < bd) { bd = d; best = p.ortsteil; } });
+      existingWaterPoints.forEach(p => { if (!canonOt(p.ortsteil)) return; const d = haversineDistance(pt.lat, pt.lon, p.lat, p.lon); if (d < bd) { bd = d; best = canonOt(p.ortsteil); } });
       return bd < 3000 ? best : '';
     }
-    function openProtocol(uid){
+    async function openProtocol(uid){
       const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
       protoFocus = uid; map.closePopup();
-      loadProtocol(ortsteilOf(pt)); toggleModal('protoModal', true);
+      toggleModal('protoModal', true); await loadProtocol(ortsteilOf(pt));
       const row = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (row) row.scrollIntoView({ block: 'center' });
     }
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
-    function loadProtocol(ot){
+    async function loadProtocol(ot){
       protoOt = ot; testedMap = buildTested();
+      document.getElementById('protoBody').innerHTML = '<tr><td colspan="10" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
+      protoPos = (currentWehr() || {}).gps !== false ? await getPosition() : null;
       protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
         .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
       try { protoData = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e) { protoData = {}; }
@@ -1026,7 +1042,7 @@
     function renderProtocol(){
       const ots = [...new Set(existingWaterPoints.filter(isShallow).map(ortsteilOf))].sort((a, b) => a.localeCompare(b, 'de'));
       if (!ots.includes(protoOt)) ots.push(protoOt);
-      document.getElementById('protoOtSel').innerHTML = ots.map(o => `<option value="${esc(o)}"${o === protoOt ? ' selected' : ''}>${esc(o || '(ohne Zuordnung)')}</option>`).join('');
+      document.getElementById('protoOtSel').innerHTML = ots.map(o => `<option value="${esc(o)}"${o === protoOt ? ' selected' : ''}>${esc(o || '(ohne Zuordnung)')}${o && !ownsName(o) ? ' (nur Ansicht)' : ''}</option>`).join('');
       const gem = (protoWells[0] || {}).gemeinde;
       protoHeader();
       document.getElementById('protoStand').textContent = new Date().toLocaleDateString('de-DE');
@@ -1051,13 +1067,14 @@
           <td class="no-print ${cell} text-center"><button onclick="protoClear('${esc(pt.uid)}')" title="Zeile leeren" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td>
         </tr>`;
       }).join('') || '<tr><td colspan="10" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
-      loadPhotos();
+      loadPhotos(); lockRows();
     }
     function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); }
     function protoEdit(e){
       const el = e.target, tr = el.closest('tr');
       if (!tr || !el.dataset.f) return;
       const uid = tr.dataset.uid;
+      const pt0 = protoWells.find(p => p.uid === uid); if (pt0 && !editStatus(pt0, protoPos).ok) return;
       if (el.dataset.f === 'loc') { const pt = existingWaterPoints.find(p => p.uid === uid); if (pt) setLocFor(pt, el.value.trim()); return; }
       const d = protoData[uid] || (protoData[uid] = {});
       d[el.dataset.f] = el.value;
@@ -1182,7 +1199,7 @@
     function renderVerInfo(){
       const el = document.getElementById('verInfo'); if (!el) return;
       const f = t => t ? new Date(t).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
-      el.innerHTML = `App-Version: ${APP_VERSION}<br>Datenstand: ${f(dataTs)}<br>Punkte: ${existingWaterPoints.length}<br>Offline-Modus: ${navigator.serviceWorker && navigator.serviceWorker.controller ? 'aktiv' : 'aus'}`;
+      el.innerHTML = `Feuerwehr: ${(currentWehr() || {}).name || '– nicht gewählt'}<br>Eigene Ortsteile: ${((currentWehr() || {}).ortsteile || []).join(', ') || 'alle'}<br>App-Version: ${APP_VERSION}<br>Datenstand: ${f(dataTs)}<br>Punkte: ${existingWaterPoints.length}<br>Offline-Modus: ${navigator.serviceWorker && navigator.serviceWorker.controller ? 'aktiv' : 'aus'}`;
     }
     async function forceUpdate(){
       try {
@@ -1196,6 +1213,130 @@
       let a = ''; try { a = localStorage.getItem('ffw_mail_to') || ''; } catch(e){}
       if (!a) { a = (prompt('E-Mail-Adresse für den Bericht (wird nur auf diesem Gerät gespeichert):') || '').trim(); if (a) { try { localStorage.setItem('ffw_mail_to', a); } catch(e){} } }
       return a;
+    }
+
+    // ==================== MEHRERE FEUERWEHREN IM AMT BURG ====================
+    const AMT_ORTSTEILE = ['Briesen', 'Burg', 'Dissen', 'Fehrow', 'Guhrow', 'Müschen', 'Ruben', 'Schmogrow', 'Striesow', 'Werben'];
+    const ORT_ALIAS = { saccasne: 'Schmogrow', brahmow: 'Werben' };
+    function canonOt(n){
+      if (!n) return '';
+      const low = String(n).toLowerCase().trim();
+      if (ORT_ALIAS[low]) return ORT_ALIAS[low];
+      const first = low.split(/[\s\-\(,]+/)[0];
+      if (ORT_ALIAS[first]) return ORT_ALIAS[first];
+      return AMT_ORTSTEILE.find(o => o.toLowerCase() === first) || '';
+    }
+    const CENTRAL_KEY = '3811682d-6504-47e2-85aa-c93fe4568d6a';
+    function defaultCfg(){
+      return { zentral: { name: 'FFW Schmogrow', key: CENTRAL_KEY }, wehren: AMT_ORTSTEILE.map(o => ({
+        id: o.toLowerCase().replace('ü', 'ue'), name: 'FFW ' + o, ortsteile: [o], gps: true,
+        zentral: o === 'Schmogrow', reportKey: o === 'Schmogrow' ? CENTRAL_KEY : '' })) };
+    }
+    let CFG = (() => { try { const c = JSON.parse(localStorage.getItem('ffw_cfg')); if (c && c.wehren && c.wehren.length) return c; } catch(e){} return defaultCfg(); })();
+    const wehrList = () => CFG.wehren.filter(w => w.aktiv !== false);
+    const currentWehr = () => { let id = ''; try { id = localStorage.getItem('ffw_wehr') || ''; } catch(e){} return wehrList().find(w => w.id === id) || null; };
+    const ownsName = (o, w = currentWehr()) => {
+      if (!w) return false;
+      const l = (w.ortsteile || []).map(x => (canonOt(x) || x).toLowerCase());
+      return !l.length || !o || l.includes(o.toLowerCase());
+    };
+    const ownsPoint = (pt, w = currentWehr()) => ownsName(ortsteilOf(pt), w);
+
+    async function loadCfg(){
+      try {
+        const r = await withTimeout(fetch('wehren.json', { cache: 'no-cache' }), 5000);
+        if (r && r.ok) { const c = await r.json(); if (c && c.wehren && c.wehren.length) { CFG = c; try { localStorage.setItem('ffw_cfg', JSON.stringify(c)); } catch(e){} } }
+      } catch(e){}
+    }
+    async function initWehr(){ await loadCfg(); if (!currentWehr()) openWehrDialog(); else applyWehrUI(false); }
+    function openWehrDialog(){
+      const cur = currentWehr();
+      document.getElementById('wehrSel').innerHTML = (cur ? '' : '<option value="">– bitte wählen –</option>') + wehrList().map(w => `<option value="${esc(w.id)}"${cur && cur.id === w.id ? ' selected' : ''}>${esc(w.name)}</option>`).join('');
+      document.getElementById('wehrModal').classList.remove('hidden');
+    }
+    function chooseWehr(){
+      const id = document.getElementById('wehrSel').value; if (!id) return;
+      try { localStorage.setItem('ffw_wehr', id); } catch(e){}
+      document.getElementById('wehrModal').classList.add('hidden');
+      applyWehrUI(true);
+    }
+    let logoOrig = '';
+    function applyWehrUI(recenter){
+      const w = currentWehr(); if (!w) return;
+      const lg = document.getElementById('headerLogo'); if (lg && !logoOrig) logoOrig = lg.innerHTML;
+      if (lg) lg.innerHTML = w.logo ? `<img src="${esc(w.logo)}" class="w-full h-full object-contain rounded-full">` : (w.zentral ? logoOrig : '<i class="fa-solid fa-droplet text-red-600 text-xl"></i>');
+      const fo = document.getElementById('footerOwner'); if (fo) fo.textContent = w.zentral ? 'Freiwillige Feuerwehr Schmogrow' : w.name + ' | Software: FFW Schmogrow';
+      renderVerInfo();
+      if (recenter) { window._centered = true; centerOnWehr(true); }
+    }
+    function centerOnWehr(force){
+      const w = currentWehr(); if (!w || !map) return;
+      try { if (!force && localStorage.getItem('ffw_start')) return; } catch(e){}
+      if (w.start) { if (force) map.setView(w.start, 17); return; }
+      const pts = existingWaterPoints.filter(p => ortsteilOf(p) && ownsPoint(p, w));
+      if (!pts.length) return;
+      map.setView([pts.reduce((a, p) => a + p.lat, 0) / pts.length, pts.reduce((a, p) => a + p.lon, 0) / pts.length], 16);
+    }
+
+    // Standort und Sperre: nur eigene Ortsteile, nur direkt vor Ort
+    let lastPos = null;
+    const NEAR_M = 150;
+    function getPosition(maxAge = 20000){
+      return new Promise(res => {
+        if (lastPos && Date.now() - lastPos.t < maxAge) return res(lastPos);
+        if (!navigator.geolocation) return res(null);
+        navigator.geolocation.getCurrentPosition(p => { lastPos = { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, t: Date.now() }; res(lastPos); }, () => res(null), { enableHighAccuracy: true, timeout: 10000, maximumAge: 10000 });
+      });
+    }
+    function editStatus(pt, pos){
+      const w = currentWehr();
+      if (!w) return { ok: false, why: 'Bitte zuerst Feuerwehr wählen' };
+      if (!ownsPoint(pt, w)) return { ok: false, why: 'Nur Ansicht, gehört zu Ortsteil ' + (ortsteilOf(pt) || '?') };
+      if (w.gps !== false) {
+        if (!pos) return { ok: false, why: 'Standort nicht verfügbar, Bearbeiten nur vor Ort' };
+        const d = haversineDistance(pos.lat, pos.lng, pt.lat, pt.lon);
+        if (d > NEAR_M) return { ok: false, why: `Zu weit entfernt (${Math.round(d)} m, max. ${NEAR_M} m)` };
+      }
+      return { ok: true, why: '' };
+    }
+    async function guardEdit(pt){
+      const w = currentWehr(); if (!w) { openWehrDialog(); return false; }
+      const st = editStatus(pt, w.gps !== false ? await getPosition() : null);
+      if (!st.ok) showToast(st.why, 'fa-lock');
+      return st.ok;
+    }
+    async function openEditFormForExisting(uid){
+      const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
+      if (await guardEdit(pt)) _openEditFormForExisting(uid);
+    }
+    function lockRows(){
+      document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => {
+        const pt = protoWells.find(p => p.uid === tr.dataset.uid); if (!pt) return;
+        const st = editStatus(pt, protoPos); if (st.ok) return;
+        tr.querySelectorAll('input,select,button').forEach(e => e.disabled = true);
+        tr.classList.add('opacity-70');
+        const d = document.createElement('div'); d.className = 'no-print text-[10px] text-amber-700'; d.textContent = 'Gesperrt: ' + st.why;
+        tr.children[1].appendChild(d);
+      });
+    }
+    async function protoRelocate(){ lastPos = null; await loadProtocol(protoOt); }
+
+    // Meldung neuer oder geänderter Stellen anderer Wehren an die Zentrale (Schmogrow)
+    function centralText(rec){
+      const w = currentWehr() || {}, la = rec.lat.toFixed(6), lo = rec.lng.toFixed(6);
+      const edit = rec.osmId ? `${OSMW}edit?editor=id&${rec.osmId.split('/')[0]}=${rec.osmId.split('/')[1]}` : `${OSMW}edit?editor=id#map=20/${la}/${lo}`;
+      const gp = lastPos ? `Standort des Geräts: ${lastPos.lat.toFixed(5)}, ${lastPos.lng.toFixed(5)} (Abstand zur Stelle ${Math.round(haversineDistance(lastPos.lat, lastPos.lng, rec.lat, rec.lng))} m)` : 'Standort des Geräts: unbekannt';
+      return [`Meldung von ${w.name || '?'} (${new Date().toLocaleString('de-DE')})`, rec.osmId ? 'Prüfung bestehender Punkt ' + rec.osmId : 'NEUE STELLE', `Position: ${la}, ${lo}`, gp,
+        rec.inspectedBy ? 'Gemeldet durch: ' + rec.inspectedBy : '', `Im Editor öffnen: ${edit}`, `Karte: ${OSMW}?mlat=${la}&mlon=${lo}#map=19/${la}/${lo}`, '', buildNoteText(rec)].join('\n');
+    }
+    function sendCentral(rec){
+      const w = currentWehr();
+      if (!w || w.zentral || !CFG.zentral || !CFG.zentral.key || !navigator.onLine || rec.centralSent) return;
+      rec.centralSent = true; saveQueue();
+      fetch('https://api.web3forms.com/submit', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ access_key: CFG.zentral.key, subject: `OSM-Meldung ${w.name}: ${getReadableType(rec.type)}`, from_name: w.name + ' (App)', message: centralText(rec) }) })
+        .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); })
+        .catch(() => { rec.centralSent = false; saveQueue(); });
     }
 
     // ==================== DIAGNOSE ====================
@@ -1411,7 +1552,7 @@
       toggleModal('formModal', true);
     }
 
-    function openEditFormForExisting(osmId) {
+    function _openEditFormForExisting(osmId) {
       const pt = existingWaterPoints.find(p => p.uid === osmId);
       if (!pt) return;
       document.getElementById('waterPointForm').reset(); prefillInspector();
@@ -1557,7 +1698,7 @@
     function buildNoteText(rec) {
       const c = Object.entries(rec.couplings || {}).filter(([,v]) => v).map(([k]) => k.toUpperCase()).join(', ');
       return [
-        '[FFW Schmogrow - Löschwassererfassung]', `Typ: ${getReadableType(rec.type)}`, TAGS_BY_TYPE[rec.type] || '',
+        `[${(currentWehr() || {}).name || 'FFW'} - Löschwassererfassung]`, `Typ: ${getReadableType(rec.type)}`, TAGS_BY_TYPE[rec.type] || '',
         rec.diameter && `fire_hydrant:diameter=${rec.diameter}`, rec.flow && `fire_hydrant:flow_rate=${rec.flow}`,
         `operational_status=${rec.operational}`, c && `Storz-Anschlüsse: ${c}`,
         `Hinweisschild: ${rec.sign === 'yes' ? 'vorhanden' : 'beschädigt/fehlt'}`, rec.notes && `Hinweis: ${rec.notes}`,
@@ -1572,6 +1713,7 @@
       showToast('Sende Notizen an OpenStreetMap...', 'fa-paper-plane');
       let ok = 0, failed = 0;
       for (const rec of offlineQueue.slice()) {
+        sendCentral(rec);
         try {
           const r = await fetch('https://api.openstreetmap.org/api/0.6/notes.json', {
             method: 'POST',

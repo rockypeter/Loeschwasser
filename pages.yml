@@ -1,0 +1,159 @@
+name: Punkte aktualisieren und veröffentlichen
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dateien prüfen
+        run: |
+          ls -la
+          test -f index.html || { echo "::error::index.html fehlt im Repository - bitte hochladen"; exit 1; }
+
+      - name: Löschwasserpunkte von Overpass holen
+        continue-on-error: true
+        run: |
+          python3 - <<'PY'
+          import json, re, time, math, datetime, urllib.request, urllib.parse
+          S, W, N, E = 51.78, 14.05, 51.98, 14.38
+          MIRRORS = ["https://overpass-api.de/api/interpreter",
+                     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+                     "https://overpass.private.coffee/api/interpreter"]
+          UA = "FFW-Schmogrow-Loeschwasser-Karte/1.0 (GitHub Actions, taeglicher Abruf)"
+          TYPES = "fire_hydrant|suction_point|water_well|water_tank|fire_water_pond"
+          def fetch(bbox):
+              return run(f'[out:json][timeout:120];nwr["emergency"~"^({TYPES})$"]({bbox});out body center qt;')
+          def run(q):
+              errs = []
+              for attempt in range(3):
+                  for url in MIRRORS:
+                      try:
+                          req = urllib.request.Request(url, data=urllib.parse.urlencode({"data": q}).encode(), headers={"User-Agent": UA})
+                          with urllib.request.urlopen(req, timeout=150) as r:
+                              d = json.load(r)
+                          if "error" in (d.get("remark") or "").lower():
+                              raise Exception(d["remark"][:80])
+                          return d["elements"]
+                      except Exception as e:
+                          errs.append(url.split("/")[2] + ": " + str(e)); time.sleep(5)
+                  time.sleep(30)
+              raise SystemExit("Fehler: " + " | ".join(errs[-6:]))
+          pts = {}
+          rows, cols = 2, 3
+          for i in range(rows):
+              for j in range(cols):
+                  b = f"{S+(N-S)*i/rows:.5f},{W+(E-W)*j/cols:.5f},{S+(N-S)*(i+1)/rows:.5f},{W+(E-W)*(j+1)/cols:.5f}"
+                  for el in fetch(b):
+                      c = el.get("center") or {}
+                      lat, lon = el.get("lat", c.get("lat")), el.get("lon", c.get("lon"))
+                      if lat is None or lon is None:
+                          continue
+                      uid = f'{el["type"]}/{el["id"]}'
+                      pts[uid] = {"uid": uid, "id": el["id"], "osmType": el["type"], "lat": lat, "lon": lon, "tags": el.get("tags", {})}
+                  time.sleep(3)
+          if not pts:
+              raise SystemExit("keine Punkte erhalten")
+          try:
+              for g in run(f'[out:json][timeout:60];rel["boundary"="administrative"]["admin_level"="8"]({S},{W},{N},{E});out tags;'):
+                  name = (g.get("tags") or {}).get("name")
+                  if not name:
+                      continue
+                  for el in run(f'[out:json][timeout:90];area(id:{3600000000 + g["id"]})->.a;nwr["emergency"~"^({TYPES})$"](area.a);out ids;'):
+                      uid = f'{el["type"]}/{el["id"]}'
+                      if uid in pts:
+                          pts[uid]["gemeinde"] = name
+                  time.sleep(3)
+          except BaseException as e:
+              print("Gemeinden nicht ermittelt:", e)
+          ALLOWED = ["Briesen", "Burg", "Dissen", "Fehrow", "Guhrow", "Müschen", "Ruben", "Schmogrow", "Striesow", "Werben"]
+          ALIAS = {"saccasne": "Schmogrow", "brahmow": "Werben"}
+          def canon(n):
+              low = (n or "").lower().strip()
+              if low in ALIAS:
+                  return ALIAS[low]
+              first = re.split(r"[\s\-(,]+", low)[0]
+              if first in ALIAS:
+                  return ALIAS[first]
+              for a in ALLOWED:
+                  if a.lower() == first:
+                      return a
+              return None
+          def hav(a, b, c, d):
+              k = math.pi / 180
+              x = math.sin((c - a) * k / 2) ** 2 + math.cos(a * k) * math.cos(c * k) * math.sin((d - b) * k / 2) ** 2
+              return 12742000 * math.asin(math.sqrt(x))
+          try:
+              for g in run(f'[out:json][timeout:60];rel["boundary"="administrative"]["admin_level"~"^(9|10)$"]({S},{W},{N},{E});out tags;'):
+                  cn = canon((g.get("tags") or {}).get("name"))
+                  if not cn:
+                      continue
+                  for el in run(f'[out:json][timeout:90];area(id:{3600000000 + g["id"]})->.a;nwr["emergency"~"^({TYPES})$"](area.a);out ids;'):
+                      uid = f'{el["type"]}/{el["id"]}'
+                      if uid in pts:
+                          pts[uid]["ortsteil"] = cn
+                  time.sleep(3)
+          except BaseException as e:
+              print("Ortsteil-Grenzen nicht ermittelt:", e)
+          try:
+              places = []
+              for e in run(f'[out:json][timeout:60];node["place"~"^(village|hamlet|suburb|town|locality)$"]["name"]({S-0.05},{W-0.05},{N+0.05},{E+0.05});out body;'):
+                  cn = canon(e["tags"]["name"])
+                  if cn:
+                      places.append((e["lat"], e["lon"], cn))
+              for p in pts.values():
+                  if "ortsteil" in p or not places:
+                      continue
+                  b = min(places, key=lambda q: hav(p["lat"], p["lon"], q[0], q[1]))
+                  if hav(p["lat"], p["lon"], b[0], b[1]) <= 3000:
+                      p["ortsteil"] = b[2]
+          except BaseException as e:
+              print("Ortsnamen nicht ermittelt:", e)
+          out = {"generated": datetime.datetime.now(datetime.timezone.utc).isoformat(), "points": list(pts.values())}
+          json.dump(out, open("points.json", "w"), ensure_ascii=False, separators=(",", ":"))
+          print(len(pts), "Punkte gespeichert")
+          PY
+
+      - name: points.json im Repository sichern
+        run: |
+          if [ -f points.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add points.json
+            if ! git diff --cached --quiet; then
+              git commit -m "Punkte aktualisiert" || true
+              git push || echo "::warning::points.json konnte nicht gespeichert werden"
+            fi
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - name: Seite zusammenstellen
+        run: |
+          mkdir _site
+          for f in index.html sw.js manifest.webmanifest icon-192.png icon-512.png points.json wehren.json; do
+            if [ -f "$f" ]; then cp "$f" _site/; else echo "::warning::$f fehlt"; fi
+          done
+          if [ -d logos ]; then cp -r logos _site/; fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
