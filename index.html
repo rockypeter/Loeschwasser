@@ -83,12 +83,12 @@
     ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
     @media print {
       html, body { height: auto !important; overflow: visible !important; }
-      body > *:not(#protoModal) { display: none !important; }
-      #protoModal { position: static !important; display: block !important; background: #fff !important; backdrop-filter: none !important; padding: 0 !important; }
-      #protoModal .no-print { display: none !important; }
-      #protoSheet { max-height: none !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; }
-      #protoSheet > div { overflow: visible !important; }
-      #protoModal input, #protoModal select { border: none !important; background: transparent !important; -webkit-appearance: none; appearance: none; }
+      body > *:not(.print-open) { display: none !important; }
+      .print-open { position: static !important; display: block !important; background: #fff !important; backdrop-filter: none !important; padding: 0 !important; }
+      .print-open .no-print { display: none !important; }
+      .print-open .sheet { max-height: none !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; }
+      .print-open .sheet > div { overflow: visible !important; }
+      .print-open input, .print-open select { border: none !important; background: transparent !important; -webkit-appearance: none; appearance: none; }
       @page { size: A4 landscape; margin: 10mm; }
     }
   </style>
@@ -180,6 +180,7 @@
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-teal-400 shrink-0"></span> Tiefbrunnen</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span> Zisterne/Tank</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span> Löschteich/Saugst.</div>
+        <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = dieses Jahr geprüft, oranger Ring = noch offen</div>
       </div>
     </div>
   </div>
@@ -211,9 +212,9 @@
 
   <!-- PRÜFPROTOKOLL FLACHSPIEGELBRUNNEN -->
   <div id="protoModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2">
-    <div id="protoSheet" class="bg-white text-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+    <div id="protoSheet" class="sheet bg-white text-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
-        <button onclick="window.print()" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
+        <button onclick="printSheet('protoModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
         <button onclick="protoCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
         <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="protoOtSel" onchange="protoSwitch(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
         <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert.</span>
@@ -224,7 +225,7 @@
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
         <table class="w-full border-collapse min-w-[860px]">
           <thead><tr class="bg-slate-200 text-left">
-            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400">Aufbau</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="no-print border border-slate-400 w-8"></th>
+            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400">Aufbau</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
@@ -232,7 +233,30 @@
     </div>
   </div>
 
-  <!-- 1. DUBLETTEN WARNUNG MODAL -->  <!-- 1. DUBLETTEN WARNUNG MODAL -->
+  <!-- LÖSCHWASSERLISTE -->
+  <div id="listModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2">
+    <div class="sheet bg-white text-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
+        <button onclick="printSheet('listModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
+        <button onclick="listCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
+        <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="listOtSel" onchange="renderList()" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
+        <span class="flex-1"></span>
+        <button onclick="toggleModal('listModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
+      </div>
+      <div class="overflow-auto p-3 text-xs">
+        <h2 class="text-base font-extrabold">Löschwasserentnahmestellen</h2>
+        <p id="listSummary" class="mb-2 text-sm"></p>
+        <table class="w-full border-collapse min-w-[860px]">
+          <thead><tr class="bg-slate-200 text-left">
+            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Art</th><th class="p-1.5 border border-slate-400">Bezeichnung / Ortsangabe</th><th class="p-1.5 border border-slate-400">Ortsteil</th><th class="p-1.5 border border-slate-400">Nennweite</th><th class="p-1.5 border border-slate-400">Durchfluss</th><th class="p-1.5 border border-slate-400">Kapazität</th><th class="p-1.5 border border-slate-400">Beschreibung</th>
+          </tr></thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. DUBLETTEN WARNUNG MODAL -->
   <div id="duplicateModal" class="hidden fixed inset-0 z-[600] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-3 sm:p-4">
     <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl max-w-md w-full p-5 shadow-2xl space-y-4">
       <div class="flex items-start gap-3">
@@ -485,7 +509,7 @@
 
         <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
           <div class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-envelope-circle-check text-emerald-400 text-sm"></i>Bericht per E-Mail</div>
-          <p class="text-slate-400 text-[11px]">Beim Beenden oder Wegdrücken der App werden offene Erfassungen als OSM-Notizen gesendet und gesammelt an feuerwehr.Schmogrow@gmail.com gemeldet, mit Links zu den OSM-Seiten. <span id="digestInfo" class="text-amber-400"></span></p>
+          <p class="text-slate-400 text-[11px]">Beim Beenden oder Wegdrücken der App werden offene Erfassungen als OSM-Notizen gesendet und gesammelt per E-Mail gemeldet, mit Links zu den OSM-Seiten. <span id="digestInfo" class="text-amber-400"></span></p>
           <button onclick="sendDigest(true)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 transition shadow"><i class="fa-solid fa-envelope"></i>Tagesbericht jetzt senden</button>
         </div>
 
@@ -493,10 +517,13 @@
           <div class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-stethoscope text-cyan-400 text-sm"></i>Kartendaten & Verbindung</div>
           <div class="grid grid-cols-2 gap-2">
             <button onclick="runDiagnose()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Server testen</button>
+            <button onclick="openList()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-list mr-1.5"></i>Löschwasserliste (Drucken / CSV)</button>
+            <button onclick="forceUpdate()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-rotate mr-1.5"></i>App neu laden (Update erzwingen)</button>
             <button onclick="saveStart()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-location-dot mr-1.5"></i>Startpunkt = aktuelle Kartenmitte</button>
             <button onclick="clearPointCache()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Cache leeren</button>
           </div>
           <label class="block w-full py-2.5 text-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition cursor-pointer"><i class="fa-solid fa-file-import mr-1.5"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="importPoints(event)"></label>
+          <div id="verInfo" class="text-[11px] text-slate-400 font-mono"></div>
           <div id="diagOut" class="text-[11px] text-slate-400 font-mono break-all"></div>
         </div>
 
@@ -548,8 +575,8 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const MAIL_TO = 'feuerwehr.Schmogrow@gmail.com';
-    const WEB3FORMS_KEY = '3811682d-6504-47e2-85aa-c93fe4568d6a'; // Access Key von web3forms.com (für MAIL_TO erstellt) hier eintragen => Versand ohne Rückfrage
+    const APP_VERSION = '2026-10-28 b';
+    const WEB3FORMS_KEY = '3811682d-6504-47e2-85aa-c93fe4568d6a'; // Access Key von web3forms.com (für die Wehr-Adresse erstellt) hier eintragen => Versand ohne Rückfrage
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
     const dayKey = d => new Date(d).toLocaleDateString('sv-SE');
@@ -587,8 +614,8 @@
           const j = await r.json(); if (!j.success) throw new Error(j.message);
           done(); showToast('Tagesbericht per E-Mail gesendet', 'fa-envelope-circle-check');
         } catch(e) { showToast('E-Mail-Versand fehlgeschlagen – später erneut', 'fa-triangle-exclamation'); }
-      } else if (manual || confirm('Tagesbericht jetzt an ' + MAIL_TO + ' senden? (Mail-App öffnet sich)')) {
-        done(); location.href = `mailto:${MAIL_TO}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+      } else if (manual || confirm('Bericht jetzt per E-Mail senden? (Mail-App öffnet sich)')) {
+        const to = mailTo(); if (!to) return; done(); location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
       } else { try { localStorage.setItem('ffw_digest_last', dayKey(Date.now())); } catch(e){} }
     }
     function checkDigest(){
@@ -615,6 +642,8 @@
     // Beim Beenden / Wegdrücken: Versand im Hintergrund (keepalive überlebt das Schließen der Seite)
     function sendDigestOnLeave(){
       if (!WEB3FORMS_KEY || !digestLog.length || !navigator.onLine) return;
+      if (Date.now() - (window._lastLeave || 0) < 120000) return;
+      window._lastLeave = Date.now();
       const snap = digestLog.slice();
       const body = JSON.stringify({ access_key: WEB3FORMS_KEY, subject: `FFW Schmogrow Löschwasser-Bericht ${new Date().toLocaleDateString('de-DE')}`, from_name: 'FFW Schmogrow App', message: digestText() });
       digestLog = []; saveDigest(); renderDigestInfo();
@@ -719,6 +748,7 @@
     function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>cacheSet('points_v3',{ts:Date.now(),dataTs,points:existingWaterPoints}),1000); }
 
     function setStatus(txt,color){
+      renderVerInfo();
       document.getElementById('statusText').textContent = txt;
       document.getElementById('statusDot').className = `w-2.5 h-2.5 rounded-full bg-${color}-500 animate-pulse`;
     }
@@ -891,7 +921,7 @@
     function renderSinglePointMarker(pt) {
       const tags = pt.tags || {};
       const style = getMarkerStyle(tags);
-      const marker = L.circleMarker([pt.lat, pt.lon], { radius: 9, fillColor: style.color, color: '#FFFFFF', weight: 2.5, fillOpacity: 0.95 });
+      const marker = L.circleMarker([pt.lat, pt.lon], { radius: 9, fillColor: style.color, ...ringOpts(pt, style), fillOpacity: 0.95 });
       const st = tags['operational_status'];
       const popupHtml = `
         <div class="space-y-2 p-1 text-xs">
@@ -900,7 +930,7 @@
             <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">OSM ${esc(pt.uid)}</span>
           </div>
           <div class="space-y-1 text-slate-300">${popupRows(tags)}</div>
-          ${style.title === 'Flachspiegelbrunnen' ? `<button onclick="openProtocol('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Ortsteil</button>` : ''}
+          ${style.title === 'Flachspiegelbrunnen' ? `<p class="text-[11px] text-slate-400 mt-1">Prüfung: ${statusText(pt)}</p><button onclick="openProtocol('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Ortsteil</button>` : ''}
           <details class="mt-1"><summary class="cursor-pointer text-[10px] text-slate-500">OSM-Tags anzeigen</summary><pre class="text-[10px] text-slate-400 whitespace-pre-wrap break-all mt-1">${esc(Object.entries(tags).map(([k, v]) => k + '=' + v).join('\n'))}</pre></details>
           <button onclick="openEditFormForExisting('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition">
             <i class="fa-solid fa-clipboard-check"></i> Gegebenheiten prüfen
@@ -987,7 +1017,7 @@
     }
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
     function loadProtocol(ot){
-      protoOt = ot;
+      protoOt = ot; testedMap = buildTested();
       protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
         .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
       try { protoData = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e) { protoData = {}; }
@@ -998,7 +1028,7 @@
       if (!ots.includes(protoOt)) ots.push(protoOt);
       document.getElementById('protoOtSel').innerHTML = ots.map(o => `<option value="${esc(o)}"${o === protoOt ? ' selected' : ''}>${esc(o || '(ohne Zuordnung)')}</option>`).join('');
       const gem = (protoWells[0] || {}).gemeinde;
-      document.getElementById('protoTitle').textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '');
+      protoHeader();
       document.getElementById('protoStand').textContent = new Date().toLocaleDateString('de-DE');
       const cell = 'p-1 border border-slate-400', inp = 'w-full bg-white border border-slate-300 rounded px-1 py-1';
       document.getElementById('protoBody').innerHTML = protoWells.map((pt, i) => {
@@ -1015,11 +1045,15 @@
           <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" value="${esc(d.leistung || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"></td>
+          <td class="${cell} text-center"><img data-photo="${esc(pt.uid)}" class="hidden mx-auto w-16 h-16 object-cover rounded border border-slate-300 mb-1">
+            <label class="no-print inline-block px-2 py-1 bg-slate-200 rounded cursor-pointer"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="protoPhoto('${esc(pt.uid)}', this)"></label>
+            <button onclick="delPhoto('${esc(pt.uid)}')" title="Foto löschen" class="no-print text-slate-400 hover:text-red-600 text-[10px]">✕</button></td>
           <td class="no-print ${cell} text-center"><button onclick="protoClear('${esc(pt.uid)}')" title="Zeile leeren" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="9" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
+      }).join('') || '<tr><td colspan="10" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
+      loadPhotos();
     }
-    function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} }
+    function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); }
     function protoEdit(e){
       const el = e.target, tr = el.closest('tr');
       if (!tr || !el.dataset.f) return;
@@ -1047,6 +1081,121 @@
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
       a.download = `Pruefprotokoll_${(protoOt || 'Ortsteil').replace(/\W+/g, '_')}_${todayISO()}.csv`;
       a.click();
+    }
+
+    // ==================== DRUCKEN, PRÜFSTATUS, FOTOS, LISTE, VERSION ====================
+    function printSheet(id){
+      document.querySelectorAll('.print-open').forEach(m => m.classList.remove('print-open'));
+      const m = document.getElementById(id); m.classList.add('print-open');
+      const done = () => { m.classList.remove('print-open'); window.removeEventListener('afterprint', done); };
+      window.addEventListener('afterprint', done);
+      window.print();
+    }
+    function buildTested(){
+      const m = {};
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (!k || !k.startsWith('ffw_proto_')) continue;
+          const d = JSON.parse(localStorage.getItem(k) || '{}');
+          Object.keys(d).forEach(uid => { const e = d[uid]; if (e && e.date && (e.pump || e.zeit || e.leistung || e.aufbau) && (!m[uid] || e.date > m[uid])) m[uid] = e.date; });
+        }
+      } catch(e){}
+      return m;
+    }
+    let testedMap = buildTested();
+    const thisYear = () => String(new Date().getFullYear());
+    const isTestedNow = uid => !!testedMap[uid] && testedMap[uid].slice(0, 4) === thisYear();
+    function statusText(pt){ const d = testedMap[pt.uid]; return d ? (isTestedNow(pt.uid) ? 'geprüft am ' : 'zuletzt geprüft am ') + d.split('-').reverse().join('.') : 'noch nicht geprüft'; }
+    function ringOpts(pt, style){
+      if (style.title !== 'Flachspiegelbrunnen') return { color: '#FFFFFF', weight: 2.5 };
+      return isTestedNow(pt.uid) ? { color: '#22C55E', weight: 4.5 } : { color: '#F59E0B', weight: 4.5 };
+    }
+    function refreshRings(){
+      testedMap = buildTested();
+      existingWaterPoints.forEach(pt => { const o = markerByUid.get(pt.uid); if (o) o.marker.setStyle(ringOpts(pt, getMarkerStyle(pt.tags || {}))); });
+    }
+    function protoHeader(){
+      const gem = (protoWells[0] || {}).gemeinde, n = protoWells.filter(p => isTestedNow(p.uid)).length, t = document.getElementById('protoTitle');
+      if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + thisYear() + ' geprüft';
+    }
+
+    function shrinkImage(file, max = 900, q = 0.65){
+      return new Promise((res, rej) => {
+        const img = new Image(), url = URL.createObjectURL(file);
+        img.onload = () => {
+          const sc = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+          c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', q));
+        };
+        img.onerror = () => rej(new Error('Bild nicht lesbar'));
+        img.src = url;
+      });
+    }
+    function setPhoto(uid, d){
+      const im = document.querySelector(`img[data-photo="${uid}"]`); if (!im) return;
+      if (d) { im.src = d; im.classList.remove('hidden'); } else { im.removeAttribute('src'); im.classList.add('hidden'); }
+    }
+    async function protoPhoto(uid, input){
+      const f = input.files[0]; if (!f) return;
+      try { const d = await shrinkImage(f); await cacheSet('photo:' + uid, d); setPhoto(uid, d); showToast('Foto gespeichert', 'fa-camera'); }
+      catch(e) { showToast('Foto fehlgeschlagen', 'fa-triangle-exclamation'); }
+      input.value = '';
+    }
+    async function delPhoto(uid){ await cacheSet('photo:' + uid, null); setPhoto(uid, null); }
+    async function loadPhotos(){ for (const pt of protoWells) setPhoto(pt.uid, await cacheGet('photo:' + pt.uid)); }
+
+    function listData(){
+      const sel = document.getElementById('listOtSel').value;
+      return existingWaterPoints.filter(p => sel === '__all' || ortsteilOf(p) === sel).map(p => {
+        const t = p.tags || {}, dn = pickTag(t, ['fire_hydrant:diameter', 'diameter'], /diameter/);
+        const nm = [t.ref, t.name].filter(Boolean).join(' – ') || ((t['addr:street'] || '') + ' ' + (t['addr:housenumber'] || '')).trim();
+        return { pt: p, typ: getMarkerStyle(t).title, name: nm, loc: getLoc(p), ot: ortsteilOf(p),
+          dn: dn ? (/^\d+$/.test(dn) ? 'DN ' + dn : dn) : '',
+          flow: pickTag(t, ['flow_rate', 'fire_hydrant:flow_rate', 'fire_hydrant:flow_capacity', 'flow_capacity'], /flow/),
+          cap: pickTag(t, ['capacity', 'water_volume', 'water_tank:volume', 'volume'], /(volume|capacity)/),
+          desc: t['description:de'] || t.description || t.note || '' };
+      }).sort((a, b) => a.ot.localeCompare(b.ot, 'de') || a.typ.localeCompare(b.typ, 'de') || (a.name + a.loc).localeCompare(b.name + b.loc, 'de', { numeric: true }));
+    }
+    function openList(){
+      const ots = [...new Set(existingWaterPoints.map(ortsteilOf))].sort((a, b) => a.localeCompare(b, 'de'));
+      document.getElementById('listOtSel').innerHTML = '<option value="__all">Alle Ortsteile</option>' + ots.map(o => `<option value="${esc(o)}">${esc(o || '(ohne Zuordnung)')}</option>`).join('');
+      toggleModal('listModal', true); renderList();
+    }
+    function renderList(){
+      const rows = listData(), cnt = {};
+      rows.forEach(r => cnt[r.typ] = (cnt[r.typ] || 0) + 1);
+      document.getElementById('listSummary').textContent = rows.length + ' Stellen: ' + Object.keys(cnt).map(k => cnt[k] + ' ' + k).join(', ') + ' | Stand ' + new Date().toLocaleDateString('de-DE');
+      const cell = 'p-1 border border-slate-400';
+      document.getElementById('listBody').innerHTML = rows.map((r, i) => `<tr><td class="${cell} text-center">${i + 1}</td><td class="${cell}">${esc(r.typ)}</td><td class="${cell}"><div class="font-bold">${esc(r.name)}</div><div>${esc(r.loc)}</div></td><td class="${cell}">${esc(r.ot)}</td><td class="${cell}">${esc(r.dn)}</td><td class="${cell}">${esc(r.flow)}</td><td class="${cell}">${esc(r.cap)}</td><td class="${cell}">${esc(r.desc)}</td></tr>`).join('') || '<tr><td colspan="8" class="p-4 text-center text-slate-500">Keine Einträge.</td></tr>';
+    }
+    function listCsv(){
+      const head = ['Nr', 'Art', 'Bezeichnung', 'Ortsangabe', 'Ortsteil', 'Nennweite', 'Durchfluss', 'Kapazität', 'Beschreibung', 'Koordinaten', 'OSM-ID'];
+      const rows = [head].concat(listData().map((r, i) => [i + 1, r.typ, r.name, r.loc, r.ot, r.dn, r.flow, r.cap, r.desc, r.pt.lat.toFixed(5) + ', ' + r.pt.lon.toFixed(5), r.pt.uid]));
+      const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = `Loeschwasserliste_${todayISO()}.csv`; a.click();
+    }
+
+    function renderVerInfo(){
+      const el = document.getElementById('verInfo'); if (!el) return;
+      const f = t => t ? new Date(t).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
+      el.innerHTML = `App-Version: ${APP_VERSION}<br>Datenstand: ${f(dataTs)}<br>Punkte: ${existingWaterPoints.length}<br>Offline-Modus: ${navigator.serviceWorker && navigator.serviceWorker.controller ? 'aktiv' : 'aus'}`;
+    }
+    async function forceUpdate(){
+      try {
+        const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.unregister()));
+        const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k)));
+      } catch(e){}
+      showToast('Lade neu…', 'fa-rotate');
+      setTimeout(() => location.reload(), 600);
+    }
+    function mailTo(){
+      let a = ''; try { a = localStorage.getItem('ffw_mail_to') || ''; } catch(e){}
+      if (!a) { a = (prompt('E-Mail-Adresse für den Bericht (wird nur auf diesem Gerät gespeichert):') || '').trim(); if (a) { try { localStorage.setItem('ffw_mail_to', a); } catch(e){} } }
+      return a;
     }
 
     // ==================== DIAGNOSE ====================
