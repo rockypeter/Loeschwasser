@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de" class="h-full w-full overflow-hidden select-none">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
@@ -89,6 +90,7 @@
       .print-open .sheet { max-height: none !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; }
       .print-open .sheet > div { overflow: visible !important; }
       .print-open input, .print-open select { border: none !important; background: transparent !important; -webkit-appearance: none; appearance: none; }
+      .print-open * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       @page { size: A4 landscape; margin: 10mm; }
     }
   </style>
@@ -217,6 +219,8 @@
         <button onclick="printSheet('protoModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
         <button onclick="protoCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
         <button onclick="protoRelocate()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-location-crosshairs"></i>Standort prüfen</button>
+        <button onclick="swShow()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
+        <button onclick="protoMail()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-envelope"></i>Per E-Mail sichern</button>
         <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="protoOtSel" onchange="protoSwitch(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
         <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert.</span>
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
@@ -230,6 +234,52 @@
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOPPUHR -->
+  <div id="swPill" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[580] bg-slate-900/95 border-2 border-cyan-500 rounded-2xl px-3 py-2 flex items-center gap-2 shadow-2xl backdrop-blur">
+    <i class="fa-solid fa-stopwatch text-cyan-400"></i>
+    <span id="swTime" class="font-mono font-extrabold text-2xl text-white tabular-nums">00:00</span>
+    <button id="swBtn" onclick="swToggle()" class="w-9 h-9 rounded-xl text-white bg-emerald-600"><i class="fa-solid fa-play"></i></button>
+    <button onclick="swReset()" title="Zurücksetzen" class="w-9 h-9 rounded-xl bg-slate-700 text-white"><i class="fa-solid fa-rotate-left"></i></button>
+    <button onclick="swHide()" title="Schließen" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 font-bold">✕</button>
+  </div>
+
+  <!-- ÄNDERUNGSPROTOKOLL -->
+  <div id="auditModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-800 shrink-0">
+        <h2 class="font-extrabold text-white text-sm flex-1"><i class="fa-solid fa-clock-rotate-left text-cyan-400 mr-1.5"></i>Änderungsprotokoll</h2>
+        <button onclick="auditCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs">CSV</button>
+        <button onclick="toggleModal('auditModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button>
+      </div>
+      <div id="auditList" class="p-3 overflow-y-auto space-y-1.5 text-[11px] text-slate-300"></div>
+    </div>
+  </div>
+
+  <!-- KARTE DRUCKEN -->
+  <div id="mapPrintModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2">
+    <div class="sheet bg-white text-slate-900 rounded-2xl max-w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
+        <button onclick="printSheet('mapPrintModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
+        <label class="text-xs font-bold flex items-center gap-1.5">Format <select id="mpOri" onchange="mapPrintLayout(true)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"><option value="land">A4 quer</option><option value="port">A4 hoch</option></select></label>
+        <label class="text-xs font-bold flex items-center gap-1.5">Karte <select id="mpBg" onchange="mapPrintBg()" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"><option value="osm">OSM</option><option value="sat">Luftbild</option></select></label>
+        <span class="text-[11px] text-slate-500 flex-1 min-w-[140px]">Karte verschieben und zoomen, dann drucken.</span>
+        <button onclick="toggleModal('mapPrintModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
+      </div>
+      <div class="overflow-auto p-2">
+        <div id="mpBox" class="relative bg-white" style="width:277mm;height:185mm">
+          <div id="printMap" style="position:absolute;inset:0;isolation:isolate"></div>
+          <div id="mpTitle" class="absolute top-2 left-2 bg-white/90 border border-slate-500 rounded px-2 py-1 text-xs font-bold" style="z-index:500"></div>
+          <div class="absolute top-2 right-2 bg-white/90 border border-slate-500 rounded px-2 py-1 text-center font-extrabold leading-none text-sm" style="z-index:500">N<br>&uarr;</div>
+          <div id="mpLegend" class="absolute bottom-2 left-2 bg-white/90 border border-slate-500 rounded px-2 py-1 text-[10px] leading-tight" style="z-index:500"></div>
+        </div>
+        <div style="page-break-before:always;padding-top:4mm" class="text-xs">
+          <h3 id="mpListTitle" class="font-extrabold text-sm mb-1"></h3>
+          <table class="w-full border-collapse"><thead><tr class="bg-slate-200 text-left"><th class="p-1 border border-slate-400 w-8">Nr.</th><th class="p-1 border border-slate-400">Art</th><th class="p-1 border border-slate-400">Bezeichnung / Ortsangabe</th><th class="p-1 border border-slate-400">Nennweite</th><th class="p-1 border border-slate-400">Durchfluss</th><th class="p-1 border border-slate-400">Kapazität</th></tr></thead><tbody id="mpListBody"></tbody></table>
+        </div>
       </div>
     </div>
   </div>
@@ -250,6 +300,7 @@
       <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
         <button onclick="printSheet('listModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
         <button onclick="listCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
+        <button onclick="openMapPrint()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-map"></i>Karte A4</button>
         <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="listOtSel" onchange="renderList()" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
         <span class="flex-1"></span>
         <button onclick="toggleModal('listModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
@@ -528,6 +579,9 @@
           <div class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-stethoscope text-cyan-400 text-sm"></i>Kartendaten & Verbindung</div>
           <div class="grid grid-cols-2 gap-2">
             <button onclick="runDiagnose()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Server testen</button>
+            <button onclick="openAudit()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-clock-rotate-left mr-1.5"></i>Änderungsprotokoll anzeigen</button>
+            <button onclick="backupSave()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-floppy-disk mr-1.5"></i>Sicherung speichern</button>
+            <label class="py-2.5 text-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition cursor-pointer"><i class="fa-solid fa-upload mr-1.5"></i>Sicherung einspielen<input type="file" accept=".json,application/json" class="hidden" onchange="backupRestore(event)"></label>
             <button onclick="openList()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-list mr-1.5"></i>Löschwasserliste (Drucken / CSV)</button>
             <button onclick="forceUpdate()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-rotate mr-1.5"></i>App neu laden (Update erzwingen)</button>
             <button onclick="saveStart()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-location-dot mr-1.5"></i>Startpunkt = aktuelle Kartenmitte</button>
@@ -587,7 +641,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-10-28 c';
+    const APP_VERSION = '2026-10-29 a';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -614,12 +668,13 @@
         if (e.notes) t += `   Hinweis: ${e.notes}\n`;
         osmLinks(e).forEach(l => t += `   ${l}\n`);
       });
+      t += auditText();
       return t;
     }
     async function sendDigest(manual){
-      if (!digestLog.length) { if (manual) showToast('Keine offenen Erfassungen.', 'fa-info-circle'); return; }
+      if (!digestLog.length && !auditPending()) { if (manual) showToast('Keine offenen Erfassungen.', 'fa-info-circle'); return; }
       const subject = `${(currentWehr() || {}).name || 'FFW'} Löschwasser-Tagesbericht ${new Date().toLocaleDateString('de-DE')}`, text = digestText();
-      const done = () => { digestLog = []; saveDigest(); renderDigestInfo(); try { localStorage.setItem('ffw_digest_last', dayKey(Date.now())); } catch(e){} };
+      const done = () => { markAuditSent(); digestLog = []; saveDigest(); renderDigestInfo(); try { localStorage.setItem('ffw_digest_last', dayKey(Date.now())); } catch(e){} };
       if (reportKey()) {
         try {
           const r = await fetch('https://api.web3forms.com/submit', { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify({ access_key: reportKey(), subject, from_name:((currentWehr() || {}).name || 'FFW') + ' App', message: text }) });
@@ -631,7 +686,7 @@
       } else { try { localStorage.setItem('ffw_digest_last', dayKey(Date.now())); } catch(e){} }
     }
     function checkDigest(){
-      if (!digestLog.length) return;
+      if (!digestLog.length && !auditPending()) return;
       if (!reportKey() && localStorage.getItem('ffw_digest_last') === dayKey(Date.now())) return;
       sendDigest(false);
     }
@@ -654,20 +709,20 @@
     }
     // Beim Beenden / Wegdrücken: Versand im Hintergrund (keepalive überlebt das Schließen der Seite)
     function sendDigestOnLeave(){
-      if (!reportKey() || !digestLog.length || !navigator.onLine) return;
+      if (!reportKey() || (!digestLog.length && !auditPending()) || !navigator.onLine) return;
       if (Date.now() - (window._lastLeave || 0) < 120000) return;
       window._lastLeave = Date.now();
-      const snap = digestLog.slice();
+      const snap = digestLog.slice(), prevSent = auditSentTs();
       const body = JSON.stringify({ access_key: reportKey(), subject: `${(currentWehr() || {}).name || 'FFW'} Löschwasser-Bericht ${new Date().toLocaleDateString('de-DE')}`, from_name: ((currentWehr() || {}).name || 'FFW') + ' App', message: digestText() });
-      digestLog = []; saveDigest(); renderDigestInfo();
-      const restore = () => { digestLog = snap.concat(digestLog); saveDigest(); renderDigestInfo(); };
+      markAuditSent(); digestLog = []; saveDigest(); renderDigestInfo();
+      const restore = () => { setAuditSent(prevSent); digestLog = snap.concat(digestLog); saveDigest(); renderDigestInfo(); };
       fetch('https://api.web3forms.com/submit', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body })
         .then(r => r.json()).then(j => { if (!j.success) restore(); }).catch(restore);
     }
     function renderSentNotes(){ renderDigestInfo(); const el=document.getElementById('sentNotesList'); if(!el) return; el.innerHTML = sentNotes.length ? sentNotes.slice(0,30).map(n=>`<a href="https://www.openstreetmap.org/note/${n.id}" target="_blank" rel="noopener" class="block text-cyan-400 underline">Notiz #${n.id} – ${new Date(n.ts).toLocaleString('de-DE')}</a>`).join('') : '<p class="italic text-slate-500">Noch keine Notizen gesendet.</p>'; }
 
     window.addEventListener('DOMContentLoaded', () => {
-      initMap(); initLegendDrag(); initWehr(); loadAmtBurgData(false); updateQueueBadge();
+      initMap(); initLegendDrag(); initWehr(); swRender(); loadAmtBurgData(false); updateQueueBadge();
       setTimeout(checkDigest, 3000);
       document.addEventListener('visibilitychange', () => { if (document.hidden) leaveSync(); });
       window.addEventListener('pagehide', leaveSync);
@@ -944,7 +999,7 @@
             <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">OSM ${esc(pt.uid)}</span>
           </div>
           <div class="space-y-1 text-slate-300">${popupRows(tags)}</div>
-          ${style.title === 'Flachspiegelbrunnen' ? `<p class="text-[11px] text-slate-400 mt-1">Prüfung: ${statusText(pt)}</p><button onclick="openProtocol('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Ortsteil</button>` : ''}
+          ${style.title === 'Flachspiegelbrunnen' ? `<p class="text-[11px] text-slate-400 mt-1">Prüfung: ${statusText(pt)}</p><button onclick="openProtocol('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Ortsteil</button><button onclick="swShow()" class="w-full mt-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-stopwatch"></i> Stoppuhr</button>` : ''}
           <details class="mt-1"><summary class="cursor-pointer text-[10px] text-slate-500">OSM-Tags anzeigen</summary><pre class="text-[10px] text-slate-400 whitespace-pre-wrap break-all mt-1">${esc(Object.entries(tags).map(([k, v]) => k + '=' + v).join('\n'))}</pre></details>
           <button onclick="openEditFormForExisting('${esc(pt.uid)}')" class="w-full mt-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition">
             <i class="fa-solid fa-clipboard-check"></i> Gegebenheiten prüfen
@@ -1075,9 +1130,10 @@
       if (!tr || !el.dataset.f) return;
       const uid = tr.dataset.uid;
       const pt0 = protoWells.find(p => p.uid === uid); if (pt0 && !editStatus(pt0, protoPos).ok) return;
-      if (el.dataset.f === 'loc') { const pt = existingWaterPoints.find(p => p.uid === uid); if (pt) setLocFor(pt, el.value.trim()); return; }
+      if (el.dataset.f === 'loc') { const pt = existingWaterPoints.find(p => p.uid === uid); if (pt) { setLocFor(pt, el.value.trim()); if (e.type === 'change') audit('Ortsangabe', el.value.trim(), pt); } return; }
       const d = protoData[uid] || (protoData[uid] = {});
       d[el.dataset.f] = el.value;
+      if (e.type === 'change') audit('Protokoll', el.dataset.f + ' = ' + el.value, pt0);
       if (el.dataset.f !== 'date' && !d.date) { d.date = todayISO(); tr.querySelector('[data-f=date]').value = d.date; }
       if (el.dataset.f !== 'pruefer' && !d.pruefer) { try { d.pruefer = localStorage.getItem('ffw_inspector') || ''; } catch(x){} tr.querySelector('[data-f=pruefer]').value = d.pruefer; }
       if (el.dataset.f === 'pump') {
@@ -1087,7 +1143,7 @@
       }
       protoSave();
     }
-    function protoClear(uid){ delete protoData[uid]; protoSave(); renderProtocol(); }
+    function protoClear(uid){ audit('Protokollzeile geleert', '', existingWaterPoints.find(p => p.uid === uid) || { uid }); delete protoData[uid]; protoSave(); renderProtocol(); }
     function protoCsv(){
       const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Prüfer']].concat(protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
@@ -1156,11 +1212,11 @@
     }
     async function protoPhoto(uid, input){
       const f = input.files[0]; if (!f) return;
-      try { const d = await shrinkImage(f); await cacheSet('photo:' + uid, d); setPhoto(uid, d); showToast('Foto gespeichert', 'fa-camera'); }
+      try { const d = await shrinkImage(f); await cacheSet('photo:' + uid, d); setPhoto(uid, d); audit('Foto gespeichert', '', { uid }); showToast('Foto gespeichert', 'fa-camera'); }
       catch(e) { showToast('Foto fehlgeschlagen', 'fa-triangle-exclamation'); }
       input.value = '';
     }
-    async function delPhoto(uid){ await cacheSet('photo:' + uid, null); setPhoto(uid, null); }
+    async function delPhoto(uid){ audit('Foto gelöscht', '', { uid }); await cacheSet('photo:' + uid, null); setPhoto(uid, null); }
     async function loadPhotos(){ for (const pt of protoWells) setPhoto(pt.uid, await cacheGet('photo:' + pt.uid)); }
 
     function listData(){
@@ -1258,6 +1314,7 @@
       const id = document.getElementById('wehrSel').value; if (!id) return;
       try { localStorage.setItem('ffw_wehr', id); } catch(e){}
       document.getElementById('wehrModal').classList.add('hidden');
+      audit('Feuerwehr gewählt', (currentWehr() || {}).name);
       applyWehrUI(true);
     }
     let logoOrig = '';
@@ -1337,6 +1394,169 @@
         body: JSON.stringify({ access_key: CFG.zentral.key, subject: `OSM-Meldung ${w.name}: ${getReadableType(rec.type)}`, from_name: w.name + ' (App)', message: centralText(rec) }) })
         .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); })
         .catch(() => { rec.centralSent = false; saveQueue(); });
+    }
+
+    // ==================== ÄNDERUNGSPROTOKOLL ====================
+    const AUDIT_KEY = 'ffw_audit';
+    const auditList = () => { try { return JSON.parse(localStorage.getItem(AUDIT_KEY) || '[]'); } catch(e) { return []; } };
+    const auditSentTs = () => { try { return localStorage.getItem('ffw_audit_sent') || ''; } catch(e) { return ''; } };
+    function setAuditSent(v){ try { localStorage.setItem('ffw_audit_sent', v); } catch(e){} }
+    const markAuditSent = () => setAuditSent(new Date().toISOString());
+    const auditPending = () => auditList().some(e => e.t > auditSentTs());
+    function audit(action, detail, pt){
+      try {
+        const w = currentWehr() || {}, list = auditList();
+        const e = { t: new Date().toISOString(), w: w.name || '?', by: localStorage.getItem('ffw_inspector') || '', a: action, d: String(detail || '').slice(0, 120) };
+        if (pt) {
+          e.u = pt.uid || '';
+          const la = Number(pt.lat), lo = Number(pt.lon !== undefined ? pt.lon : pt.lng);
+          if (!isNaN(la) && !isNaN(lo)) { e.la = +la.toFixed(5); e.lo = +lo.toFixed(5); if (lastPos && Date.now() - lastPos.t < 600000) e.m = Math.round(haversineDistance(lastPos.lat, lastPos.lng, la, lo)); }
+        }
+        list.push(e); localStorage.setItem(AUDIT_KEY, JSON.stringify(list.slice(-500)));
+      } catch(x){}
+    }
+    function auditLine(e){ return `${new Date(e.t).toLocaleString('de-DE')} | ${e.w}${e.by ? ' / ' + e.by : ''} | ${e.a}${e.d ? ': ' + e.d : ''}${e.u ? ' | ' + e.u : ''}${e.m != null ? ' | Abstand ' + e.m + ' m' : ''}`; }
+    function auditText(){
+      const l = auditList().filter(e => e.t > auditSentTs());
+      return l.length ? '\nÄnderungsprotokoll (' + l.length + ' Einträge):\n' + l.map(auditLine).join('\n') + '\n' : '';
+    }
+    function openAudit(){
+      const l = auditList().slice(-150).reverse();
+      document.getElementById('auditList').innerHTML = l.map(e => `<div class="p-2 bg-slate-950 border border-slate-800 rounded-xl">${esc(auditLine(e))}</div>`).join('') || '<p class="italic text-slate-500">Noch keine Einträge.</p>';
+      toggleModal('auditModal', true);
+    }
+    function downloadText(name, text, type){
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/plain;charset=utf-8' }));
+      a.download = name; a.click();
+    }
+    function auditCsv(){
+      const rows = [['Zeit', 'Feuerwehr', 'Prüfer', 'Aktion', 'Detail', 'Stelle', 'Breite', 'Länge', 'Abstand (m)']].concat(auditList().map(e => [e.t, e.w, e.by, e.a, e.d, e.u || '', e.la || '', e.lo || '', e.m != null ? e.m : '']));
+      downloadText(`Aenderungsprotokoll_${todayISO()}.csv`, '\ufeff' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+    }
+
+    // ==================== SICHERUNG ====================
+    function backupSave(){
+      const proto = {};
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('ffw_proto_')) proto[k] = localStorage.getItem(k); }
+      const b = { v: 1, t: new Date().toISOString(), wehr: (currentWehr() || {}).id || '', proto, loc: locMap(), audit: auditList(), inspector: localStorage.getItem('ffw_inspector') || '', queue: offlineQueue.map(q => ({ ...q, image: undefined })), digest: digestLog };
+      downloadText(`Sicherung_${b.wehr || 'ffw'}_${todayISO()}.json`, JSON.stringify(b), 'application/json');
+      audit('Sicherung gespeichert');
+      showToast('Sicherung gespeichert (ohne Fotos)', 'fa-floppy-disk');
+    }
+    function backupRestore(ev){
+      const f = ev.target.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const b = JSON.parse(rd.result); if (!b || b.v !== 1) throw new Error('keine Sicherungsdatei');
+          Object.keys(b.proto || {}).forEach(k => {
+            if (!k.startsWith('ffw_proto_')) return;
+            const inc = JSON.parse(b.proto[k] || '{}'), cur = JSON.parse(localStorage.getItem(k) || '{}');
+            Object.keys(inc).forEach(u => { if (!cur[u] || (inc[u].date || '') > (cur[u].date || '')) cur[u] = inc[u]; });
+            localStorage.setItem(k, JSON.stringify(cur));
+          });
+          const lm = locMap(); Object.keys(b.loc || {}).forEach(k => { if (!(k in lm)) lm[k] = b.loc[k]; }); localStorage.setItem(LOC_KEY, JSON.stringify(lm));
+          const au = auditList(), key = e => e.t + e.a + (e.u || '') + e.d, seen = new Set(au.map(key));
+          (b.audit || []).forEach(e => { if (!seen.has(key(e))) au.push(e); });
+          au.sort((x, y) => x.t < y.t ? -1 : 1); localStorage.setItem(AUDIT_KEY, JSON.stringify(au.slice(-500)));
+          if (b.inspector && !localStorage.getItem('ffw_inspector')) localStorage.setItem('ffw_inspector', b.inspector);
+          audit('Sicherung eingespielt'); refreshRings(); showToast('Sicherung eingespielt', 'fa-check-circle');
+        } catch(e) { showToast('Sicherung nicht lesbar: ' + e.message, 'fa-triangle-exclamation'); }
+      };
+      rd.readAsText(f); ev.target.value = '';
+    }
+    function protoText(){
+      const head = `Prüfprotokoll Flachspiegelbrunnen | ${document.getElementById('protoTitle').textContent} | Stand ${new Date().toLocaleDateString('de-DE')}`;
+      return head + '\n\n' + protoWells.map((pt, i) => {
+        const d = protoData[pt.uid] || {};
+        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${d.aufbau || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Prüfer: ${d.pruefer || '-'}`;
+      }).join('\n') + '\n';
+    }
+    async function protoMail(){
+      const text = protoText(), w = currentWehr() || {}, subject = `Prüfprotokoll ${protoOt || 'Ortsteil'} ${new Date().toLocaleDateString('de-DE')} (${w.name || 'FFW'})`;
+      if (reportKey()) {
+        try {
+          const r = await fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ access_key: reportKey(), subject, from_name: (w.name || 'FFW') + ' App', message: text }) });
+          const j = await r.json(); if (!j.success) throw new Error(j.message);
+          audit('Protokoll per E-Mail gesendet', protoOt); showToast('Protokoll per E-Mail gesendet', 'fa-envelope-circle-check');
+        } catch(e) { showToast('E-Mail fehlgeschlagen', 'fa-triangle-exclamation'); }
+      } else {
+        const to = mailTo(); if (!to) return;
+        location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+      }
+    }
+
+    // ==================== STOPPUHR ====================
+    const SW_KEY = 'ffw_sw';
+    let swState = (() => { try { return JSON.parse(localStorage.getItem(SW_KEY)) || {}; } catch(e) { return {}; } })();
+    let swTimer = null, swLockObj = null;
+    const swSave = () => { try { localStorage.setItem(SW_KEY, JSON.stringify(swState)); } catch(e){} };
+    const swElapsed = () => (swState.acc || 0) + (swState.run ? Date.now() - swState.start : 0);
+    function swFmt(ms){ const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60, p = n => String(n).padStart(2, '0'); return (h ? h + ':' : '') + p(m) + ':' + p(x); }
+    function swRender(){
+      const pill = document.getElementById('swPill'); if (!pill) return;
+      pill.classList.toggle('hidden', !swState.show);
+      document.getElementById('swTime').textContent = swFmt(swElapsed());
+      const b = document.getElementById('swBtn');
+      b.innerHTML = swState.run ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+      b.className = 'w-9 h-9 rounded-xl text-white ' + (swState.run ? 'bg-amber-600' : 'bg-emerald-600');
+      if (swState.run && !swTimer) swTimer = setInterval(swRender, 250);
+      if (!swState.run && swTimer) { clearInterval(swTimer); swTimer = null; }
+    }
+    async function swLock(on){ try { if (on && navigator.wakeLock) swLockObj = await navigator.wakeLock.request('screen'); else if (swLockObj) { await swLockObj.release(); swLockObj = null; } } catch(e){} }
+    function swShow(){ swState.show = true; swSave(); swRender(); }
+    function swToggle(){
+      if (swState.run) { swState.acc = swElapsed(); swState.run = false; swLock(false); }
+      else { swState.start = Date.now(); swState.run = true; swLock(true); }
+      swSave(); swRender();
+    }
+    function swReset(){ swState.acc = 0; swState.start = Date.now(); swSave(); swRender(); }
+    function swHide(){ if (swState.run) swToggle(); swState.show = false; swSave(); swRender(); }
+
+    // ==================== KARTE ZUM DRUCKEN (A4) ====================
+    let pmap = null, pLayer = null, pBase = null;
+    function openMapPrint(){ toggleModal('mapPrintModal', true); setTimeout(buildPrintMap, 80); }
+    function mapPrintBg(){
+      if (!pmap) return;
+      if (pBase) pmap.removeLayer(pBase);
+      pBase = document.getElementById('mpBg').value === 'sat'
+        ? L.tileLayer.wms('https://isk.geobasis-bb.de/mapproxy/dop20c/service/wms', { layers: 'bebb_dop20c', version: '1.3.0', format: 'image/png', transparent: false, maxNativeZoom: 19, maxZoom: 21, attribution: '&copy; GeoBasis-DE/LGB, dl-de/by-2-0' })
+        : L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap-Mitwirkende' });
+      pBase.addTo(pmap); pBase.bringToBack();
+    }
+    function mapPrintLayout(refit){
+      const port = document.getElementById('mpOri').value === 'port', box = document.getElementById('mpBox');
+      box.style.width = port ? '190mm' : '277mm'; box.style.height = port ? '268mm' : '185mm';
+      let st = document.getElementById('pageStyle');
+      if (!st) { st = document.createElement('style'); st.id = 'pageStyle'; document.head.appendChild(st); }
+      st.textContent = `@media print { @page { size: A4 ${port ? 'portrait' : 'landscape'}; margin: 10mm; } }`;
+      if (pmap) { pmap.invalidateSize(); if (refit) fitPrintMap(); }
+    }
+    let mpRows = [];
+    function fitPrintMap(){ if (mpRows.length) pmap.fitBounds(L.latLngBounds(mpRows.map(r => [r.pt.lat, r.pt.lon])), { padding: [50, 50], maxZoom: 18 }); }
+    function buildPrintMap(){
+      mpRows = listData();
+      if (!pmap) {
+        pmap = L.map('printMap', { zoomControl: false, zoomSnap: 0.25 });
+        L.control.scale({ imperial: false, position: 'bottomright' }).addTo(pmap);
+        pLayer = L.layerGroup().addTo(pmap);
+      }
+      mapPrintBg(); mapPrintLayout(false);
+      pLayer.clearLayers();
+      mpRows.forEach((r, i) => {
+        const st = getMarkerStyle(r.pt.tags || {});
+        L.marker([r.pt.lat, r.pt.lon], { icon: L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13],
+          html: `<div style="width:26px;height:26px;border-radius:50%;background:${st.color};border:2px solid #fff;box-shadow:0 0 0 1.5px #111;color:#fff;font:700 12px/22px sans-serif;text-align:center;text-shadow:0 0 2px #000">${i + 1}</div>` }) }).addTo(pLayer);
+      });
+      const sel = document.getElementById('listOtSel').value, ot = sel === '__all' ? 'Alle Ortsteile' : (sel || 'ohne Zuordnung');
+      const cnt = {}, col = {}; mpRows.forEach(r => { cnt[r.typ] = (cnt[r.typ] || 0) + 1; col[r.typ] = getMarkerStyle(r.pt.tags || {}).color; });
+      document.getElementById('mpTitle').textContent = 'Löschwasserentnahmestellen – ' + ot + ' – Stand ' + new Date().toLocaleDateString('de-DE');
+      document.getElementById('mpLegend').innerHTML = Object.keys(cnt).map(k => `<div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col[k]};border:1px solid #111;margin-right:4px"></span>${esc(k)} (${cnt[k]})</div>`).join('');
+      document.getElementById('mpListTitle').textContent = 'Löschwasserentnahmestellen – ' + ot;
+      const cell = 'p-1 border border-slate-400';
+      document.getElementById('mpListBody').innerHTML = mpRows.map((r, i) => `<tr><td class="${cell} text-center">${i + 1}</td><td class="${cell}">${esc(r.typ)}</td><td class="${cell}"><b>${esc(r.name)}</b> ${esc(r.loc)}</td><td class="${cell}">${esc(r.dn)}</td><td class="${cell}">${esc(r.flow)}</td><td class="${cell}">${esc(r.cap)}</td></tr>`).join('');
+      pmap.invalidateSize(); fitPrintMap();
     }
 
     // ==================== DIAGNOSE ====================
@@ -1623,6 +1843,7 @@
       offlineQueue.push(record);
       if (!saveQueue()) { offlineQueue.pop(); return; }
       digestAdd(record);
+      audit(record.osmId ? 'Prüfung gesendet' : 'Neue Stelle erfasst', getReadableType(record.type), { uid: record.osmId, lat: record.lat, lon: record.lng });
 
       updateQueueBadge();
       toggleModal('formModal', false);
