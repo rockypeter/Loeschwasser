@@ -8,7 +8,8 @@
       "id": "briesen",
       "name": "FFW Briesen",
       "ortsteile": [
-        "Briesen"
+        "Briesen",
+        "Guhrow"
       ],
       "gps": true,
       "reportKey": ""
@@ -18,6 +19,15 @@
       "name": "FFW Burg",
       "ortsteile": [
         "Burg"
+      ],
+      "gps": true,
+      "reportKey": ""
+    },
+    {
+      "id": "burg-kauper",
+      "name": "FFW Burg-Kauper",
+      "ortsteile": [
+        "Burg-Kauper"
       ],
       "gps": true,
       "reportKey": ""
@@ -36,15 +46,6 @@
       "name": "FFW Fehrow",
       "ortsteile": [
         "Fehrow"
-      ],
-      "gps": true,
-      "reportKey": ""
-    },
-    {
-      "id": "guhrow",
-      "name": "FFW Guhrow",
-      "ortsteile": [
-        "Guhrow"
       ],
       "gps": true,
       "reportKey": ""
@@ -74,8 +75,8 @@
         "Schmogrow"
       ],
       "gps": true,
-      "zentral": true,
-      "reportKey": "3811682d-6504-47e2-85aa-c93fe4568d6a"
+      "reportKey": "3811682d-6504-47e2-85aa-c93fe4568d6a",
+      "zentral": true
     },
     {
       "id": "striesow",

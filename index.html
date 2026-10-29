@@ -93,6 +93,10 @@
       .print-open * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       @page { size: A4 landscape; margin: 10mm; }
     }
+    .mi { width: 100%; display: flex; align-items: center; gap: .75rem; padding: .7rem .75rem; border-radius: .75rem; background: rgba(30,41,59,.7); color: #f1f5f9; font-weight: 600; text-align: left; font-size: .9rem; cursor: pointer; }
+    .mi:hover, .mi:active { background: #1e293b; }
+    .mi i { width: 1.25rem; text-align: center; color: #22d3ee; }
+    .msec { font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; color: #64748b; font-weight: 800; margin: .1rem .25rem .4rem; }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -130,9 +134,9 @@
 
     <!-- Right Header Actions -->
     <div class="flex items-center gap-2">
-      <button onclick="toggleModal('syncModal')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow backdrop-blur">
-        <i class="fa-solid fa-arrows-rotate text-cyan-400"></i>
-        <span class="hidden sm:inline">OSM Sync</span>
+      <button onclick="openMenu()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow backdrop-blur">
+        <i class="fa-solid fa-bars text-cyan-400 text-base"></i>
+        <span class="hidden sm:inline">Menü</span>
         <span id="queueBadge" class="hidden px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[10px] font-bold">0</span>
       </button>
 
@@ -235,6 +239,75 @@
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- SEITENMENÜ -->
+  <div id="menuOverlay" class="hidden fixed inset-0 z-[555] bg-black/60" onclick="closeMenu()"></div>
+  <aside id="sideMenu" class="fixed top-0 left-0 h-full w-[86%] max-w-sm z-[556] bg-slate-900 border-r border-slate-700 shadow-2xl -translate-x-full transition-transform duration-200 flex flex-col">
+    <div class="px-4 py-3 border-b border-slate-800 flex items-center gap-2 shrink-0">
+      <div class="flex-1 min-w-0"><div id="menuWehr" class="font-extrabold text-white truncate"></div><div id="menuOt" class="text-[11px] text-slate-400 truncate"></div></div>
+      <button onclick="closeMenu()" class="w-9 h-9 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button>
+    </div>
+    <nav class="flex-1 overflow-y-auto p-3 space-y-4">
+      <div><div class="msec" id="menuProtoTitle">Prüfprotokolle</div><div id="menuProto" class="space-y-1.5"></div></div>
+      <div><div class="msec">Senden und Daten</div><div class="space-y-1.5">
+        <button class="mi" onclick="closeMenu();toggleModal('syncModal', true)"><i class="fa-solid fa-paper-plane"></i><span class="flex-1">Erfassungen senden</span><span id="menuQ" class="text-amber-400 font-mono text-xs"></span></button>
+        <button class="mi" onclick="closeMenu();loadAmtBurgData(true)"><i class="fa-solid fa-rotate"></i>Punkte neu laden</button>
+      </div></div>
+      <div><div class="msec">Listen und Karten</div><div class="space-y-1.5">
+        <button class="mi" onclick="closeMenu();openList()"><i class="fa-solid fa-list"></i>Löschwasserliste und Karte A4</button>
+        <label class="mi cursor-pointer"><i class="fa-solid fa-file-import"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();importPoints(event)"></label>
+      </div></div>
+      <div><div class="msec">Werkzeuge</div><div class="space-y-1.5">
+        <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
+        <button class="mi" onclick="closeMenu();saveStart()"><i class="fa-solid fa-location-dot"></i>Startpunkt = aktuelle Kartenmitte</button>
+        <button class="mi" onclick="closeMenu();openAudit()"><i class="fa-solid fa-clock-rotate-left"></i>Änderungsprotokoll</button>
+      </div></div>
+      <div><div class="msec">Sicherung</div><div class="space-y-1.5">
+        <button class="mi" onclick="closeMenu();backupSave()"><i class="fa-solid fa-floppy-disk"></i>Sicherung speichern</button>
+        <label class="mi cursor-pointer"><i class="fa-solid fa-upload"></i>Sicherung einspielen<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();backupRestore(event)"></label>
+      </div></div>
+      <div><div class="msec">Hilfe</div><div class="space-y-1.5">
+        <button class="mi" onclick="closeMenu();openHelp()"><i class="fa-solid fa-circle-question"></i>So geht’s</button>
+        <button class="mi" onclick="closeMenu();openFeedback()"><i class="fa-solid fa-envelope"></i>Fehler oder Idee melden</button>
+      </div></div>
+      <div><div class="msec">Technik</div><div class="space-y-1.5">
+        <button class="mi" onclick="closeMenu();openWehrDialog()"><i class="fa-solid fa-fire-extinguisher"></i>Feuerwehr wechseln</button>
+        <button class="mi" onclick="runDiagnose()"><i class="fa-solid fa-stethoscope"></i>Server testen</button>
+        <button class="mi" onclick="clearPointCache()"><i class="fa-solid fa-trash"></i>Cache leeren</button>
+        <button class="mi" onclick="forceUpdate()"><i class="fa-solid fa-rotate"></i>App neu laden (Update erzwingen)</button>
+        <div id="verInfo" class="text-[11px] text-slate-400 font-mono px-1"></div>
+        <div id="diagOut" class="text-[11px] text-slate-400 font-mono break-all px-1"></div>
+      </div></div>
+    </nav>
+  </aside>
+
+  <!-- HILFE -->
+  <div id="helpModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center px-4 py-3 border-b border-slate-800 shrink-0"><h2 class="font-extrabold text-white text-sm flex-1"><i class="fa-solid fa-circle-question text-cyan-400 mr-1.5"></i>So geht’s</h2><button onclick="toggleModal('helpModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button></div>
+      <div class="p-4 overflow-y-auto space-y-3 text-xs text-slate-300 leading-relaxed">
+        <p><b class="text-white">Karte:</b> Die Punkte sind Löschwasserentnahmestellen aus OpenStreetMap. Tippe auf einen Punkt, um die Angaben zu sehen. Die Legende lässt sich verschieben.</p>
+        <p><b class="text-white">Ring um Flachspiegelbrunnen:</b> grün = dieses Jahr geprüft, orange = noch offen.</p>
+        <p><b class="text-white">Prüfen und bearbeiten:</b> Nur Stellen deiner eigenen Ortsteile und nur direkt vor Ort (höchstens 150 m). Dafür muss der Standort erlaubt sein. Alle anderen Stellen siehst du nur an.</p>
+        <p><b class="text-white">Neue Stelle:</b> „Neu Erfassen“ antippen, Art und Angaben eintragen, speichern. Beim Beenden der App gehen die Notizen an OSM, bei den Wehren außer Schmogrow zusätzlich eine Meldung an die Zentrale.</p>
+        <p><b class="text-white">Prüfprotokoll:</b> Menü → Prüfprotokolle → Ortsteil wählen, oder im Popup eines Brunnens. Zeile ausfüllen, Datum und Prüfer füllen sich selbst. Mit der Kamera-Taste hängst du ein Foto an. Drucken oder als PDF speichern über „Drucken / PDF“.</p>
+        <p><b class="text-white">Stoppuhr:</b> Menü → Stoppuhr. Sie läuft weiter, auch wenn das Handy sich sperrt.</p>
+        <p><b class="text-white">Karte drucken:</b> Menü → Löschwasserliste und Karte A4 → Ortsteil wählen → „Karte A4“.</p>
+        <p><b class="text-white">Sicherung:</b> Menü → Sicherung speichern, am besten regelmäßig. Fotos sind nicht enthalten.</p>
+        <p><b class="text-white">Wenn etwas nicht stimmt:</b> Menü → Technik → App neu laden. Dort steht auch die Version. Fehler und Ideen kannst du über „Fehler oder Idee melden“ schicken.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEHLER ODER IDEE MELDEN -->
+  <div id="fbModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-4 space-y-3 shadow-2xl">
+      <div class="flex items-center"><h2 class="font-extrabold text-white text-sm flex-1"><i class="fa-solid fa-envelope text-cyan-400 mr-1.5"></i>Fehler oder Idee melden</h2><button onclick="toggleModal('fbModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button></div>
+      <textarea id="fbText" rows="5" placeholder="Was ist passiert oder was fehlt?" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-cyan-500"></textarea>
+      <p class="text-[11px] text-slate-500">Es werden Feuerwehr, App-Version und Gerätetyp mitgeschickt.</p>
+      <button onclick="sendFeedback()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-extrabold">Senden</button>
     </div>
   </div>
 
@@ -575,24 +648,6 @@
           <button onclick="sendDigest(true)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 transition shadow"><i class="fa-solid fa-envelope"></i>Tagesbericht jetzt senden</button>
         </div>
 
-        <div class="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2">
-          <div class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-stethoscope text-cyan-400 text-sm"></i>Kartendaten & Verbindung</div>
-          <div class="grid grid-cols-2 gap-2">
-            <button onclick="runDiagnose()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Server testen</button>
-            <button onclick="openAudit()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-clock-rotate-left mr-1.5"></i>Änderungsprotokoll anzeigen</button>
-            <button onclick="backupSave()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-floppy-disk mr-1.5"></i>Sicherung speichern</button>
-            <label class="py-2.5 text-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition cursor-pointer"><i class="fa-solid fa-upload mr-1.5"></i>Sicherung einspielen<input type="file" accept=".json,application/json" class="hidden" onchange="backupRestore(event)"></label>
-            <button onclick="openList()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-list mr-1.5"></i>Löschwasserliste (Drucken / CSV)</button>
-            <button onclick="forceUpdate()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-rotate mr-1.5"></i>App neu laden (Update erzwingen)</button>
-            <button onclick="saveStart()" class="col-span-2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-location-dot mr-1.5"></i>Startpunkt = aktuelle Kartenmitte</button>
-            <button onclick="clearPointCache()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">Cache leeren</button>
-          </div>
-          <label class="block w-full py-2.5 text-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition cursor-pointer"><i class="fa-solid fa-file-import mr-1.5"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="importPoints(event)"></label>
-          <button onclick="openWehrDialog()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition"><i class="fa-solid fa-fire-extinguisher mr-1.5"></i>Feuerwehr wechseln</button>
-          <div id="verInfo" class="text-[11px] text-slate-400 font-mono"></div>
-          <div id="diagOut" class="text-[11px] text-slate-400 font-mono break-all"></div>
-        </div>
-
         <!-- Erfassungsliste -->
         <div class="pt-2 border-t border-slate-800 space-y-1.5">
           <div class="flex justify-between items-center font-bold text-slate-200">
@@ -641,7 +696,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-10-29 a';
+    const APP_VERSION = '2026-10-29 b';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1272,11 +1327,12 @@
     }
 
     // ==================== MEHRERE FEUERWEHREN IM AMT BURG ====================
-    const AMT_ORTSTEILE = ['Briesen', 'Burg', 'Dissen', 'Fehrow', 'Guhrow', 'Müschen', 'Ruben', 'Schmogrow', 'Striesow', 'Werben'];
+    const AMT_ORTSTEILE = ['Briesen', 'Burg', 'Burg-Kauper', 'Dissen', 'Fehrow', 'Guhrow', 'Müschen', 'Ruben', 'Schmogrow', 'Striesow', 'Werben'];
     const ORT_ALIAS = { saccasne: 'Schmogrow', brahmow: 'Werben' };
     function canonOt(n){
       if (!n) return '';
       const low = String(n).toLowerCase().trim();
+      if (/kauper/.test(low)) return 'Burg-Kauper';
       if (ORT_ALIAS[low]) return ORT_ALIAS[low];
       const first = low.split(/[\s\-\(,]+/)[0];
       if (ORT_ALIAS[first]) return ORT_ALIAS[first];
@@ -1284,9 +1340,12 @@
     }
     const CENTRAL_KEY = '3811682d-6504-47e2-85aa-c93fe4568d6a';
     function defaultCfg(){
-      return { zentral: { name: 'FFW Schmogrow', key: CENTRAL_KEY }, wehren: AMT_ORTSTEILE.map(o => ({
-        id: o.toLowerCase().replace('ü', 'ue'), name: 'FFW ' + o, ortsteile: [o], gps: true,
-        zentral: o === 'Schmogrow', reportKey: o === 'Schmogrow' ? CENTRAL_KEY : '' })) };
+      const w = (id, name, orte, extra) => Object.assign({ id, name, ortsteile: orte, gps: true, reportKey: '' }, extra || {});
+      return { zentral: { name: 'FFW Schmogrow', key: CENTRAL_KEY }, wehren: [
+        w('briesen', 'FFW Briesen', ['Briesen', 'Guhrow']), w('burg', 'FFW Burg', ['Burg']), w('burg-kauper', 'FFW Burg-Kauper', ['Burg-Kauper']),
+        w('dissen', 'FFW Dissen', ['Dissen']), w('fehrow', 'FFW Fehrow', ['Fehrow']), w('mueschen', 'FFW Müschen', ['Müschen']),
+        w('ruben', 'FFW Ruben', ['Ruben']), w('schmogrow', 'FFW Schmogrow', ['Schmogrow'], { zentral: true, reportKey: CENTRAL_KEY }),
+        w('striesow', 'FFW Striesow', ['Striesow']), w('werben', 'FFW Werben', ['Werben']) ] };
     }
     let CFG = (() => { try { const c = JSON.parse(localStorage.getItem('ffw_cfg')); if (c && c.wehren && c.wehren.length) return c; } catch(e){} return defaultCfg(); })();
     const wehrList = () => CFG.wehren.filter(w => w.aktiv !== false);
@@ -1557,6 +1616,47 @@
       const cell = 'p-1 border border-slate-400';
       document.getElementById('mpListBody').innerHTML = mpRows.map((r, i) => `<tr><td class="${cell} text-center">${i + 1}</td><td class="${cell}">${esc(r.typ)}</td><td class="${cell}"><b>${esc(r.name)}</b> ${esc(r.loc)}</td><td class="${cell}">${esc(r.dn)}</td><td class="${cell}">${esc(r.flow)}</td><td class="${cell}">${esc(r.cap)}</td></tr>`).join('');
       pmap.invalidateSize(); fitPrintMap();
+    }
+
+    // ==================== SEITENMENÜ ====================
+    function openMenu(){
+      renderMenu();
+      document.getElementById('menuOverlay').classList.remove('hidden');
+      document.getElementById('sideMenu').classList.remove('-translate-x-full');
+    }
+    function closeMenu(){
+      document.getElementById('menuOverlay').classList.add('hidden');
+      document.getElementById('sideMenu').classList.add('-translate-x-full');
+    }
+    function renderMenu(){
+      const w = currentWehr();
+      document.getElementById('menuWehr').textContent = w ? w.name : 'Keine Feuerwehr gewählt';
+      document.getElementById('menuOt').textContent = w ? 'Ortsteile: ' + ((w.ortsteile || []).join(', ') || 'alle') : '';
+      document.getElementById('menuQ').textContent = offlineQueue.length ? '(' + offlineQueue.length + ')' : '';
+      document.getElementById('menuProtoTitle').textContent = 'Prüfprotokolle | ' + thisYear() + ' geprüft';
+      testedMap = buildTested(); renderVerInfo();
+      const groups = {};
+      existingWaterPoints.filter(isShallow).forEach(p => { const o = ortsteilOf(p); (groups[o] = groups[o] || []).push(p); });
+      const names = Object.keys(groups).sort((a, b) => (ownsName(b) - ownsName(a)) || a.localeCompare(b, 'de'));
+      document.getElementById('menuProto').innerHTML = names.map(o => {
+        const n = groups[o].length, d = groups[o].filter(p => isTestedNow(p.uid)).length, done = d === n;
+        return `<button onclick="closeMenu();openProtocolOt('${esc(o)}')" class="w-full text-left px-3 py-2 rounded-xl bg-slate-800/70 hover:bg-slate-800">
+          <div class="flex items-center gap-2"><span class="flex-1 font-semibold text-slate-100 text-sm">${esc(o || '(ohne Zuordnung)')}${ownsName(o) ? '' : ' <i class="fa-solid fa-lock text-[10px] text-slate-500"></i>'}</span><span class="font-mono text-xs ${done ? 'text-emerald-400' : 'text-amber-400'}">${d}/${n}</span></div>
+          <div class="h-1.5 rounded bg-slate-700 mt-1.5"><div class="h-1.5 rounded ${done ? 'bg-emerald-500' : 'bg-amber-500'}" style="width:${Math.round(100 * d / n)}%"></div></div></button>`;
+      }).join('') || '<p class="text-xs text-slate-500 italic px-1">Noch keine Flachspiegelbrunnen geladen.</p>';
+    }
+    async function openProtocolOt(ot){ protoFocus = ''; toggleModal('protoModal', true); await loadProtocol(ot); }
+    function openHelp(){ toggleModal('helpModal', true); }
+    function openFeedback(){ toggleModal('fbModal', true); }
+    async function sendFeedback(){
+      const t = document.getElementById('fbText').value.trim(); if (!t) return;
+      const w = currentWehr() || {}, key = (CFG.zentral || {}).key || reportKey();
+      const message = `${t}\n\n--\nFeuerwehr: ${w.name || '-'}\nApp-Version: ${APP_VERSION}\nGerät: ${navigator.userAgent}`;
+      try {
+        const r = await fetch('https://api.web3forms.com/submit', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ access_key: key, subject: 'App-Rückmeldung ' + (w.name || ''), from_name: (w.name || 'FFW') + ' App', message }) });
+        const j = await r.json(); if (!j.success) throw new Error(j.message);
+        document.getElementById('fbText').value = ''; toggleModal('fbModal'); showToast('Danke, die Nachricht ist gesendet', 'fa-envelope-circle-check');
+      } catch(e) { showToast('Senden fehlgeschlagen, bitte später noch einmal', 'fa-triangle-exclamation'); }
     }
 
     // ==================== DIAGNOSE ====================

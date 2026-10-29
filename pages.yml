@@ -81,10 +81,12 @@ jobs:
                   time.sleep(3)
           except BaseException as e:
               print("Gemeinden nicht ermittelt:", e)
-          ALLOWED = ["Briesen", "Burg", "Dissen", "Fehrow", "Guhrow", "Müschen", "Ruben", "Schmogrow", "Striesow", "Werben"]
+          ALLOWED = ["Briesen", "Burg", "Burg-Kauper", "Dissen", "Fehrow", "Guhrow", "Müschen", "Ruben", "Schmogrow", "Striesow", "Werben"]
           ALIAS = {"saccasne": "Schmogrow", "brahmow": "Werben"}
           def canon(n):
               low = (n or "").lower().strip()
+              if "kauper" in low:
+                  return "Burg-Kauper"
               if low in ALIAS:
                   return ALIAS[low]
               first = re.split(r"[\s\-(,]+", low)[0]

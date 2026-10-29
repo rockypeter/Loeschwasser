@@ -20,7 +20,7 @@ Hinweise
 
 Alle Wehren öffnen dieselbe Adresse und wählen beim ersten Start ihre Feuerwehr. Die Liste steht in `wehren.json`.
 
-- `ortsteile`: Nur Stellen in diesen Ortsteilen sind bearbeitbar. Erlaubt sind Briesen, Burg, Dissen, Fehrow, Guhrow, Müschen, Ruben, Schmogrow (mit Saccasne), Striesow, Werben (mit Brahmow).
+- `ortsteile`: Nur Stellen in diesen Ortsteilen sind bearbeitbar. Erlaubt sind Briesen, Burg, Burg-Kauper, Dissen, Fehrow, Guhrow, Müschen, Ruben, Schmogrow (mit Saccasne), Striesow, Werben (mit Brahmow). Guhrow gehört zur FFW Briesen.
 - `gps`: `true` heißt, bearbeiten geht nur, wenn das Handy höchstens 150 m von der Stelle entfernt ist. Zum Testen am Schreibtisch kurz auf `false` setzen.
 - `reportKey`: Web3Forms-Key der Wehr für ihren eigenen Bericht. Ohne Key fragt die App nach der Mailadresse und öffnet das Mailprogramm.
 - `start`: optional, `[Breite, Länge]` des Gerätehauses, z. B. `[51.85, 14.21]`. Ohne Angabe startet die Karte in der Mitte der eigenen Stellen.
