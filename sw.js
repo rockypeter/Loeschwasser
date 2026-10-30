@@ -1,5 +1,5 @@
-const V='ffw-v3', TILES='ffw-tiles-v1', MAX_TILES=1500;
-self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'])).catch(()=>{}).then(()=>self.skipWaiting()));});
+const V='ffw-v4', TILES='ffw-tiles-v1', MAX_TILES=1500;
+self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(['./','index.html','manifest.webmanifest','fb-sync.js','icon-192.png','icon-512.png'])).catch(()=>{}).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==V&&n!==TILES).map(n=>caches.delete(n)))).then(()=>self.clients.claim()));});
 async function trim(c,max){const k=await c.keys();if(k.length>max)await Promise.all(k.slice(0,k.length-max).map(x=>c.delete(x)));}
 async function swr(req,name,max){
@@ -18,8 +18,8 @@ async function networkFirst(req){
 }
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
-  if(e.request.method!=='GET'||/overpass|api\.openstreetmap\.org|web3forms/.test(u.host))return;
-  if(u.origin===location.origin&&(e.request.mode==='navigate'||/(\.html|points\.json|manifest\.webmanifest|\/)$/.test(u.pathname)))return e.respondWith(networkFirst(e.request));
+  if(e.request.method!=='GET'||/overpass|api\.openstreetmap\.org|web3forms|firebasedatabase|firebaseio|googleapis\.com/.test(u.host))return;
+  if(u.origin===location.origin&&(e.request.mode==='navigate'||/(\.html|points\.json|manifest\.webmanifest|fb-sync\.js|firebase-config\.js|\/)$/.test(u.pathname)))return e.respondWith(networkFirst(e.request));
   const tile=/tile\.openstreetmap\.org|geobasis-bb\.de/.test(u.host);
   e.respondWith(swr(e.request,tile?TILES:V,tile?MAX_TILES:0));
 });
