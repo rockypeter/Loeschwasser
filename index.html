@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de" class="h-full w-full overflow-hidden select-none">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://*.firebaseio.com https://*.firebasedatabase.app; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
@@ -226,15 +226,26 @@
         <button onclick="swShow()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
         <button onclick="protoMail()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-envelope"></i>Per E-Mail sichern</button>
         <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="protoOtSel" onchange="protoSwitch(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
-        <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert.</span>
+        <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät und in der Cloud gespeichert.</span>
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
       <div class="overflow-auto p-3 text-xs">
         <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
-        <table class="w-full border-collapse min-w-[860px]">
+        <table class="w-full border-collapse min-w-[960px]">
           <thead><tr class="bg-slate-200 text-left">
-            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400">Aufbau</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
+            <th class="p-1.5 border border-slate-400 w-8">Nr.</th>
+            <th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th>
+            <th class="p-1.5 border border-slate-400">Datum</th>
+            <th class="p-1.5 border border-slate-400">Pumpe</th>
+            <th class="p-1.5 border border-slate-400">Aufbau</th>
+            <th class="p-1.5 border border-slate-400 w-20">Eingang (bar)</th> <!-- NEU: Vakuum/Saugdruck -->
+            <th class="p-1.5 border border-slate-400 w-20">Ausgang (bar)</th> <!-- NEU: Pumpendruck -->
+            <th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th>
+            <th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th>
+            <th class="p-1.5 border border-slate-400">Prüfer</th>
+            <th class="p-1.5 border border-slate-400 w-20">Foto</th>
+            <th class="no-print border border-slate-400 w-8"></th>
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
@@ -662,6 +673,27 @@
       </div>
     </div>
   </div>
+
+  <!-- FIREBASE REALTIME DATABASE ECHTZEIT-ANBINDUNG & SCRIPT -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDnQOJKvbldNPA4l9ZUhzhUccy34MJfSIk",
+      authDomain: "feuerwehr-loeschwasser-14a62.firebaseapp.com",
+      databaseURL: "https://feuerwehr-loeschwasser-14a62-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "feuerwehr-loeschwasser-14a62",
+      storageBucket: "feuerwehr-loeschwasser-14a62.firebasestorage.app",
+      messagingSenderId: "287854597030",
+      appId: "1:287854597030:web:25f9603400cb66dd543567"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.fbSync = { db, ref, set, onValue, push, remove };
+  </script>
 
   <!-- MAIN SCRIPT -->
   <script>
@@ -1142,7 +1174,7 @@
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
     async function loadProtocol(ot){
       protoOt = ot; testedMap = buildTested();
-      document.getElementById('protoBody').innerHTML = '<tr><td colspan="10" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
+      document.getElementById('protoBody').innerHTML = '<tr><td colspan="12" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
       protoPos = (currentWehr() || {}).gps !== false ? await getPosition() : null;
       protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
         .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
@@ -1168,6 +1200,8 @@
           <td class="${cell}"><input type="date" data-f="date" value="${esc(d.date || '')}" class="${inp}"></td>
           <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe eintragen" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Andere' ? '' : 'hidden'}"></td>
           <td class="${cell}"><input type="text" data-f="aufbau" value="${esc(d.aufbau || '')}" class="${inp}"></td>
+          <td class="${cell}"><input type="number" data-f="eingangsdruck" step="0.1" placeholder="-0.6" value="${esc(d.eingangsdruck || '')}" class="${inp} font-bold text-red-600"></td> <!-- NEU: Eingangsdruck -->
+          <td class="${cell}"><input type="number" data-f="ausgangsdruck" step="0.1" placeholder="4.5" value="${esc(d.ausgangsdruck || '')}" class="${inp} font-bold"></td> <!-- NEU: Ausgangsdruck -->
           <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" value="${esc(d.leistung || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"></td>
@@ -1176,7 +1210,7 @@
             <button onclick="delPhoto('${esc(pt.uid)}')" title="Foto löschen" class="no-print text-slate-400 hover:text-red-600 text-[10px]">✕</button></td>
           <td class="no-print ${cell} text-center"><button onclick="protoClear('${esc(pt.uid)}')" title="Zeile leeren" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="10" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
+      }).join('') || '<tr><td colspan="12" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       loadPhotos(); lockRows();
     }
     function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); }
@@ -1200,9 +1234,9 @@
     }
     function protoClear(uid){ audit('Protokollzeile geleert', '', existingWaterPoints.find(p => p.uid === uid) || { uid }); delete protoData[uid]; protoSave(); renderProtocol(); }
     function protoCsv(){
-      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Prüfer']].concat(protoWells.map((pt, i) => {
+      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Prüfzeit (min)', 'Leistung (l/min)', 'Prüfer']].concat(protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), d.aufbau || '', d.zeit || '', d.leistung || '', d.pruefer || ''];
+        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), d.aufbau || '', d.eingangsdruck || '', d.ausgangsdruck || '', d.zeit || '', d.leistung || '', d.pruefer || ''];
       }));
       const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
       const a = document.createElement('a');
@@ -1529,7 +1563,7 @@
       const head = `Prüfprotokoll Flachspiegelbrunnen | ${document.getElementById('protoTitle').textContent} | Stand ${new Date().toLocaleDateString('de-DE')}`;
       return head + '\n\n' + protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${d.aufbau || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Prüfer: ${d.pruefer || '-'}`;
+        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${d.aufbau || '-'} | Eingangsdruck: ${d.eingangsdruck || '-'} bar | Ausgangsdruck: ${d.ausgangsdruck || '-'} bar | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Prüfer: ${d.pruefer || '-'}`;
       }).join('\n') + '\n';
     }
     async function protoMail(){
