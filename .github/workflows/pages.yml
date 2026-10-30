@@ -30,7 +30,7 @@ jobs:
         continue-on-error: true
         run: |
           python3 - <<'PY'
-          import json, time, math, datetime, urllib.request, urllib.parse
+          import json, re, time, math, datetime, urllib.request, urllib.parse
           S, W, N, E = 51.78, 14.05, 51.98, 14.38
           MIRRORS = ["https://overpass-api.de/api/interpreter",
                      "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
@@ -81,24 +81,43 @@ jobs:
                   time.sleep(3)
           except BaseException as e:
               print("Gemeinden nicht ermittelt:", e)
+          ALLOWED = ["Briesen", "Burg", "Burg-Kauper", "Dissen", "Fehrow", "Guhrow", "Müschen", "Ruben", "Schmogrow", "Striesow", "Werben"]
+          ALIAS = {"saccasne": "Schmogrow", "brahmow": "Werben"}
+          def canon(n):
+              low = (n or "").lower().strip()
+              if "kauper" in low:
+                  return "Burg-Kauper"
+              if low in ALIAS:
+                  return ALIAS[low]
+              first = re.split(r"[\s\-(,]+", low)[0]
+              if first in ALIAS:
+                  return ALIAS[first]
+              for a in ALLOWED:
+                  if a.lower() == first:
+                      return a
+              return None
           def hav(a, b, c, d):
               k = math.pi / 180
               x = math.sin((c - a) * k / 2) ** 2 + math.cos(a * k) * math.cos(c * k) * math.sin((d - b) * k / 2) ** 2
               return 12742000 * math.asin(math.sqrt(x))
           try:
               for g in run(f'[out:json][timeout:60];rel["boundary"="administrative"]["admin_level"~"^(9|10)$"]({S},{W},{N},{E});out tags;'):
-                  name = (g.get("tags") or {}).get("name")
-                  if not name:
+                  cn = canon((g.get("tags") or {}).get("name"))
+                  if not cn:
                       continue
                   for el in run(f'[out:json][timeout:90];area(id:{3600000000 + g["id"]})->.a;nwr["emergency"~"^({TYPES})$"](area.a);out ids;'):
                       uid = f'{el["type"]}/{el["id"]}'
                       if uid in pts:
-                          pts[uid]["ortsteil"] = name
+                          pts[uid]["ortsteil"] = cn
                   time.sleep(3)
           except BaseException as e:
               print("Ortsteil-Grenzen nicht ermittelt:", e)
           try:
-              places = [(e["lat"], e["lon"], e["tags"]["name"]) for e in run(f'[out:json][timeout:60];node["place"~"^(village|hamlet|suburb|town)$"]["name"]({S-0.05},{W-0.05},{N+0.05},{E+0.05});out body;')]
+              places = []
+              for e in run(f'[out:json][timeout:60];node["place"~"^(village|hamlet|suburb|town|locality)$"]["name"]({S-0.05},{W-0.05},{N+0.05},{E+0.05});out body;'):
+                  cn = canon(e["tags"]["name"])
+                  if cn:
+                      places.append((e["lat"], e["lon"], cn))
               for p in pts.values():
                   if "ortsteil" in p or not places:
                       continue
@@ -129,9 +148,21 @@ jobs:
       - name: Seite zusammenstellen
         run: |
           mkdir _site
-          for f in index.html sw.js manifest.webmanifest icon-192.png icon-512.png points.json; do
+          for f in index.html sw.js fb-sync.js manifest.webmanifest icon-192.png icon-512.png points.json wehren.json; do
             if [ -f "$f" ]; then cp "$f" _site/; else echo "::warning::$f fehlt"; fi
           done
+          if [ -d logos ]; then cp -r logos _site/; fi
+
+      - name: Firebase-Konfiguration aus Secret erzeugen
+        env:
+          FB_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
+        run: |
+          if [ -n "$FB_CONFIG" ] && python3 -c 'import json,sys; json.loads(sys.argv[1])' "$FB_CONFIG"; then
+            printf 'export const firebaseConfig = %s;\n' "$FB_CONFIG" > _site/firebase-config.js
+            echo "firebase-config.js erzeugt"
+          else
+            echo "::warning::Secret FIREBASE_CONFIG fehlt oder ist kein gültiges JSON - Sync bleibt aus"
+          fi
 
       - uses: actions/upload-pages-artifact@v3
         with:
