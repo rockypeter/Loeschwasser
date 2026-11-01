@@ -1,4 +1,4 @@
-const V='ffw-v4', TILES='ffw-tiles-v1', MAX_TILES=1500;
+const V='ffw-v5', TILES='ffw-tiles-v1', MAX_TILES=1500;
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(['./','index.html','manifest.webmanifest','fb-sync.js','icon-192.png','icon-512.png'])).catch(()=>{}).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==V&&n!==TILES).map(n=>caches.delete(n)))).then(()=>self.clients.claim()));});
 async function trim(c,max){const k=await c.keys();if(k.length>max)await Promise.all(k.slice(0,k.length-max).map(x=>c.delete(x)));}

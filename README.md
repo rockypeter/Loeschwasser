@@ -1,31 +1,72 @@
-# FFW Schmogrow – Löschwasserkarte auf GitHub Pages
+# Löschwasserkarte der Feuerwehren im Amt Burg
 
-Einmalige Einrichtung (geht auch am Handy im Browser):
+Web-App für Handy und Tablet. Sie zeigt die Löschwasserentnahmestellen auf einer Karte, hilft beim Erfassen und Prüfen
+und führt das Prüfprotokoll für Flachspiegelbrunnen. Sie läuft im Browser und lässt sich zum Startbildschirm hinzufügen.
+Ohne Netz bleibt sie benutzbar.
 
-1. github.com → **New repository**. Name z. B. `loeschwasser`, **Public**, ohne README anlegen.
-2. **uploading an existing file**: diese 5 Dateien hochladen und mit **Commit** speichern:
-   `index.html`, `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`
-3. **Add file → Create new file**. Als Dateiname genau `.github/workflows/pages.yml` eintippen (die Schrägstriche legen die Ordner an). Den Inhalt der mitgelieferten `pages.yml` einfügen, **Commit**.
-4. **Settings → Pages → Source: GitHub Actions**.
-5. **Actions → „Punkte aktualisieren und veröffentlichen“ → Run workflow**. Nach einigen Minuten ist die Seite online, danach läuft es jede Nacht automatisch.
-6. Adresse: `https://DEIN-NAME.github.io/loeschwasser/` – im Handy-Browser öffnen und „Zum Startbildschirm hinzufügen“.
+## Karte und Stellen
+- Die Stellen kommen aus OpenStreetMap und werden jede Nacht automatisch aktualisiert. Farben zeigen die Art:
+  Unterflurhydrant, Überflurhydrant, Flachspiegelbrunnen, Tiefbrunnen, Zisterne/Tank, Löschteich/Saugstelle.
+- Bei Flachspiegelbrunnen zeigt ein Ring den Prüfstand: **grün** = dieses Jahr geprüft, **orange** = noch offen.
+- Beim Antippen einer Stelle erscheinen ihre Daten und der Prüfstatus.
+- Die Liste mit Karte (A4) lässt sich pro Ortsteil oder für alle drucken oder als CSV speichern.
 
-Hinweise
-- Die Datei `points.json` entsteht beim ersten Lauf im Repository. Schlägt ein nächtlicher Abruf fehl, bleibt die letzte gute Liste online.
-- Das Repository ist öffentlich, damit Pages kostenlos läuft. Der Web3Forms-Key in `index.html` ist dadurch öffentlich sichtbar. Das ist bei diesem Dienst vorgesehen, er verrät die Mailadresse nicht.
-- Neue Version der App: `index.html` im Repository öffnen, Stift-Symbol, Inhalt ersetzen, Commit.
-- GitHub schaltet geplante Läufe nach 60 Tagen ohne Aktivität ab. Die tägliche Aktualisierung von `points.json` zählt als Aktivität.
+## Feuerwehr und Zuständigkeit
+- Beim ersten Start wählt jede Wehr ihre Feuerwehr. Bearbeiten lassen sich nur Stellen in den eigenen Ortsteilen,
+  die übrigen sind „nur Ansicht“.
+- Bearbeiten ist nur möglich, wenn das Gerät höchstens 150 m von der Stelle entfernt ist.
 
-## Weitere Feuerwehren im Amt Burg
+## Stellen erfassen und melden
+- Neue Stellen anlegen oder bestehende Stellen prüfen: Typ, Nennweite, Ertrag, einsatzbereit/eingeschränkt/defekt,
+  Hinweis, Foto.
+- Die Meldung geht als OSM-Notiz an OpenStreetMap. Ohne Netz wird sie gespeichert und später gesendet.
+- Meldungen anderer Wehren bekommt zusätzlich die Zentrale (FFW Schmogrow) per E-Mail.
+- Alle Änderungen stehen im **Änderungsprotokoll** (Menü), mit Zeit, Wehr, Prüfer und Abstand zur Stelle.
 
-Alle Wehren öffnen dieselbe Adresse und wählen beim ersten Start ihre Feuerwehr. Die Liste steht in `wehren.json`.
+## Prüfprotokoll Flachspiegelbrunnen
+Menü → Prüfprotokolle → Ortsteil. Pro Brunnen eine Zeile:
 
-- `ortsteile`: Nur Stellen in diesen Ortsteilen sind bearbeitbar. Erlaubt sind Briesen, Burg, Burg-Kauper, Dissen, Fehrow, Guhrow, Müschen, Ruben, Schmogrow (mit Saccasne), Striesow, Werben (mit Brahmow). Guhrow gehört zur FFW Briesen.
-- `gps`: `true` heißt, bearbeiten geht nur, wenn das Handy höchstens 150 m von der Stelle entfernt ist. Zum Testen am Schreibtisch kurz auf `false` setzen.
-- `reportKey`: Web3Forms-Key der Wehr für ihren eigenen Bericht. Ohne Key fragt die App nach der Mailadresse und öffnet das Mailprogramm.
-- `start`: optional, `[Breite, Länge]` des Gerätehauses, z. B. `[51.85, 14.21]`. Ohne Angabe startet die Karte in der Mitte der eigenen Stellen.
-- `logo`: optional, Pfad zur Wappen-Datei, z. B. `logos/burg.png` (Datei im Ordner `logos` hochladen).
-- `aktiv`: `false` blendet eine Wehr aus.
-- `zentral`: Die Zentrale (Schmogrow) bekommt Meldungen neuer Stellen der anderen Wehren per E-Mail. Diese Wehr sendet selbst nur OSM-Notizen.
+| Spalte | Inhalt |
+|---|---|
+| Brunnen / Ortsangabe | Bezeichnung, eigene Ortsangabe (z. B. „Wendeplatz“), Koordinaten |
+| Datum, Prüfer | Werden beim ersten Eintrag automatisch gesetzt |
+| Pumpe | Magirus TS, Ziegler TS, Fahrzeugpumpe oder Andere (Freitext) |
+| Aufbau | Bis zu 3 Strahlrohre: B oder C, jeweils mit oder ohne Mundstück, oder „Sonstiges“ mit eigener Leistung in l/min |
+| Prüfzeit (min) | Dauer der Prüfung |
+| Leistung (l/min) | Wird automatisch berechnet, kann von Hand korrigiert werden |
+| Eingangsdruck (bar) | Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ. Unter −1 bar erscheint eine Warnung. |
+| Ausgangsdruck (bar) | Druck am Pumpenausgang |
+| Foto | Zum Brunnen, bleibt auf dem Gerät |
 
-Änderungen an `wehren.json` sind nach dem nächsten Lauf für alle da. Die Datei wird beim Start geladen, ein Neustart der App genügt.
+**Berechnung der Leistung:** Nennwerte bei 5 bar Strahlrohrdruck: B mit Mundstück 400, B ohne Mundstück 800,
+C mit Mundstück 100, C ohne Mundstück 200 l/min. Bei anderem Druck gilt
+`Q = Nennwert × √(Druck ÷ 5)`. Als Druck gilt der Ausgangsdruck. Mehrere Strahlrohre werden addiert, „Sonstiges“
+wird unverändert dazugezählt. Unter der Leistung steht die Wassermenge aus Leistung und Prüfzeit.
+
+Das Protokoll lässt sich drucken (PDF), als CSV speichern oder per E-Mail sichern. „Standort prüfen“ aktualisiert
+die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
+
+## Gemeinsames Protokoll (Sync)
+- Mehrere Trupps einer Feuerwehr können im selben Ortsteil gleichzeitig arbeiten. Die Anmeldung erfolgt einmal pro Gerät
+  mit der PIN der Feuerwehr (Menü → Protokoll-Sync).
+- Jede Zelle wird einzeln gespeichert, Änderungen erscheinen bei den anderen Trupps sofort. Am Ende druckt oder speichert
+  ein Gerät das vollständige Protokoll.
+- Der Knopf oben im Protokoll zeigt den Zustand: live, wartet (offline) oder nicht angemeldet.
+- Offline Erfasstes wird beim nächsten Verbinden hochgeladen. Wird dieselbe Zelle von zwei Trupps geändert, gilt die
+  letzte Änderung. Fotos werden nicht synchronisiert.
+
+## Tagesbericht
+- Die App sendet höchstens einmal pro Tag automatisch einen Bericht per E-Mail, und nur wenn Stellen neu erfasst oder
+  geändert wurden. Prüfprotokoll-Einträge, Fotos und Sicherungen lösen keinen Bericht aus.
+- Im Sende-Fenster lässt sich der Bericht jederzeit von Hand senden.
+
+## Weitere Funktionen
+- **Sicherung:** Protokolle, Ortsangaben und Änderungsprotokoll lassen sich als Datei speichern und wieder einspielen.
+- **Punkte aus Datei importieren:** Für den Einsatz ohne aktuelle Daten.
+- **Startpunkt:** Die Kartenmitte lässt sich als Startansicht merken.
+- **Fehler oder Idee melden:** Direkt aus dem Menü.
+
+## Hinweise zu den Daten
+- Protokolle und Fotos liegen zuerst auf dem Gerät. Bei aktivem Sync liegen die Protokolleinträge (ohne Fotos) zusätzlich
+  in der Firebase-Datenbank der Wehr, geschützt durch PIN-Anmeldung. Gespeichert werden auch die Namen der Prüfer.
+- Die Stellendaten stammen aus OpenStreetMap (© OpenStreetMap-Mitwirkende).
