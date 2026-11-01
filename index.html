@@ -96,6 +96,11 @@
       .print-open * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       @page { size: A4 landscape; margin: 10mm; }
     }
+    /* Prüfprotokoll: Tabellenkopf bleibt beim Scrollen stehen */
+    #protoSheet thead th { position: sticky; top: 0; z-index: 5; background: #e2e8f0; box-shadow: inset 0 1px 0 #94a3b8, inset 0 -1px 0 #94a3b8; }
+    @media print { #protoSheet thead th { position: static; } .print-open .plausi-warn { outline: none !important; } }
+    /* Plausibilitätshinweis: Feld bekommt orangen Rand */
+    .plausi-warn { outline: 2px solid #f59e0b; outline-offset: -1px; background-color: #fffbeb !important; }
     .mi { width: 100%; display: flex; align-items: center; gap: .75rem; padding: .7rem .75rem; border-radius: .75rem; background: rgba(30,41,59,.7); color: #f1f5f9; font-weight: 600; text-align: left; font-size: .9rem; cursor: pointer; }
     .mi:hover, .mi:active { background: #1e293b; }
     .mi i { width: 1.25rem; text-align: center; color: #22d3ee; }
@@ -715,7 +720,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-01 aufbau b';
+    const APP_VERSION = '2026-11-01 aufbau d';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1205,7 +1210,7 @@
         </tr>`;
       }).join('') || '<tr><td colspan="12" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
-      refreshVols(); loadPhotos(); lockRows();
+      refreshVols(); refreshPlausi(); loadPhotos(); lockRows();
     }
     // ==================== AUFBAU (Strahlrohre) und Leistung ====================
     // Nennwerte Mehrzweckstrahlrohre (DIN 14365) bei 5 bar Strahlrohrdruck; Durchfluss wächst mit der Wurzel des Drucks: Q = Qnenn * wurzel(p / 5)
@@ -1264,7 +1269,37 @@
         el.textContent = q > 0 && t > 0 ? '≈ ' + Math.round(q * t).toLocaleString('de-DE') + ' l in ' + String(t).replace('.', ',') + ' min' : '';
       });
     }
-    function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); }
+    // ==================== PLAUSIBILITÄT (nur Hinweise, nichts wird blockiert) ====================
+    function plausiCheck(d){
+      const w = {}, num = v => (v === '' || v == null) ? NaN : parseFloat(v);
+      const eing = num(d.eingang), aus = num(d.ausgang), zeit = num(d.zeit), lei = num(d.leistung), a = aufbauParse(d.aufbau);
+      if (aus > 12) w.ausgang = 'Ausgangsdruck über 12 bar, bitte prüfen';
+      if (aus < 0) w.ausgang = 'Ausgangsdruck darf nicht negativ sein';
+      if (eing < -0.8) w.eingang = 'Eingangsdruck unter -0,8 bar ist sehr ungewöhnlich (Grenze etwa -1 bar)';
+      if (!isNaN(zeit) && zeit <= 0) w.zeit = 'Prüfzeit muss größer als 0 sein';
+      else if (zeit > 120) w.zeit = 'Prüfzeit über 120 min, bitte prüfen';
+      if (lei > 0 && a && !a.length) w.aufbau = 'Aufbau fehlt, ohne Strahlrohre ist die Leistung nicht nachvollziehbar';
+      if (a && a.some(i => i.k !== 'S') && isNaN(aus)) w.ausgang = w.ausgang || 'Ausgangsdruck fehlt, Leistung wird nicht berechnet';
+      if (lei > 3000) w.leistung = 'Leistung über 3000 l/min ist für einen Brunnen sehr ungewöhnlich';
+      const calc = aufbauFlow(d.aufbau, aus);
+      if (calc && lei >= 0 && Math.abs(lei - calc) > calc * 0.25) w.leistung = w.leistung || `Weicht um mehr als 25 % vom berechneten Wert ab (${calc} l/min)`;
+      if (d.date && new Date(d.date + 'T00:00:00') > new Date()) w.date = 'Datum liegt in der Zukunft';
+      return w;
+    }
+    function plausiMark(el, msg){
+      if (!el) return;
+      if (el.dataset.t0 === undefined) el.dataset.t0 = el.title || '';
+      el.classList.toggle('plausi-warn', !!msg);
+      el.title = msg ? '⚠ ' + msg : el.dataset.t0;
+    }
+    function refreshPlausi(){
+      document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => {
+        const w = plausiCheck(protoData[tr.dataset.uid] || {});
+        ['date', 'zeit', 'leistung', 'eingang', 'ausgang'].forEach(f => plausiMark(tr.querySelector(`[data-f="${f}"]`), w[f]));
+        plausiMark(tr.querySelector('[data-slotwrap="0"] select'), w.aufbau);
+      });
+    }
+    function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); refreshPlausi(); }
     function protoEdit(e){
       let el = e.target; const tr = el.closest('tr');
       if (tr && (el.dataset.slot !== undefined || el.dataset.slotv !== undefined)) el = aufbauCollect(tr, el, e.type);
@@ -1302,6 +1337,8 @@
         (tr.dataset.auto || '').split(',').filter(Boolean).forEach(f => { if (d[f]) ch[f] = d[f]; });
         tr.dataset.auto = '';
         syncPush(uid, ch);
+        const pw = plausiCheck(d), pk = [el.dataset.f, 'leistung', 'ausgang', 'aufbau'].find(k => pw[k]);
+        if (pk) showToast('⚠ ' + pw[pk], 'fa-triangle-exclamation');
       }
     }
     function protoClear(uid){ audit('Protokollzeile geleert', '', existingWaterPoints.find(p => p.uid === uid) || { uid }); delete protoData[uid]; protoSave(); renderProtocol(); syncDrop(uid); }
