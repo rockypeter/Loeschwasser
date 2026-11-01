@@ -43,6 +43,15 @@ C mit Mundstück 100, C ohne Mundstück 200 l/min. Bei anderem Druck gilt
 `Q = Nennwert × √(Druck ÷ 5)`. Als Druck gilt der Ausgangsdruck. Mehrere Strahlrohre werden addiert, „Sonstiges“
 wird unverändert dazugezählt. Unter der Leistung steht die Wassermenge aus Leistung und Prüfzeit.
 
+**Verlauf über die Jahre:** Ein Tipp auf Nummer oder Namen des Brunnens zeigt ein Diagramm der Leistung je Jahr
+mit Wertetabelle. Unter der Leistung steht ein Trendpfeil gegenüber der letzten Messung: ↑ ab +10 %, ↓ ab −10 %,
+dazwischen →. Beim ersten Eintrag in einem neuen Jahr werden die Werte des Vorjahres automatisch in die Historie des
+Brunnens übernommen, die Zeile ist dann für das neue Jahr leer. Die Historie wird mit gesichert und zwischen den Trupps
+synchronisiert.
+
+**Plausibilitätshinweise:** Auffällige Werte (z. B. Ausgangsdruck über 12 bar, Eingangsdruck unter −0,8 bar, Leistung
+weicht mehr als 25 % vom berechneten Wert ab) werden orange markiert. Eintragen lässt sich trotzdem alles.
+
 Das Protokoll lässt sich drucken (PDF), als CSV speichern oder per E-Mail sichern. „Standort prüfen“ aktualisiert
 die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
 
