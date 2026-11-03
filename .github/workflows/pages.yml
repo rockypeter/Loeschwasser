@@ -28,10 +28,12 @@ jobs:
 
       - name: Löschwasserpunkte von Overpass holen
         continue-on-error: true
+        timeout-minutes: 25
         run: |
           python3 - <<'PY'
           import json, re, time, math, datetime, urllib.request, urllib.parse
           S, W, N, E = 51.78, 14.05, 51.98, 14.38
+          DEADLINE = time.time() + 30 * 60  # harte Zeitgrenze für den ganzen Abruf
           MIRRORS = ["https://overpass-api.de/api/interpreter",
                      "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
                      "https://overpass.private.coffee/api/interpreter"]
@@ -41,8 +43,12 @@ jobs:
               return run(f'[out:json][timeout:120];nwr["emergency"~"^({TYPES})$"]({bbox});out body center qt;')
           def run(q):
               errs = []
+              if time.time() > DEADLINE:
+                  raise SystemExit("Zeitbudget (30 min) aufgebraucht")
               for attempt in range(3):
                   for url in MIRRORS:
+                      if time.time() > DEADLINE:
+                          raise SystemExit("Zeitbudget (30 min) aufgebraucht")
                       try:
                           req = urllib.request.Request(url, data=urllib.parse.urlencode({"data": q}).encode(), headers={"User-Agent": UA})
                           with urllib.request.urlopen(req, timeout=150) as r:
@@ -185,7 +191,7 @@ jobs:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
           if [ -n "$FIREBASE_CONFIG" ]; then
-            python3 -c 'import json,os; c=json.loads(os.environ["FIREBASE_CONFIG"]); open("_site/firebase-config.js","w").write("export const firebaseConfig = " + json.dumps(c) + ";\n")'
+            python3 -c 'import json,os; c=json.loads(os.environ["FIREBASE_CONFIG"]); print("::warning::databaseURL fehlt im Secret FIREBASE_CONFIG, der Sync bleibt offline") if not c.get("databaseURL") else None; open("_site/firebase-config.js","w").write("export const firebaseConfig = " + json.dumps(c) + ";\n")'
             echo "firebase-config.js erzeugt"
           else
             echo "::warning::Secret FIREBASE_CONFIG fehlt, der Sync bleibt aus"
