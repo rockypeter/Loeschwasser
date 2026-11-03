@@ -28,6 +28,7 @@ window.FB = FB;
     // Historie früherer Jahre je Brunnen (wird einmal geschrieben und danach nicht mehr überschrieben)
     FB.listenHist = (ot, cb, err) => onValue(ref(db, 'historie/' + ot), s => cb(s.val() || {}), err);
     FB.setHist = (ot, key, year, rec) => set(ref(db, 'historie/' + ot + '/' + key + '/' + year), rec).catch(() => {});
+    FB.info = { dbUrl: firebaseConfig.databaseURL || '' }; // nur für die Diagnose im Menü
     FB.ok = true;
   } catch (e) {
     FB.ok = false; // keine Konfiguration oder offline ohne Cache: App läuft lokal weiter

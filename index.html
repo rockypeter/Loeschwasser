@@ -485,7 +485,7 @@
         <!-- Entnahmeart mit exakter Tagging-Unterscheidung -->
         <div>
           <label class="block text-slate-300 font-bold mb-1.5">Entnahmeart / Typ <span class="text-red-500">*</span></label>
-          <select id="formType" required class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 font-medium focus:outline-none focus:border-red-500">
+          <select id="formType" required onchange="signToggle()" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 font-medium focus:outline-none focus:border-red-500">
             <option value="underground">Unterflurhydrant</option>
             <option value="pillar">Überflurhydrant</option>
             <option value="shallow_well">Flachspiegelbrunnen</option>
@@ -733,7 +733,10 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-03 css';
+    const APP_VERSION = '2026-11-03 diagnose';
+    // Blockierte Verbindungen (Sicherheitsrichtlinie) für die Diagnose mitschreiben
+    const cspLog = [];
+    document.addEventListener('securitypolicyviolation', e => { if (cspLog.length < 6) cspLog.push(e.violatedDirective + ': ' + String(e.blockedURI || '').slice(0, 90)); });
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -2146,6 +2149,14 @@
       const out = document.getElementById('diagOut'), rows = [];
       out.textContent = 'Teste…';
       rows.push(`Seite: ${location.protocol}//${location.host || 'lokale Datei'}, online: ${navigator.onLine ? 'ja' : 'nein'}`);
+      rows.push('Sync-Konfiguration: ' + (fbOk() ? 'geladen' : 'FEHLT (firebase-config.js)'));
+      if (fbOk()) {
+        const u = (FB.info && FB.info.dbUrl) || '';
+        rows.push('Datenbank-URL: ' + (u ? new URL(u).host : 'FEHLT in der Konfiguration'));
+        rows.push('Konto: ' + (FB.wehrId() || 'nicht angemeldet') + ', Verbindung: ' + (syncConn ? 'online' : 'offline'));
+        if (u) { try { const r = await withTimeout(fetch(u.replace(/\/$/, '') + '/.json?shallow=true'), 10000); rows.push(r ? 'Datenbank erreichbar, HTTP ' + r.status + ' (401 ist normal)' : 'Datenbank: Zeitüberschreitung'); } catch (e) { rows.push('Datenbank nicht erreichbar: ' + e.message); } }
+      }
+      if (cspLog.length) rows.push('Blockiert: ' + cspLog.join(' | '));
       const q = encodeURIComponent('[out:json][timeout:10];node["emergency"="fire_hydrant"](51.85,14.12,51.87,14.15);out body;');
       for (const url of OVERPASS_MIRRORS) {
         const t0 = performance.now(); let msg;
@@ -2426,6 +2437,7 @@
       if (!saveQueue()) { offlineQueue.pop(); return; }
       digestAdd(record);
       audit(record.osmId ? 'Prüfung gesendet' : 'Neue Stelle erfasst', getReadableType(record.type), { uid: record.osmId, lat: record.lat, lon: record.lng });
+      if (record.osmId) autoMangel(record);
 
       updateQueueBadge();
       toggleModal('formModal', false);
@@ -2439,6 +2451,34 @@
       }).addTo(map).bindPopup('<b>Erfassung Gespeichert!</b><br>Bereit zur OSM-Synchronisation.').openPopup();
 
       showToast("Erfassung lokal für FFW Schmogrow gespeichert", "fa-check");
+    }
+
+    // Brunnen haben keine Schilder: Feld bei Brunnen ausblenden
+    function signToggle(){
+      const t = document.getElementById('formType').value, well = t === 'shallow_well' || t === 'deep_well', sel = document.getElementById('formSign');
+      sel.parentElement.classList.toggle('hidden', well); if (well) sel.value = 'yes';
+    }
+    function pushCell(ot, uid, fields){
+      const w = currentWehr();
+      if (!fbOk() || !w || FB.wehrId() !== w.id || !ownsName(ot)) return;
+      const c = syncClean(fields); if (Object.keys(c).length) FB.push(otKey(ot), uKey(uid), c);
+    }
+    // Defekt oder eingeschränkt nutzbar (aus "Gegebenheiten prüfen") wird als Mangel im Prüfprotokoll des Brunnens vermerkt
+    function autoMangel(rec){
+      if (rec.operational === 'yes') return;
+      const pt = existingWaterPoints.find(p => p.uid === rec.osmId); if (!pt || !isShallow(pt)) return;
+      const ot = ortsteilOf(pt); if (!ot) return;
+      const text = ((rec.operational === 'no' ? 'Defekt / außer Betrieb' : 'Eingeschränkt nutzbar') + (rec.notes ? ': ' + rec.notes : '')).slice(0, 120), live = protoOt === ot;
+      let pd = protoData; if (!live) { try { pd = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e){ pd = {}; } }
+      const d = pd[pt.uid] || (pd[pt.uid] = {}), up = {};
+      if ((d.mangel || '').includes(text)) return;
+      d.mangel = [d.mangel, text].filter(Boolean).join('; ').slice(0, 120); up.mangel = d.mangel;
+      if (!d.date) { d.date = todayISO(); up.date = d.date; }
+      if (live) { protoSave(); if (!document.getElementById('protoModal').classList.contains('hidden')) renderProtocol(); }
+      else { try { localStorage.setItem(protoKey(ot), JSON.stringify(pd)); } catch(e){} }
+      pushCell(ot, pt.uid, up);
+      audit('Mangel eingetragen', text, pt);
+      showToast('Mangel im Prüfprotokoll eingetragen', 'fa-clipboard-list');
     }
 
     // ==================== EXAKTE OSM SYNCHRONISATION ====================
@@ -2504,7 +2544,7 @@
         `[${(currentWehr() || {}).name || 'FFW'} - Löschwassererfassung]`, `Typ: ${getReadableType(rec.type)}`, TAGS_BY_TYPE[rec.type] || '',
         rec.diameter && `fire_hydrant:diameter=${rec.diameter}`, rec.flow && `fire_hydrant:flow_rate=${rec.flow}`,
         `operational_status=${rec.operational}`, c && `Storz-Anschlüsse: ${c}`,
-        `Hinweisschild: ${rec.sign === 'yes' ? 'vorhanden' : 'beschädigt/fehlt'}`, rec.notes && `Hinweis: ${rec.notes}`,
+        /_well$/.test(rec.type) ? '' : `Hinweisschild: ${rec.sign === 'yes' ? 'vorhanden' : 'beschädigt/fehlt'}`, rec.notes && `Hinweis: ${rec.notes}`,
         rec.osmId && `Prüfung bestehender Punkt: https://www.openstreetmap.org/${rec.osmId}`,
         rec.image && '(Foto liegt bei der FFW Schmogrow vor)'
       ].filter(Boolean).join('\n');
@@ -2619,6 +2659,7 @@
 
     // ==================== UTILS ====================
     function toggleModal(modalId, show) {
+      if (modalId === 'formModal' && show) setTimeout(signToggle, 0);
       const el = document.getElementById(modalId);
       if (show === undefined) el.classList.toggle('hidden');
       else if (show) el.classList.remove('hidden');
