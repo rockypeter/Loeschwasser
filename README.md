@@ -7,7 +7,7 @@ Ohne Netz bleibt sie benutzbar.
 ## Karte und Stellen
 - Die Stellen kommen aus OpenStreetMap und werden jede Nacht automatisch aktualisiert. Farben zeigen die Art:
   Unterflurhydrant, Überflurhydrant, Flachspiegelbrunnen, Tiefbrunnen, Zisterne/Tank, Löschteich/Saugstelle.
-- Bei Flachspiegelbrunnen zeigt ein Ring den Prüfstand: **grün** = dieses Jahr geprüft, **orange** = noch offen.
+- Bei Flachspiegelbrunnen zeigt ein Ring den Prüfstand: **grün** = im aktuellen Prüfdurchgang geprüft (Frühjahr bis Juli, Herbst ab August), **orange** = noch offen.
 - Beim Antippen einer Stelle erscheinen ihre Daten und der Prüfstatus.
 - Die Liste mit Karte (A4) lässt sich pro Ortsteil oder für alle drucken oder als CSV speichern.
 
@@ -60,6 +60,8 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
   mit der PIN der Feuerwehr (Menü → Protokoll-Sync).
 - Jede Zelle wird einzeln gespeichert, Änderungen erscheinen bei den anderen Trupps sofort. Am Ende druckt oder speichert
   ein Gerät das vollständige Protokoll.
+- Nach der Anmeldung werden im Hintergrund alle eigenen Ortsteile abgeglichen, damit Ringe, Menü und Jahresbericht auf jedem
+  Gerät den gemeinsamen Stand zeigen. Lokal Erfasstes wird weiterhin beim Öffnen des Ortsteils hochgeladen.
 - Der Knopf oben im Protokoll zeigt den Zustand: live, wartet (offline) oder nicht angemeldet.
 - Offline Erfasstes wird beim nächsten Verbinden hochgeladen. Wird dieselbe Zelle von zwei Trupps geändert, gilt die
   letzte Änderung. Fotos werden nicht synchronisiert.
@@ -74,6 +76,11 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
 - **Punkte aus Datei importieren:** Für den Einsatz ohne aktuelle Daten.
 - **Startpunkt:** Die Kartenmitte lässt sich als Startansicht merken.
 - **Fehler oder Idee melden:** Direkt aus dem Menü.
+
+## Jahresbericht und Mängelliste
+Menü → Jahresbericht und Mängelliste. Übersicht je Ortsteil, Mängelliste und alle Brunnen, druckbar als PDF. Mängel sind: im
+Durchgang nicht geprüft, Leistung um mindestens 20 % gesunken, auffällige Werte und die Spalte „Mängel“ im Protokoll
+(leer = keine Mängel). Der Bericht nutzt die Daten dieses Geräts.
 
 ## Hinweise zu den Daten
 - Protokolle und Fotos liegen zuerst auf dem Gerät. Bei aktivem Sync liegen die Protokolleinträge (ohne Fotos) zusätzlich
