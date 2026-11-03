@@ -194,7 +194,7 @@
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-teal-400 shrink-0"></span> Tiefbrunnen</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span> Zisterne/Tank</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span> Löschteich/Saugst.</div>
-        <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = dieses Jahr geprüft, oranger Ring = noch offen</div>
+        <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = im aktuellen Durchgang (Frühjahr/Herbst) geprüft, oranger Ring = noch offen</div>
       </div>
     </div>
   </div>
@@ -239,11 +239,11 @@
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
       <div class="overflow-auto p-3 text-xs">
-        <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
+        <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2><datalist id="mangelList"><option value="Deckel defekt"><option value="Schild fehlt oder beschädigt"><option value="Zufahrt versperrt"><option value="Brunnen versandet"><option value="Leistung zu gering"><option value="Anschluss oder Schlauch defekt"></datalist>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
-        <table class="w-full border-collapse min-w-[1020px]">
+        <table class="w-full border-collapse min-w-[1160px]">
           <thead><tr class="bg-slate-200 text-left">
-            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400 min-w-[200px]">Aufbau (Strahlrohre)</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400 w-20">Eingangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 w-20">Ausgangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
+            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400 min-w-[200px]">Aufbau (Strahlrohre)</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400 w-20">Eingangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 w-20">Ausgangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 min-w-[150px]">Mängel</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
@@ -321,7 +321,7 @@
       <div class="flex items-center px-4 py-3 border-b border-slate-800 shrink-0"><h2 class="font-extrabold text-white text-sm flex-1"><i class="fa-solid fa-circle-question text-cyan-400 mr-1.5"></i>So geht’s</h2><button onclick="toggleModal('helpModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button></div>
       <div class="p-4 overflow-y-auto space-y-3 text-xs text-slate-300 leading-relaxed">
         <p><b class="text-white">Karte:</b> Die Punkte sind Löschwasserentnahmestellen aus OpenStreetMap. Tippe auf einen Punkt, um die Angaben zu sehen. Die Legende lässt sich verschieben.</p>
-        <p><b class="text-white">Ring um Flachspiegelbrunnen:</b> grün = dieses Jahr geprüft, orange = noch offen.</p>
+        <p><b class="text-white">Ring um Flachspiegelbrunnen:</b> grün = im aktuellen Durchgang (Frühjahr bis Juli, Herbst ab August) geprüft, orange = noch offen.</p>
         <p><b class="text-white">Prüfen und bearbeiten:</b> Nur Stellen deiner eigenen Ortsteile und nur direkt vor Ort (höchstens 150 m). Dafür muss der Standort erlaubt sein. Alle anderen Stellen siehst du nur an.</p>
         <p><b class="text-white">Neue Stelle:</b> „Neu Erfassen“ antippen, Art und Angaben eintragen, speichern. Beim Beenden der App gehen die Notizen an OSM, bei den Wehren außer Schmogrow zusätzlich eine Meldung an die Zentrale.</p>
         <p><b class="text-white">Prüfprotokoll:</b> Menü → Prüfprotokolle → Ortsteil wählen, oder im Popup eines Brunnens. Zeile ausfüllen, Datum und Prüfer füllen sich selbst. Mit der Kamera-Taste hängst du ein Foto an. Drucken oder als PDF speichern über „Drucken / PDF“.</p>
@@ -728,7 +728,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-01 verlauf';
+    const APP_VERSION = '2026-11-03 durchgaenge';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1180,7 +1180,7 @@
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
     async function loadProtocol(ot){
       protoOt = ot; testedMap = buildTested();
-      document.getElementById('protoBody').innerHTML = '<tr><td colspan="12" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
+      document.getElementById('protoBody').innerHTML = '<tr><td colspan="13" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
       protoPos = (currentWehr() || {}).gps !== false ? await getPosition() : null;
       protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
         .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
@@ -1211,13 +1211,14 @@
           <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" title="Wird aus Strahlrohren und Ausgangsdruck berechnet, kann von Hand korrigiert werden" value="${esc(d.leistung || '')}" class="${inp}"><div data-vol class="text-[10px] text-slate-500 mt-0.5"></div><div data-trend class="text-[10px] font-bold"></div></td>
           <td class="${cell}"><input type="number" data-f="eingang" step="0.01" max="0" title="Eingangsdruck in bar. Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ." placeholder="-0,40" value="${esc(d.eingang || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="ausgang" min="0" step="0.1" inputmode="decimal" title="Ausgangsdruck in bar" placeholder="0,0" value="${esc(d.ausgang || '')}" class="${inp}"></td>
+          <td class="${cell}"><input type="text" data-f="mangel" list="mangelList" maxlength="120" placeholder="leer = keine Mängel" value="${esc(d.mangel || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"></td>
           <td class="${cell} text-center"><img data-photo="${esc(pt.uid)}" class="hidden mx-auto w-16 h-16 object-cover rounded border border-slate-300 mb-1">
             <label class="no-print inline-block px-2 py-1 bg-slate-200 rounded cursor-pointer"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="protoPhoto(${jq(pt.uid)}, this)"></label>
             <button onclick="delPhoto(${jq(pt.uid)})" title="Foto löschen" class="no-print text-slate-400 hover:text-red-600 text-[10px]">✕</button></td>
           <td class="no-print ${cell} text-center"><button onclick="protoClear(${jq(pt.uid)})" title="Zeile leeren" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="12" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
+      }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
       refreshVols(); refreshPlausi(); loadPhotos(); lockRows();
     }
@@ -1277,7 +1278,7 @@
         const d = protoData[tr.dataset.uid] || {}, q = parseFloat(d.leistung), t = parseFloat(d.zeit);
         el.textContent = q > 0 && t > 0 ? '≈ ' + Math.round(q * t).toLocaleString('de-DE') + ' l in ' + String(t).replace('.', ',') + ' min' : '';
         const te = tr.querySelector('[data-trend]'), tt = trendOf(tr.dataset.uid);
-        if (te) { te.textContent = tt ? tt.arrow + ' ' + (tt.pct > 0 ? '+' : '') + tt.pct + ' % ggü. ' + tt.from : ''; te.style.color = tt ? trendColor(tt.pct) : ''; }
+        if (te) { te.textContent = tt ? tt.arrow + ' ' + (tt.pct > 0 ? '+' : '') + tt.pct + ' % ggü. ' + roundLabel(tt.from) : ''; te.style.color = tt ? trendColor(tt.pct) : ''; }
       });
     }
     // ==================== PLAUSIBILITÄT (nur Hinweise, nichts wird blockiert) ====================
@@ -1312,15 +1313,15 @@
     }
     // ==================== HISTORIE, VERLAUF, TREND ====================
     // Beim ersten Eintrag in einem neuen Jahr wandern die Werte des Vorjahres automatisch in die Historie des Brunnens.
-    const HIST_F = ['date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer'];
+    const HIST_F = ['date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer', 'mangel'];
     const histKey = o => 'ffw_hist_' + (o || 'ohne_zuordnung');
     let protoHist = {};
     function histSave(){ try { localStorage.setItem(histKey(protoOt), JSON.stringify(protoHist)); } catch(e){} }
     function histRollover(tr, target){
       const uid = tr.dataset.uid, d = protoData[uid];
       if (!d || !d.date || target.dataset.f === 'loc') return;
-      const y = String(d.date).slice(0, 4);
-      if (!/^\d{4}$/.test(y) || y >= thisYear()) return;
+      const y = roundOf(d.date);
+      if (!y || y >= curRound()) return;
       if (!['leistung', 'eingang', 'ausgang', 'zeit', 'aufbau', 'pump'].some(f => d[f])) return;
       const pt = protoWells.find(p => p.uid === uid);
       if (pt && !editStatus(pt, protoPos).ok) return;
@@ -1333,12 +1334,12 @@
       aufbauToSlots(tr, '');
       target.value = keep;
       syncPush(uid, Object.fromEntries(HIST_F.map(f => [f, ''])));
-      showToast('Werte ' + y + ' in die Historie übernommen', 'fa-clock-rotate-left');
+      showToast('Werte ' + roundLabel(y) + ' in die Historie übernommen', 'fa-clock-rotate-left');
     }
     function histSeries(uid){
       const h = protoHist[uid] || {}, rows = Object.keys(h).map(y => Object.assign({ y }, h[y])), d = protoData[uid];
-      if (d && /^\d{4}/.test(d.date || '') && (d.leistung || d.eingang || d.ausgang)) {
-        const y = d.date.slice(0, 4), cur = Object.assign({ y }, d), i = rows.findIndex(r => r.y === y);
+      if (d && roundOf(d.date) && (d.leistung || d.eingang || d.ausgang)) {
+        const y = roundOf(d.date), cur = Object.assign({ y }, d), i = rows.findIndex(r => r.y === y);
         if (i >= 0) rows[i] = cur; else rows.push(cur);
       }
       return rows.sort((a, b) => a.y.localeCompare(b.y));
@@ -1351,7 +1352,7 @@
     }
     const trendColor = pct => pct >= 10 ? '#059669' : pct <= -10 ? '#dc2626' : '#64748b';
     function verlaufSvg(rows){
-      const pts = rows.filter(r => parseFloat(r.leistung) > 0).map(r => ({ y: +r.y, v: parseFloat(r.leistung) }));
+      const pts = rows.filter(r => parseFloat(r.leistung) > 0).map(r => ({ y: roundNum(r.y), l: r.y, v: parseFloat(r.leistung) }));
       if (!pts.length) return '';
       const W = 320, H = 180, L = 40, R = 14, T = 16, B = 28;
       const y0 = Math.min(...pts.map(p => p.y)), y1 = Math.max(...pts.map(p => p.y)), vmax = Math.max(...pts.map(p => p.v)) * 1.2;
@@ -1360,7 +1361,7 @@
       let g = '';
       [0, 0.5, 1].forEach(f => { const v = vmax * f, yy = Y(v); g += `<line x1="${L}" y1="${yy}" x2="${W - R}" y2="${yy}" stroke="#334155" stroke-width="1"/><text x="${L - 4}" y="${yy + 3}" text-anchor="end" font-size="9" fill="#94a3b8">${Math.round(v)}</text>`; });
       const line = pts.length > 1 ? `<polyline fill="none" stroke="#22d3ee" stroke-width="2" points="${pts.map(p => X(p.y) + ',' + Y(p.v)).join(' ')}"/>` : '';
-      const dots = pts.map(p => `<circle cx="${X(p.y)}" cy="${Y(p.v)}" r="4" fill="#22d3ee"/><text x="${X(p.y)}" y="${Y(p.v) - 8}" text-anchor="middle" font-size="10" font-weight="bold" fill="#e2e8f0">${Math.round(p.v)}</text><text x="${X(p.y)}" y="${H - 10}" text-anchor="middle" font-size="10" fill="#cbd5e1">${p.y}</text>`).join('');
+      const dots = pts.map(p => `<circle cx="${X(p.y)}" cy="${Y(p.v)}" r="4" fill="#22d3ee"/><text x="${X(p.y)}" y="${Y(p.v) - 8}" text-anchor="middle" font-size="10" font-weight="bold" fill="#e2e8f0">${Math.round(p.v)}</text><text x="${X(p.y)}" y="${H - 10}" text-anchor="middle" font-size="10" fill="#cbd5e1">${esc(String(p.l).replace(/^20(\d\d)-([FH])$/, '$2 $1'))}</text>`).join('');
       return `<svg viewBox="0 0 ${W} ${H}" class="w-full mt-2" role="img" aria-label="Leistung in l/min je Jahr">${g}${line}${dots}<text x="${L}" y="10" font-size="9" fill="#94a3b8">l/min</text></svg>`;
     }
     function openVerlauf(uid){
@@ -1368,11 +1369,11 @@
       const rows = histSeries(uid), t = trendOf(uid);
       const fd = s => (s ? new Date(s + 'T00:00:00').toLocaleDateString('de-DE') : '-'), nm = v => (v ? String(v).replace('.', ',') : '-');
       let html = `<div class="font-bold text-white">${esc(wellLabel(pt))}${getLoc(pt) ? ' <span class="text-slate-400 font-normal">(' + esc(getLoc(pt)) + ')</span>' : ''}</div>`;
-      if (t) html += `<div class="mt-1 font-extrabold" style="color:${t.pct >= 10 ? '#34d399' : t.pct <= -10 ? '#f87171' : '#94a3b8'}">${t.arrow} ${t.pct > 0 ? '+' : ''}${t.pct} % (${esc(t.from)} → ${esc(t.to)})</div>`;
+      if (t) html += `<div class="mt-1 font-extrabold" style="color:${t.pct >= 10 ? '#34d399' : t.pct <= -10 ? '#f87171' : '#94a3b8'}">${t.arrow} ${t.pct > 0 ? '+' : ''}${t.pct} % (${esc(roundLabel(t.from))} → ${esc(roundLabel(t.to))})</div>`;
       html += verlaufSvg(rows) || '<p class="text-slate-400 mt-3">Noch keine Leistung eingetragen.</p>';
-      if (rows.filter(r => parseFloat(r.leistung) > 0).length < 2) html += '<p class="text-xs text-slate-400 mt-2">Bisher höchstens eine Messung. Der Verlauf entsteht ab dem nächsten Jahr: Beim ersten Eintrag im neuen Jahr werden die Werte des Vorjahres automatisch in die Historie übernommen.</p>';
-      if (rows.length) html += '<div class="mt-3 overflow-x-auto"><table class="w-full text-xs border-collapse"><tr class="text-slate-400 text-left"><th class="py-1 pr-2">Jahr</th><th class="pr-2">Datum</th><th class="pr-2">l/min</th><th class="pr-2">Eingang bar</th><th class="pr-2">Ausgang bar</th><th>Zeit min</th></tr>'
-        + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700 align-top"><td class="py-1 pr-2 font-bold">${esc(r.y)}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>${r.aufbau ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">${esc(aufbauLabel(r.aufbau))}${r.pump ? ' | ' + esc(r.pump === 'Andere' ? (r.pumpOther || 'Andere') : r.pump) : ''}</td></tr>` : ''}`).join('') + '</table></div>';
+      if (rows.filter(r => parseFloat(r.leistung) > 0).length < 2) html += '<p class="text-xs text-slate-400 mt-2">Bisher höchstens eine Messung. Der Verlauf entsteht ab dem nächsten Durchgang (Frühjahr oder Herbst): Beim ersten Eintrag im neuen Durchgang werden die Werte des vorigen automatisch in die Historie übernommen.</p>';
+      if (rows.length) html += '<div class="mt-3 overflow-x-auto"><table class="w-full text-xs border-collapse"><tr class="text-slate-400 text-left"><th class="py-1 pr-2">Durchgang</th><th class="pr-2">Datum</th><th class="pr-2">l/min</th><th class="pr-2">Eingang bar</th><th class="pr-2">Ausgang bar</th><th>Zeit min</th></tr>'
+        + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700 align-top"><td class="py-1 pr-2 font-bold">${esc(roundLabel(r.y))}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>${r.aufbau ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">${esc(aufbauLabel(r.aufbau))}${r.pump ? ' | ' + esc(r.pump === 'Andere' ? (r.pumpOther || 'Andere') : r.pump) : ''}</td></tr>` : ''}`).join('') + '</table></div>';
       document.getElementById('verlaufBody').innerHTML = html;
       toggleModal('verlaufModal', true);
     }
@@ -1421,9 +1422,9 @@
     }
     function protoClear(uid){ audit('Protokollzeile geleert', '', existingWaterPoints.find(p => p.uid === uid) || { uid }); delete protoData[uid]; protoSave(); renderProtocol(); syncDrop(uid); }
     function protoCsv(){
-      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Prüfer']].concat(protoWells.map((pt, i) => {
+      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Mängel', 'Prüfer']].concat(protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), aufbauLabel(d.aufbau), d.zeit || '', d.leistung || '', d.eingang || '', d.ausgang || '', d.pruefer || ''];
+        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), aufbauLabel(d.aufbau), d.zeit || '', d.leistung || '', d.eingang || '', d.ausgang || '', d.mangel || '', d.pruefer || ''];
       }));
       const csv = '\ufeff' + rows.map(r => r.map(v => csvCell(v)).join(';')).join('\r\n');
       const a = document.createElement('a');
@@ -1435,7 +1436,7 @@
     // ==================== SYNC (Firebase, PIN je Feuerwehr) ====================
     // Mehrere Trupps einer Wehr arbeiten live am selben Ortsteil-Protokoll. Jede Zelle wird einzeln gespeichert,
     // so überschreiben sich Trupps nie gegenseitig (gleiche Zelle: letzte Änderung gilt). Fotos bleiben auf dem Gerät.
-    const SYNC_F = ['loc', 'date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer'];
+    const SYNC_F = ['loc', 'date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer', 'mangel'];
     const SYNC_NUM = ['zeit', 'leistung', 'eingang', 'ausgang'];
     const otKey = o => String(o || 'ohne_zuordnung').replace(/[.$#\[\]\/\s]+/g, '_');
     const uKey = uid => String(uid).replace(/\//g, '_');
@@ -1525,7 +1526,7 @@
       Object.keys(val).forEach(k => {
         const pt = byKey[k], hy = val[k]; if (!pt || !hy || typeof hy !== 'object') return;
         Object.keys(hy).forEach(y => {
-          if (!/^20\d\d$/.test(y) || !hy[y] || typeof hy[y] !== 'object') return;
+          if (!/^20\d\d(-[FH])?$/.test(y) || !hy[y] || typeof hy[y] !== 'object') return;
           const h = protoHist[pt.uid] || (protoHist[pt.uid] = {});
           if (!h[y]) { const rec = {}; HIST_F.forEach(f => { if (typeof hy[y][f] === 'string') rec[f] = hy[y][f]; }); h[y] = rec; changed = true; }
         });
@@ -1592,7 +1593,12 @@
     }
     let testedMap = buildTested();
     const thisYear = () => String(new Date().getFullYear());
-    const isTestedNow = uid => !!testedMap[uid] && testedMap[uid].slice(0, 4) === thisYear();
+    // Prüfdurchgang: Januar bis Juli = Frühjahr (F), August bis Dezember = Herbst (H)
+    const roundOf = date => { const m = /^(\d{4})-(\d{2})/.exec(date || ''); return m ? m[1] + (+m[2] <= 7 ? '-F' : '-H') : ''; };
+    const curRound = () => roundOf(todayISO());
+    const roundLabel = r => { const m = /^(\d{4})(?:-([FH]))?$/.exec(r || ''); return m ? (m[2] ? (m[2] === 'F' ? 'Frühjahr ' : 'Herbst ') : '') + m[1] : String(r || ''); };
+    const roundNum = r => { const m = /^(\d{4})(?:-([FH]))?$/.exec(r || ''); return m ? +m[1] + (m[2] === 'H' ? 0.5 : 0) : 0; };
+    const isTestedNow = uid => !!testedMap[uid] && roundOf(testedMap[uid]) === curRound();
     function statusText(pt){ const d = testedMap[pt.uid]; return d ? (isTestedNow(pt.uid) ? 'geprüft am ' : 'zuletzt geprüft am ') + d.split('-').reverse().join('.') : 'noch nicht geprüft'; }
     function ringOpts(pt, style){
       if (style.title !== 'Flachspiegelbrunnen') return { color: '#FFFFFF', weight: 2.5 };
@@ -1604,7 +1610,7 @@
     }
     function protoHeader(){
       const gem = (protoWells[0] || {}).gemeinde, n = protoWells.filter(p => isTestedNow(p.uid)).length, t = document.getElementById('protoTitle');
-      if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + thisYear() + ' geprüft';
+      if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + roundLabel(curRound()) + ' geprüft';
     }
 
     function shrinkImage(file, max = 900, q = 0.65){
@@ -1892,7 +1898,7 @@
       const head = `Prüfprotokoll Flachspiegelbrunnen | ${document.getElementById('protoTitle').textContent} | Stand ${new Date().toLocaleDateString('de-DE')}`;
       return head + '\n\n' + protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${aufbauLabel(d.aufbau) || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Eingangsdruck: ${d.eingang || '-'} bar | Ausgangsdruck: ${d.ausgang || '-'} bar | Prüfer: ${d.pruefer || '-'}`;
+        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${aufbauLabel(d.aufbau) || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Eingangsdruck: ${d.eingang || '-'} bar | Ausgangsdruck: ${d.ausgang || '-'} bar | Mängel: ${d.mangel || 'keine'} | Prüfer: ${d.pruefer || '-'}`;
       }).join('\n') + '\n';
     }
     async function protoMail(){
@@ -1996,7 +2002,7 @@
       document.getElementById('menuWehr').textContent = w ? w.name : 'Keine Feuerwehr gewählt';
       document.getElementById('menuOt').textContent = w ? 'Ortsteile: ' + ((w.ortsteile || []).join(', ') || 'alle') : '';
       document.getElementById('menuQ').textContent = offlineQueue.length ? '(' + offlineQueue.length + ')' : '';
-      document.getElementById('menuProtoTitle').textContent = 'Prüfprotokolle | ' + thisYear() + ' geprüft';
+      document.getElementById('menuProtoTitle').textContent = 'Prüfprotokolle | ' + roundLabel(curRound()) + ' geprüft';
       testedMap = buildTested(); renderVerInfo();
       const groups = {};
       existingWaterPoints.filter(isShallow).forEach(p => { const o = ortsteilOf(p); (groups[o] = groups[o] || []).push(p); });
