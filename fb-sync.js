@@ -2,7 +2,7 @@
 // Hier stehen KEINE Zugangsdaten: die Konfiguration kommt aus firebase-config.js, das erst beim
 // Veröffentlichen aus dem GitHub-Secret FIREBASE_CONFIG erzeugt wird (siehe FIREBASE-SETUP.md).
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getDatabase, ref, update, set, remove, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+import { enableLogging, getDatabase, ref, update, set, remove, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 const MAILDOMAIN = '@ffw-loeschwasser.de'; // Pro Feuerwehr ein Konto: <wehr-id>@ffw-loeschwasser.de, Passwort = PIN
@@ -13,6 +13,9 @@ window.FB = FB;
   try {
     const { firebaseConfig } = await import('./firebase-config.js');
     const app = initializeApp(firebaseConfig);
+    // Verbindungsereignisse für die Diagnose mitschreiben (ohne Zugangsdaten und Nutzdaten)
+    FB.log = [];
+    enableLogging(m => { const t = String(m); if (/ebsocket|onnect|isconnect|imeout|ong.?poll|handshake|error/i.test(t) && !/cred|auth|token/i.test(t)) { FB.log.push(t.slice(0, 110)); if (FB.log.length > 30) FB.log.shift(); } });
     const db = getDatabase(app), auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] }); // ohne Popup-Weiterleitung: lädt keine Skripte von apis.google.com
     FB.wehrId = () => {
       const m = auth.currentUser && auth.currentUser.email;

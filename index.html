@@ -733,7 +733,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-03 diagnose2';
+    const APP_VERSION = '2026-11-03 diagnose3';
     // Blockierte Verbindungen (Sicherheitsrichtlinie) für die Diagnose mitschreiben
     const cspLog = [];
     document.addEventListener('securitypolicyviolation', e => { if (cspLog.length < 6) cspLog.push(e.violatedDirective + ': ' + String(e.blockedURI || '').slice(0, 90)); });
@@ -2157,6 +2157,7 @@
         if (u) { try { const r = await withTimeout(fetch(u.replace(/\/$/, '') + '/.json?shallow=true'), 10000); rows.push(r ? 'Datenbank erreichbar, HTTP ' + r.status + ' (401 ist normal)' : 'Datenbank: Zeitüberschreitung'); } catch (e) { rows.push('Datenbank nicht erreichbar: ' + e.message); } }
         if (u && FB.token) { try { const t = await withTimeout(FB.token(), 8000); if (!t) rows.push('Token: nicht erhalten (Zeitüberschreitung oder nicht angemeldet)'); else { const o = bgOts()[0]; if (o) { const r = await withTimeout(fetch(u.replace(/\/$/, '') + '/protokolle/' + encodeURIComponent(otKey(o)) + '.json?shallow=true&auth=' + t), 10000); rows.push('Lesetest ' + o + ': ' + (r ? 'HTTP ' + r.status + (r.status === 200 ? ' (ok)' : ' (kein Zugriff: Daten unter zugang und Regeln prüfen)') : 'Zeitüberschreitung')); } } } catch (e) { rows.push('Token-Test Fehler: ' + e.message); } }
       }
+      if (fbOk() && FB.log && FB.log.length) rows.push('Verbindungsprotokoll: ' + FB.log.slice(-8).join(' | '));
       if (cspLog.length) rows.push('Blockiert: ' + cspLog.join(' | '));
       const q = encodeURIComponent('[out:json][timeout:10];node["emergency"="fire_hydrant"](51.85,14.12,51.87,14.15);out body;');
       for (const url of OVERPASS_MIRRORS) {
