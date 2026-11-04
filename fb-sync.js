@@ -3,7 +3,7 @@
 // Veröffentlichen aus dem GitHub-Secret FIREBASE_CONFIG erzeugt wird (siehe FIREBASE-SETUP.md).
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
 import { getDatabase, ref, update, set, remove, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 const MAILDOMAIN = '@ffw-loeschwasser.de'; // Pro Feuerwehr ein Konto: <wehr-id>@ffw-loeschwasser.de, Passwort = PIN
 const FB = { ok: false };
@@ -13,11 +13,12 @@ window.FB = FB;
   try {
     const { firebaseConfig } = await import('./firebase-config.js');
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app), auth = getAuth(app);
+    const db = getDatabase(app), auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] }); // ohne Popup-Weiterleitung: lädt keine Skripte von apis.google.com
     FB.wehrId = () => {
       const m = auth.currentUser && auth.currentUser.email;
       return m && m.endsWith(MAILDOMAIN) ? m.slice(0, -MAILDOMAIN.length) : '';
     };
+    FB.token = async () => (auth.currentUser ? auth.currentUser.getIdToken() : null); // nur für die Diagnose
     FB.login = (wehr, pin) => signInWithEmailAndPassword(auth, wehr + MAILDOMAIN, pin);
     FB.logout = () => signOut(auth);
     FB.onAuth = cb => onAuthStateChanged(auth, cb);
