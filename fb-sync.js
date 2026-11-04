@@ -13,6 +13,8 @@ window.FB = FB;
   try {
     const { firebaseConfig } = await import('./firebase-config.js');
     const app = initializeApp(firebaseConfig);
+    // Hat Firebase einmal einen WebSocket-Fehler gemerkt, bleibt es in dieser Sitzung bei Long-Polling. Merker löschen, damit WebSocket neu versucht wird.
+    try { Object.keys(sessionStorage).filter(k => /previous_websocket_failure/.test(k)).forEach(k => sessionStorage.removeItem(k)); } catch (e) {}
     // Verbindungsereignisse für die Diagnose mitschreiben (ohne Zugangsdaten und Nutzdaten)
     FB.log = [];
     enableLogging(m => { const t = String(m); if (/ebsocket|onnect|isconnect|imeout|ong.?poll|handshake|error/i.test(t) && !/cred|auth|token/i.test(t)) { FB.log.push(t.slice(0, 110)); if (FB.log.length > 30) FB.log.shift(); } });
