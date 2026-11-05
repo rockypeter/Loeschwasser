@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de" class="h-full w-full overflow-hidden select-none">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://*.europe-west1.firebasedatabase.app; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src https://*.europe-west1.firebasedatabase.app; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
@@ -12,18 +12,36 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Löschwasserentnahmestellen</title>
 
-  <!-- Tailwind-CSS (wird beim Veröffentlichen aus index.html gebaut) -->
-  <link rel="stylesheet" href="tailwind.css">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ffw: {
+              red: '#D32F2F',
+              darkred: '#9A0007',
+              bright: '#EF4444',
+              yellow: '#F59E0B',
+              dark: '#0f172a',
+              panel: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
 
   <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="leaflet/leaflet.css"/>
-  <script src="leaflet/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
   <!-- Sync (Firebase); Zugangsdaten kommen aus firebase-config.js (wird beim Veröffentlichen aus einem GitHub-Secret erzeugt) -->
   <script type="module" src="fb-sync.js"></script>
 
   <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="fontawesome/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
   <style>
     * { touch-action: manipulation; }
@@ -87,6 +105,93 @@
     .mi:hover, .mi:active { background: #1e293b; }
     .mi i { width: 1.25rem; text-align: center; color: #22d3ee; }
     .msec { font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; color: #64748b; font-weight: 800; margin: .1rem .25rem .4rem; }
+  
+    /* ===== Optik: ruhig, hell, kontrastreich für Sonnenlicht ===== */
+    @media screen {
+      html, body { background:#e5e7eb; }
+      #map { background:#e5e7eb; }
+      [class*="backdrop-blur"] { backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+      [class*="bg-slate-950/80"], [class*="bg-slate-950/90"], [class*="bg-black/70"], [class*="bg-black/60"] { background:rgba(15,23,42,.55) !important; }
+      .animate-pulse, .animate-bounce, #newPointBanner { animation:none !important; }
+
+      /* Kopfzeile */
+      header { background:#fff !important; border-bottom:3px solid #d32f2f !important; box-shadow:0 1px 4px rgba(0,0,0,.15) !important; }
+      header h1 { color:#111827 !important; }
+      header button { min-height:44px; }
+      header button:not(#btnNewPointToggle) { background:#f1f5f9 !important; color:#0f172a !important; border:1px solid #94a3b8 !important; box-shadow:none !important; }
+      header button:not(#btnNewPointToggle) i { color:#b91c1c !important; }
+      #btnNewPointToggle { font-size:13px !important; box-shadow:none !important; }
+
+      /* Karten-Buttons */
+      .right-3.top-16 > button { width:52px !important; height:52px !important; background:#fff !important; border:2px solid #475569 !important; box-shadow:0 1px 4px rgba(0,0,0,.25) !important; }
+      .right-3.top-16 > button i { color:#0f172a !important; }
+      .leaflet-control-zoom a { width:40px !important; height:40px !important; line-height:40px !important; font-size:20px !important; color:#0f172a !important; }
+
+      /* Legende */
+      #legend > div { background:#fff !important; border:1px solid #94a3b8 !important; box-shadow:0 1px 4px rgba(0,0,0,.2) !important; }
+      #legend .text-slate-200, #legend .text-slate-300, #legend .text-slate-400, #legend .text-slate-500 { color:#1e293b !important; }
+      #legend .grid { font-size:12px !important; }
+      #legend .col-span-2 { font-size:11px !important; border-color:#cbd5e1 !important; }
+      #legend .grid > div > span { width:13px !important; height:13px !important; }
+      #legend .border-slate-800 { border-color:#cbd5e1 !important; }
+      #pointCount { background:#e2e8f0 !important; color:#0f172a !important; }
+
+      /* Popups */
+      .leaflet-popup-content-wrapper { background:#fff !important; color:#0f172a !important; border:1px solid #94a3b8 !important; box-shadow:0 2px 8px rgba(0,0,0,.3) !important; }
+      .leaflet-popup-tip { background:#fff !important; }
+      .leaflet-popup-content { font-size:13px; }
+      .leaflet-popup-content .text-slate-300, .leaflet-popup-content .text-slate-400, .leaflet-popup-content .text-slate-500 { color:#334155 !important; }
+      .leaflet-popup-content .text-red-400 { color:#b91c1c !important; }
+      .leaflet-popup-content .bg-slate-800 { background:#e2e8f0 !important; color:#334155 !important; }
+      .leaflet-popup-content .border-slate-700 { border-color:#cbd5e1 !important; }
+      .leaflet-popup-content button { min-height:44px; font-size:13px; }
+      .leaflet-container a.leaflet-popup-close-button { color:#475569 !important; }
+
+      /* Seitenmenü */
+      #sideMenu { background:#f8fafc !important; border-color:#cbd5e1 !important; }
+      #sideMenu .border-slate-800 { border-color:#e2e8f0 !important; }
+      #sideMenu .text-white, #sideMenu .text-slate-100 { color:#0f172a !important; }
+      #sideMenu .text-slate-400 { color:#475569 !important; }
+      #sideMenu button.rounded-full { background:#e2e8f0 !important; color:#0f172a !important; }
+      .mi { background:#fff !important; color:#0f172a !important; border:1px solid #e2e8f0; min-height:52px; font-size:1rem; }
+      .mi:hover, .mi:active { background:#fee2e2 !important; }
+      .mi i { color:#b91c1c !important; }
+      .msec { color:#475569; font-size:.72rem; }
+      #menuProto button { background:#fff !important; border:1px solid #e2e8f0; min-height:52px; }
+      #menuProto .bg-slate-700 { background:#e2e8f0 !important; }
+
+      /* Dialoge */
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) .bg-slate-900 { background:#fff !important; border-color:#94a3b8 !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) :is(.bg-slate-950,.bg-slate-950\/80) { background:#f1f5f9 !important; border-color:#cbd5e1 !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) .border-slate-800 { border-color:#e2e8f0 !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) :not(button):not(.bg-red-600).text-white { color:#0f172a !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) :is(.text-slate-200,.text-slate-300) { color:#1e293b !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) :is(.text-slate-400,.text-slate-500) { color:#475569 !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) .text-cyan-400 { color:#0e7490 !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) .text-amber-400 { color:#b45309 !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) :is(button.bg-slate-800,button.bg-slate-700,.bg-slate-800) { background:#e2e8f0 !important; color:#0f172a !important; border-color:#94a3b8 !important; }
+      :is(#helpModal,#fbModal,#auditModal,#wehrModal,#duplicateModal,#formModal,#syncModal,#pinModal,#verlaufModal) :is(input:not([type=checkbox]),select,textarea) { background:#fff !important; color:#0f172a !important; border:1.5px solid #94a3b8 !important; font-size:16px !important; min-height:46px; }
+      #formModal .bg-gradient-to-r { background:#b71c1c !important; }
+      #formModal .bg-gradient-to-r * { color:#fff !important; }
+      #formModal .bg-gradient-to-r .text-yellow-300 { color:#fde68a !important; }
+      #formModal button[type=submit], #syncModal button, #duplicateModal button { min-height:48px; }
+      #verlaufModal svg text { fill:#0f172a !important; }
+      #verlaufModal svg line { stroke:#cbd5e1 !important; }
+
+      /* Toast, Stoppuhr, Fuß */
+      #toast { font-size:14px !important; padding:12px 16px !important; }
+      #swPill { background:#fff !important; border-color:#0e7490 !important; }
+      #swTime { color:#0f172a !important; }
+      footer { background:#f1f5f9 !important; border-color:#cbd5e1 !important; }
+      footer, footer * { color:#475569 !important; }
+
+      /* Prüfprotokoll */
+      #protoSheet .text-xs { font-size:13px !important; }
+      #protoSheet :is(input,select) { border-color:#94a3b8 !important; min-height:38px; font-size:14px !important; }
+      #protoBody tr:nth-child(even):not(.bg-yellow-100) { background:#f8fafc; }
+      #protoBody td { padding:6px !important; }
+      #protoSheet thead th { background:#e2e8f0; color:#0f172a; font-size:12px; }
+    }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -176,7 +281,7 @@
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-teal-400 shrink-0"></span> Tiefbrunnen</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span> Zisterne/Tank</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span> Löschteich/Saugst.</div>
-        <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = im aktuellen Durchgang (Frühjahr/Herbst) geprüft, oranger Ring = noch offen</div>
+        <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = dieses Jahr geprüft, oranger Ring = noch offen</div>
       </div>
     </div>
   </div>
@@ -221,18 +326,14 @@
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
       <div class="overflow-auto p-3 text-xs">
-        <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2><div id="protoWehr" class="text-sm font-semibold mb-1"></div><datalist id="mangelList"><option value="Deckel defekt"><option value="Schild fehlt oder beschädigt"><option value="Zufahrt versperrt"><option value="Brunnen versandet"><option value="Leistung zu gering"><option value="Anschluss oder Schlauch defekt"></datalist>
+        <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
-        <table class="w-full border-collapse min-w-[1160px]">
+        <table class="w-full border-collapse min-w-[1020px]">
           <thead><tr class="bg-slate-200 text-left">
-            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400 min-w-[200px]">Aufbau (Strahlrohre)</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400 w-20">Eingangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 w-20">Ausgangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 min-w-[150px]">Mängel</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
+            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400 min-w-[200px]">Aufbau (Strahlrohre)</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400 w-20">Eingangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 w-20">Ausgangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
-        <div class="grid grid-cols-2 gap-10 text-[11px] mt-6 max-w-xl" style="break-inside:avoid">
-          <div class="border-t border-slate-700 pt-1 mt-12">Datum</div>
-          <div class="border-t border-slate-700 pt-1 mt-12">Unterschrift Prüfer</div>
-        </div>
       </div>
     </div>
   </div>
@@ -275,7 +376,6 @@
       </div></div>
       <div><div class="msec">Listen und Karten</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openList()"><i class="fa-solid fa-list"></i>Löschwasserliste und Karte A4</button>
-        <button class="mi" onclick="closeMenu();openReport()"><i class="fa-solid fa-file-lines"></i>Jahresbericht und Mängelliste</button>
         <label class="mi cursor-pointer"><i class="fa-solid fa-file-import"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();importPoints(event)"></label>
       </div></div>
       <div><div class="msec">Werkzeuge</div><div class="space-y-1.5">
@@ -308,7 +408,7 @@
       <div class="flex items-center px-4 py-3 border-b border-slate-800 shrink-0"><h2 class="font-extrabold text-white text-sm flex-1"><i class="fa-solid fa-circle-question text-cyan-400 mr-1.5"></i>So geht’s</h2><button onclick="toggleModal('helpModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button></div>
       <div class="p-4 overflow-y-auto space-y-3 text-xs text-slate-300 leading-relaxed">
         <p><b class="text-white">Karte:</b> Die Punkte sind Löschwasserentnahmestellen aus OpenStreetMap. Tippe auf einen Punkt, um die Angaben zu sehen. Die Legende lässt sich verschieben.</p>
-        <p><b class="text-white">Ring um Flachspiegelbrunnen:</b> grün = im aktuellen Durchgang (Frühjahr bis Juli, Herbst ab August) geprüft, orange = noch offen.</p>
+        <p><b class="text-white">Ring um Flachspiegelbrunnen:</b> grün = dieses Jahr geprüft, orange = noch offen.</p>
         <p><b class="text-white">Prüfen und bearbeiten:</b> Nur Stellen deiner eigenen Ortsteile und nur direkt vor Ort (höchstens 150 m). Dafür muss der Standort erlaubt sein. Alle anderen Stellen siehst du nur an.</p>
         <p><b class="text-white">Neue Stelle:</b> „Neu Erfassen“ antippen, Art und Angaben eintragen, speichern. Beim Beenden der App gehen die Notizen an OSM, bei den Wehren außer Schmogrow zusätzlich eine Meldung an die Zentrale.</p>
         <p><b class="text-white">Prüfprotokoll:</b> Menü → Prüfprotokolle → Ortsteil wählen, oder im Popup eines Brunnens. Zeile ausfüllen, Datum und Prüfer füllen sich selbst. Mit der Kamera-Taste hängst du ein Foto an. Drucken oder als PDF speichern über „Drucken / PDF“.</p>
@@ -372,28 +472,6 @@
           <h3 id="mpListTitle" class="font-extrabold text-sm mb-1"></h3>
           <table class="w-full border-collapse"><thead><tr class="bg-slate-200 text-left"><th class="p-1 border border-slate-400 w-8">Nr.</th><th class="p-1 border border-slate-400">Art</th><th class="p-1 border border-slate-400">Bezeichnung / Ortsangabe</th><th class="p-1 border border-slate-400">Nennweite</th><th class="p-1 border border-slate-400">Durchfluss</th><th class="p-1 border border-slate-400">Kapazität</th></tr></thead><tbody id="mpListBody"></tbody></table>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- JAHRESBERICHT -->
-  <div id="reportModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2">
-    <div class="sheet bg-white text-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
-        <button onclick="printSheet('reportModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
-        <button onclick="reportCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>Mängel als CSV</button>
-        <span class="flex-1"></span>
-        <button onclick="toggleModal('reportModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
-      </div>
-      <div class="overflow-auto p-3 text-xs">
-        <h2 class="text-base font-extrabold">Jahresbericht Löschwasser: Flachspiegelbrunnen</h2>
-        <p id="repHead" class="mb-3 text-sm"></p>
-        <h3 class="font-bold mb-1">Übersicht je Ortsteil</h3>
-        <table class="w-full border-collapse mb-4"><thead><tr class="bg-slate-200 text-left"><th class="p-1 border border-slate-400">Ortsteil</th><th class="p-1 border border-slate-400">Brunnen</th><th class="p-1 border border-slate-400">geprüft</th><th class="p-1 border border-slate-400">Ø Leistung (l/min)</th><th class="p-1 border border-slate-400">Mängel</th></tr></thead><tbody id="repSum"></tbody></table>
-        <h3 class="font-bold mb-1">Mängelliste</h3>
-        <table class="w-full border-collapse mb-4"><thead><tr class="bg-slate-200 text-left"><th class="p-1 border border-slate-400">Ortsteil</th><th class="p-1 border border-slate-400">Brunnen / Ortsangabe</th><th class="p-1 border border-slate-400">Mangel</th></tr></thead><tbody id="repMg"></tbody></table>
-        <h3 class="font-bold mb-1">Alle Brunnen</h3>
-        <table class="w-full border-collapse min-w-[860px]"><thead><tr class="bg-slate-200 text-left"><th class="p-1 border border-slate-400">Nr.</th><th class="p-1 border border-slate-400">Ortsteil</th><th class="p-1 border border-slate-400">Brunnen / Ortsangabe</th><th class="p-1 border border-slate-400">Datum</th><th class="p-1 border border-slate-400">l/min</th><th class="p-1 border border-slate-400">Trend</th><th class="p-1 border border-slate-400">Eingang (bar)</th><th class="p-1 border border-slate-400">Ausgang (bar)</th><th class="p-1 border border-slate-400">Prüfer</th></tr></thead><tbody id="repAll"></tbody></table>
       </div>
     </div>
   </div>
@@ -489,7 +567,7 @@
         <!-- Entnahmeart mit exakter Tagging-Unterscheidung -->
         <div>
           <label class="block text-slate-300 font-bold mb-1.5">Entnahmeart / Typ <span class="text-red-500">*</span></label>
-          <select id="formType" required onchange="signToggle()" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 font-medium focus:outline-none focus:border-red-500">
+          <select id="formType" required class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 font-medium focus:outline-none focus:border-red-500">
             <option value="underground">Unterflurhydrant</option>
             <option value="pillar">Überflurhydrant</option>
             <option value="shallow_well">Flachspiegelbrunnen</option>
@@ -737,10 +815,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-04 prueftag';
-    // Blockierte Verbindungen (Sicherheitsrichtlinie) für die Diagnose mitschreiben
-    const cspLog = [];
-    document.addEventListener('securitypolicyviolation', e => { if (cspLog.length < 6) cspLog.push(e.violatedDirective + ': ' + String(e.blockedURI || '').slice(0, 90)); });
+    const APP_VERSION = '2026-11-05 optik';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1095,7 +1170,7 @@
     function renderSinglePointMarker(pt) {
       const tags = pt.tags || {};
       const style = getMarkerStyle(tags);
-      const marker = L.circleMarker([pt.lat, pt.lon], { radius: 9, fillColor: style.color, ...ringOpts(pt, style), fillOpacity: 0.95 });
+      const marker = L.circleMarker([pt.lat, pt.lon], { radius: 11, fillColor: style.color, ...ringOpts(pt, style), fillOpacity: 0.95 });
       const st = tags['operational_status'];
       const popupHtml = `
         <div class="space-y-2 p-1 text-xs">
@@ -1192,7 +1267,7 @@
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
     async function loadProtocol(ot){
       protoOt = ot; testedMap = buildTested();
-      document.getElementById('protoBody').innerHTML = '<tr><td colspan="13" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
+      document.getElementById('protoBody').innerHTML = '<tr><td colspan="12" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
       protoPos = (currentWehr() || {}).gps !== false ? await getPosition() : null;
       protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
         .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
@@ -1219,18 +1294,17 @@
           <td class="${cell}"><input type="date" data-f="date" value="${esc(d.date || '')}" class="${inp}"></td>
           <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe eintragen" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Andere' ? '' : 'hidden'}"></td>
           <td class="${cell}"><input type="hidden" data-f="aufbau" value="${esc(d.aufbau || '')}"><div data-legacy class="hidden text-[10px] text-amber-700 mb-1"></div>${[0, 1, 2].map(i => `<div data-slotwrap="${i}" class="flex gap-1 ${i ? 'mt-1 hidden' : ''}"><select data-slot="${i}" class="${inp}">${ROHR_OPTS}</select><input type="number" data-slotv="${i}" min="0" step="1" inputmode="numeric" placeholder="l/min" title="Eigene Leistung in l/min" class="${inp} w-24 hidden"></div>`).join('')}</td>
-          <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"><button type="button" onclick="swTake(${jq(pt.uid)})" class="no-print mt-1 w-full py-1.5 bg-cyan-700 text-white rounded text-[11px] font-bold"><i class="fa-solid fa-stopwatch"></i> Uhr übernehmen</button></td>
+          <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" title="Wird aus Strahlrohren und Ausgangsdruck berechnet, kann von Hand korrigiert werden" value="${esc(d.leistung || '')}" class="${inp}"><div data-vol class="text-[10px] text-slate-500 mt-0.5"></div><div data-trend class="text-[10px] font-bold"></div></td>
           <td class="${cell}"><input type="number" data-f="eingang" step="0.01" max="0" title="Eingangsdruck in bar. Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ." placeholder="-0,40" value="${esc(d.eingang || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="ausgang" min="0" step="0.1" inputmode="decimal" title="Ausgangsdruck in bar" placeholder="0,0" value="${esc(d.ausgang || '')}" class="${inp}"></td>
-          <td class="${cell}"><input type="text" data-f="mangel" list="mangelList" maxlength="120" placeholder="leer = keine Mängel" value="${esc(d.mangel || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"></td>
           <td class="${cell} text-center"><img data-photo="${esc(pt.uid)}" class="hidden mx-auto w-16 h-16 object-cover rounded border border-slate-300 mb-1">
             <label class="no-print inline-block px-2 py-1 bg-slate-200 rounded cursor-pointer"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="protoPhoto(${jq(pt.uid)}, this)"></label>
             <button onclick="delPhoto(${jq(pt.uid)})" title="Foto löschen" class="no-print text-slate-400 hover:text-red-600 text-[10px]">✕</button></td>
           <td class="no-print ${cell} text-center"><button onclick="protoClear(${jq(pt.uid)})" title="Zeile leeren" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
+      }).join('') || '<tr><td colspan="12" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
       refreshVols(); refreshPlausi(); loadPhotos(); lockRows();
     }
@@ -1290,7 +1364,7 @@
         const d = protoData[tr.dataset.uid] || {}, q = parseFloat(d.leistung), t = parseFloat(d.zeit);
         el.textContent = q > 0 && t > 0 ? '≈ ' + Math.round(q * t).toLocaleString('de-DE') + ' l in ' + String(t).replace('.', ',') + ' min' : '';
         const te = tr.querySelector('[data-trend]'), tt = trendOf(tr.dataset.uid);
-        if (te) { te.textContent = tt ? tt.arrow + ' ' + (tt.pct > 0 ? '+' : '') + tt.pct + ' % ggü. ' + roundLabel(tt.from) : ''; te.style.color = tt ? trendColor(tt.pct) : ''; }
+        if (te) { te.textContent = tt ? tt.arrow + ' ' + (tt.pct > 0 ? '+' : '') + tt.pct + ' % ggü. ' + tt.from : ''; te.style.color = tt ? trendColor(tt.pct) : ''; }
       });
     }
     // ==================== PLAUSIBILITÄT (nur Hinweise, nichts wird blockiert) ====================
@@ -1325,20 +1399,18 @@
     }
     // ==================== HISTORIE, VERLAUF, TREND ====================
     // Beim ersten Eintrag in einem neuen Jahr wandern die Werte des Vorjahres automatisch in die Historie des Brunnens.
-    const HIST_F = ['date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer', 'mangel'];
+    const HIST_F = ['date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer'];
     const histKey = o => 'ffw_hist_' + (o || 'ohne_zuordnung');
     let protoHist = {};
     function histSave(){ try { localStorage.setItem(histKey(protoOt), JSON.stringify(protoHist)); } catch(e){} }
     function histRollover(tr, target){
       const uid = tr.dataset.uid, d = protoData[uid];
       if (!d || !d.date || target.dataset.f === 'loc') return;
-      const y = roundOf(d.date);
-      if (!y || y >= curRound()) return;
+      const y = String(d.date).slice(0, 4);
+      if (!/^\d{4}$/.test(y) || y >= thisYear()) return;
       if (!['leistung', 'eingang', 'ausgang', 'zeit', 'aufbau', 'pump'].some(f => d[f])) return;
       const pt = protoWells.find(p => p.uid === uid);
       if (pt && !editStatus(pt, protoPos).ok) return;
-      if (!rollAns.has(uid)) rollAns.set(uid, confirm('Werte von ' + roundLabel(y) + ' ins Archiv übernehmen und die Zeile für ' + roundLabel(curRound()) + ' neu beginnen?\n\nAbbrechen = nur einen Tippfehler in der alten Zeile korrigieren.'));
-      if (!rollAns.get(uid)) return;
       const h = protoHist[uid] || (protoHist[uid] = {});
       if (!h[y]) { const rec = {}; HIST_F.forEach(f => { if (d[f]) rec[f] = d[f]; }); h[y] = rec; histSave(); histPush(uid, y, rec); }
       const keep = target.value;
@@ -1348,12 +1420,12 @@
       aufbauToSlots(tr, '');
       target.value = keep;
       syncPush(uid, Object.fromEntries(HIST_F.map(f => [f, ''])));
-      showToast('Werte ' + roundLabel(y) + ' in die Historie übernommen', 'fa-clock-rotate-left');
+      showToast('Werte ' + y + ' in die Historie übernommen', 'fa-clock-rotate-left');
     }
     function histSeries(uid){
       const h = protoHist[uid] || {}, rows = Object.keys(h).map(y => Object.assign({ y }, h[y])), d = protoData[uid];
-      if (d && roundOf(d.date) && (d.leistung || d.eingang || d.ausgang)) {
-        const y = roundOf(d.date), cur = Object.assign({ y }, d), i = rows.findIndex(r => r.y === y);
+      if (d && /^\d{4}/.test(d.date || '') && (d.leistung || d.eingang || d.ausgang)) {
+        const y = d.date.slice(0, 4), cur = Object.assign({ y }, d), i = rows.findIndex(r => r.y === y);
         if (i >= 0) rows[i] = cur; else rows.push(cur);
       }
       return rows.sort((a, b) => a.y.localeCompare(b.y));
@@ -1366,7 +1438,7 @@
     }
     const trendColor = pct => pct >= 10 ? '#059669' : pct <= -10 ? '#dc2626' : '#64748b';
     function verlaufSvg(rows){
-      const pts = rows.filter(r => parseFloat(r.leistung) > 0).map(r => ({ y: roundNum(r.y), l: r.y, v: parseFloat(r.leistung) }));
+      const pts = rows.filter(r => parseFloat(r.leistung) > 0).map(r => ({ y: +r.y, v: parseFloat(r.leistung) }));
       if (!pts.length) return '';
       const W = 320, H = 180, L = 40, R = 14, T = 16, B = 28;
       const y0 = Math.min(...pts.map(p => p.y)), y1 = Math.max(...pts.map(p => p.y)), vmax = Math.max(...pts.map(p => p.v)) * 1.2;
@@ -1375,7 +1447,7 @@
       let g = '';
       [0, 0.5, 1].forEach(f => { const v = vmax * f, yy = Y(v); g += `<line x1="${L}" y1="${yy}" x2="${W - R}" y2="${yy}" stroke="#334155" stroke-width="1"/><text x="${L - 4}" y="${yy + 3}" text-anchor="end" font-size="9" fill="#94a3b8">${Math.round(v)}</text>`; });
       const line = pts.length > 1 ? `<polyline fill="none" stroke="#22d3ee" stroke-width="2" points="${pts.map(p => X(p.y) + ',' + Y(p.v)).join(' ')}"/>` : '';
-      const dots = pts.map(p => `<circle cx="${X(p.y)}" cy="${Y(p.v)}" r="4" fill="#22d3ee"/><text x="${X(p.y)}" y="${Y(p.v) - 8}" text-anchor="middle" font-size="10" font-weight="bold" fill="#e2e8f0">${Math.round(p.v)}</text><text x="${X(p.y)}" y="${H - 10}" text-anchor="middle" font-size="10" fill="#cbd5e1">${esc(String(p.l).replace(/^20(\d\d)-([FH])$/, '$2 $1'))}</text>`).join('');
+      const dots = pts.map(p => `<circle cx="${X(p.y)}" cy="${Y(p.v)}" r="4" fill="#22d3ee"/><text x="${X(p.y)}" y="${Y(p.v) - 8}" text-anchor="middle" font-size="10" font-weight="bold" fill="#e2e8f0">${Math.round(p.v)}</text><text x="${X(p.y)}" y="${H - 10}" text-anchor="middle" font-size="10" fill="#cbd5e1">${p.y}</text>`).join('');
       return `<svg viewBox="0 0 ${W} ${H}" class="w-full mt-2" role="img" aria-label="Leistung in l/min je Jahr">${g}${line}${dots}<text x="${L}" y="10" font-size="9" fill="#94a3b8">l/min</text></svg>`;
     }
     function openVerlauf(uid){
@@ -1383,11 +1455,11 @@
       const rows = histSeries(uid), t = trendOf(uid);
       const fd = s => (s ? new Date(s + 'T00:00:00').toLocaleDateString('de-DE') : '-'), nm = v => (v ? String(v).replace('.', ',') : '-');
       let html = `<div class="font-bold text-white">${esc(wellLabel(pt))}${getLoc(pt) ? ' <span class="text-slate-400 font-normal">(' + esc(getLoc(pt)) + ')</span>' : ''}</div>`;
-      if (t) html += `<div class="mt-1 font-extrabold" style="color:${t.pct >= 10 ? '#34d399' : t.pct <= -10 ? '#f87171' : '#94a3b8'}">${t.arrow} ${t.pct > 0 ? '+' : ''}${t.pct} % (${esc(roundLabel(t.from))} → ${esc(roundLabel(t.to))})</div>`;
+      if (t) html += `<div class="mt-1 font-extrabold" style="color:${t.pct >= 10 ? '#34d399' : t.pct <= -10 ? '#f87171' : '#94a3b8'}">${t.arrow} ${t.pct > 0 ? '+' : ''}${t.pct} % (${esc(t.from)} → ${esc(t.to)})</div>`;
       html += verlaufSvg(rows) || '<p class="text-slate-400 mt-3">Noch keine Leistung eingetragen.</p>';
-      if (rows.filter(r => parseFloat(r.leistung) > 0).length < 2) html += '<p class="text-xs text-slate-400 mt-2">Bisher höchstens eine Messung. Der Verlauf entsteht ab dem nächsten Durchgang (Frühjahr oder Herbst): Beim ersten Eintrag im neuen Durchgang werden die Werte des vorigen automatisch in die Historie übernommen.</p>';
-      if (rows.length) html += '<div class="mt-3 overflow-x-auto"><table class="w-full text-xs border-collapse"><tr class="text-slate-400 text-left"><th class="py-1 pr-2">Durchgang</th><th class="pr-2">Datum</th><th class="pr-2">l/min</th><th class="pr-2">Eingang bar</th><th class="pr-2">Ausgang bar</th><th>Zeit min</th></tr>'
-        + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700 align-top"><td class="py-1 pr-2 font-bold">${esc(roundLabel(r.y))}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>${r.aufbau ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">${esc(aufbauLabel(r.aufbau))}${r.pump ? ' | ' + esc(r.pump === 'Andere' ? (r.pumpOther || 'Andere') : r.pump) : ''}</td></tr>` : ''}`).join('') + '</table></div>';
+      if (rows.filter(r => parseFloat(r.leistung) > 0).length < 2) html += '<p class="text-xs text-slate-400 mt-2">Bisher höchstens eine Messung. Der Verlauf entsteht ab dem nächsten Jahr: Beim ersten Eintrag im neuen Jahr werden die Werte des Vorjahres automatisch in die Historie übernommen.</p>';
+      if (rows.length) html += '<div class="mt-3 overflow-x-auto"><table class="w-full text-xs border-collapse"><tr class="text-slate-400 text-left"><th class="py-1 pr-2">Jahr</th><th class="pr-2">Datum</th><th class="pr-2">l/min</th><th class="pr-2">Eingang bar</th><th class="pr-2">Ausgang bar</th><th>Zeit min</th></tr>'
+        + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700 align-top"><td class="py-1 pr-2 font-bold">${esc(r.y)}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>${r.aufbau ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">${esc(aufbauLabel(r.aufbau))}${r.pump ? ' | ' + esc(r.pump === 'Andere' ? (r.pumpOther || 'Andere') : r.pump) : ''}</td></tr>` : ''}`).join('') + '</table></div>';
       document.getElementById('verlaufBody').innerHTML = html;
       toggleModal('verlaufModal', true);
     }
@@ -1436,9 +1508,9 @@
     }
     function protoClear(uid){ audit('Protokollzeile geleert', '', existingWaterPoints.find(p => p.uid === uid) || { uid }); delete protoData[uid]; protoSave(); renderProtocol(); syncDrop(uid); }
     function protoCsv(){
-      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Mängel', 'Prüfer']].concat(protoWells.map((pt, i) => {
+      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Prüfer']].concat(protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), aufbauLabel(d.aufbau), d.zeit || '', d.leistung || '', d.eingang || '', d.ausgang || '', d.mangel || '', d.pruefer || ''];
+        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), aufbauLabel(d.aufbau), d.zeit || '', d.leistung || '', d.eingang || '', d.ausgang || '', d.pruefer || ''];
       }));
       const csv = '\ufeff' + rows.map(r => r.map(v => csvCell(v)).join(';')).join('\r\n');
       const a = document.createElement('a');
@@ -1450,7 +1522,7 @@
     // ==================== SYNC (Firebase, PIN je Feuerwehr) ====================
     // Mehrere Trupps einer Wehr arbeiten live am selben Ortsteil-Protokoll. Jede Zelle wird einzeln gespeichert,
     // so überschreiben sich Trupps nie gegenseitig (gleiche Zelle: letzte Änderung gilt). Fotos bleiben auf dem Gerät.
-    const SYNC_F = ['loc', 'date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer', 'mangel'];
+    const SYNC_F = ['loc', 'date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer'];
     const SYNC_NUM = ['zeit', 'leistung', 'eingang', 'ausgang'];
     const otKey = o => String(o || 'ohne_zuordnung').replace(/[.$#\[\]\/\s]+/g, '_');
     const uKey = uid => String(uid).replace(/\//g, '_');
@@ -1540,7 +1612,7 @@
       Object.keys(val).forEach(k => {
         const pt = byKey[k], hy = val[k]; if (!pt || !hy || typeof hy !== 'object') return;
         Object.keys(hy).forEach(y => {
-          if (!/^20\d\d(-[FH])?$/.test(y) || !hy[y] || typeof hy[y] !== 'object') return;
+          if (!/^20\d\d$/.test(y) || !hy[y] || typeof hy[y] !== 'object') return;
           const h = protoHist[pt.uid] || (protoHist[pt.uid] = {});
           if (!h[y]) { const rec = {}; HIST_F.forEach(f => { if (typeof hy[y][f] === 'string') rec[f] = hy[y][f]; }); h[y] = rec; changed = true; }
         });
@@ -1552,63 +1624,6 @@
       if (changed) { histSave(); refreshVols(); }
     }
     function syncDrop(uid){ if (syncActive() && syncOt === protoOt) FB.drop(otKey(protoOt), uKey(uid)); }
-    // ==================== HINTERGRUND-SYNC ====================
-    // Alle eigenen Ortsteile werden abonniert, damit Ringe, Menü und Jahresbericht auf jedem Gerät den gemeinsamen Stand zeigen.
-    // Der gerade geöffnete Ortsteil wird vom Protokoll selbst bedient. Lokale Einträge werden weiterhin nur beim Öffnen hochgeladen.
-    const bgSubs = {}, bgSeen = {}, rollAns = new Map();
-    const keyToUid = k => k.replace(/^(node|way|relation)_/, '$1/');
-    function bgDrop(o){ (bgSubs[o] || []).forEach(u => { try { u(); } catch(e){} }); delete bgSubs[o]; delete bgSeen[o]; }
-    function bgStop(){ Object.keys(bgSubs).forEach(bgDrop); }
-    function bgOts(){
-      const w = currentWehr(); if (!w) return [];
-      const l = (w.ortsteile || []).map(x => canonOt(x) || x);
-      return (l.length ? l : [...new Set(existingWaterPoints.filter(isShallow).map(ortsteilOf))]).filter(Boolean);
-    }
-    function bgSyncStart(){
-      const w = currentWehr();
-      if (!fbOk() || !w || FB.wehrId() !== w.id) { bgStop(); return; }
-      const want = bgOts();
-      Object.keys(bgSubs).forEach(o => { if (!want.includes(o)) bgDrop(o); });
-      want.forEach(o => {
-        if (bgSubs[o]) return;
-        const subs = bgSubs[o] = [];
-        try { subs.push(FB.listen(otKey(o), v => bgApply(o, v), () => {})); if (FB.listenHist) subs.push(FB.listenHist(otKey(o), v => bgApplyHist(o, v), () => {})); } catch(e){}
-      });
-    }
-    function bgApply(ot, val){
-      if (syncOt === ot && protoOt === ot) return;
-      val = val || {};
-      let pd = {}; try { pd = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e){}
-      const seen = bgSeen[ot] || (bgSeen[ot] = new Set()), lm = locMap(); let ch = false, lc = false;
-      Object.keys(val).forEach(k => {
-        const rec = val[k]; if (!rec || typeof rec !== 'object') return;
-        seen.add(k); const uid = keyToUid(k), d = pd[uid] || (pd[uid] = {});
-        SYNC_F.forEach(f => {
-          if (!(f in rec)) return;
-          const v = String(rec[f] ?? '');
-          if (f === 'loc') { if ((lm[uid] || '') !== v) { lm[uid] = v; lc = true; } return; }
-          if ((d[f] || '') !== v) { d[f] = v; ch = true; }
-        });
-      });
-      [...seen].forEach(k => { if (!(k in val)) { seen.delete(k); const uid = keyToUid(k); if (pd[uid]) { delete pd[uid]; ch = true; } } });
-      try { if (ch) localStorage.setItem(protoKey(ot), JSON.stringify(pd)); if (lc) localStorage.setItem(LOC_KEY, JSON.stringify(lm)); } catch(e){}
-      if (ch) refreshRings();
-    }
-    function bgApplyHist(ot, val){
-      if (syncOt === ot && protoOt === ot) return;
-      let hs = {}; try { hs = JSON.parse(localStorage.getItem(histKey(ot)) || '{}'); } catch(e){}
-      let ch = false;
-      Object.keys(val || {}).forEach(k => {
-        const hy = val[k]; if (!hy || typeof hy !== 'object') return;
-        const uid = keyToUid(k);
-        Object.keys(hy).forEach(y => {
-          if (!/^20\d\d(-[FH])?$/.test(y) || !hy[y] || typeof hy[y] !== 'object') return;
-          const h = hs[uid] || (hs[uid] = {});
-          if (!h[y]) { const rec = {}; HIST_F.forEach(f => { if (typeof hy[y][f] === 'string') rec[f] = hy[y][f]; }); h[y] = rec; ch = true; }
-        });
-      });
-      if (ch) { try { localStorage.setItem(histKey(ot), JSON.stringify(hs)); } catch(e){} }
-    }
     function pinRender(){
       const w = currentWehr() || {}, on = fbOk() && FB.wehrId() === w.id;
       document.getElementById('pinInfo').textContent = on ? `Angemeldet für ${w.name}. Eingaben in euren Ortsteilen werden live mit den anderen Trupps abgeglichen.` : `PIN für ${w.name || 'die Feuerwehr'} eingeben. Danach bleibt dieses Gerät angemeldet.`;
@@ -1635,11 +1650,11 @@
       }
       document.getElementById('pinBtn').disabled = false;
     }
-    async function syncLogout(){ try { await FB.logout(); } catch(e){} syncStop(); bgStop(); syncUi(); pinRender(); toggleModal('pinModal', false); }
+    async function syncLogout(){ try { await FB.logout(); } catch(e){} syncStop(); syncUi(); pinRender(); toggleModal('pinModal', false); }
     window.addEventListener('fbsync-ready', () => {
       if (!fbOk()) { syncUi(); return; }
       FB.connected(c => { syncConn = c; syncUi(); });
-      FB.onAuth(() => { syncUi(); bgSyncStart(); const m = document.getElementById('protoModal'); if (m && !m.classList.contains('hidden')) syncStart(); });
+      FB.onAuth(() => { syncUi(); const m = document.getElementById('protoModal'); if (m && !m.classList.contains('hidden')) syncStart(); });
     });
 
     // ==================== DRUCKEN, PRÜFSTATUS, FOTOS, LISTE, VERSION ====================
@@ -1664,15 +1679,10 @@
     }
     let testedMap = buildTested();
     const thisYear = () => String(new Date().getFullYear());
-    // Prüfdurchgang: Januar bis Juli = Frühjahr (F), August bis Dezember = Herbst (H)
-    const roundOf = date => { const m = /^(\d{4})-(\d{2})/.exec(date || ''); return m ? m[1] + (+m[2] <= 7 ? '-F' : '-H') : ''; };
-    const curRound = () => roundOf(todayISO());
-    const roundLabel = r => { const m = /^(\d{4})(?:-([FH]))?$/.exec(r || ''); return m ? (m[2] ? (m[2] === 'F' ? 'Frühjahr ' : 'Herbst ') : '') + m[1] : String(r || ''); };
-    const roundNum = r => { const m = /^(\d{4})(?:-([FH]))?$/.exec(r || ''); return m ? +m[1] + (m[2] === 'H' ? 0.5 : 0) : 0; };
-    const isTestedNow = uid => !!testedMap[uid] && roundOf(testedMap[uid]) === curRound();
+    const isTestedNow = uid => !!testedMap[uid] && testedMap[uid].slice(0, 4) === thisYear();
     function statusText(pt){ const d = testedMap[pt.uid]; return d ? (isTestedNow(pt.uid) ? 'geprüft am ' : 'zuletzt geprüft am ') + d.split('-').reverse().join('.') : 'noch nicht geprüft'; }
     function ringOpts(pt, style){
-      if (style.title !== 'Flachspiegelbrunnen') return { color: '#FFFFFF', weight: 2.5 };
+      if (style.title !== 'Flachspiegelbrunnen') return { color: '#1E293B', weight: 3 };
       return isTestedNow(pt.uid) ? { color: '#22C55E', weight: 4.5 } : { color: '#F59E0B', weight: 4.5 };
     }
     function refreshRings(){
@@ -1681,7 +1691,7 @@
     }
     function protoHeader(){
       const gem = (protoWells[0] || {}).gemeinde, n = protoWells.filter(p => isTestedNow(p.uid)).length, t = document.getElementById('protoTitle');
-      const wn = document.getElementById('protoWehr'); if (wn) wn.textContent = (currentWehr() || {}).name || ''; if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + roundLabel(curRound()) + ' geprüft';
+      if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + thisYear() + ' geprüft';
     }
 
     function shrinkImage(file, max = 900, q = 0.65){
@@ -1810,7 +1820,7 @@
       try { localStorage.setItem('ffw_wehr', id); } catch(e){}
       document.getElementById('wehrModal').classList.add('hidden');
       audit('Feuerwehr gewählt', (currentWehr() || {}).name);
-      applyWehrUI(true); syncUi(); bgSyncStart();
+      applyWehrUI(true); syncUi();
     }
     let logoOrig = '';
     function applyWehrUI(recenter){
@@ -1969,7 +1979,7 @@
       const head = `Prüfprotokoll Flachspiegelbrunnen | ${document.getElementById('protoTitle').textContent} | Stand ${new Date().toLocaleDateString('de-DE')}`;
       return head + '\n\n' + protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${aufbauLabel(d.aufbau) || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Eingangsdruck: ${d.eingang || '-'} bar | Ausgangsdruck: ${d.ausgang || '-'} bar | Mängel: ${d.mangel || 'keine'} | Prüfer: ${d.pruefer || '-'}`;
+        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${aufbauLabel(d.aufbau) || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Eingangsdruck: ${d.eingang || '-'} bar | Ausgangsdruck: ${d.ausgang || '-'} bar | Prüfer: ${d.pruefer || '-'}`;
       }).join('\n') + '\n';
     }
     async function protoMail(){
@@ -2012,20 +2022,6 @@
     }
     function swReset(){ swState.acc = 0; swState.start = Date.now(); swSave(); swRender(); }
     function swHide(){ if (swState.run) swToggle(); swState.show = false; swSave(); swRender(); }
-
-    // Stoppuhr-Zeit in die Prüfzeit des Brunnens übernehmen (auf halbe Minuten gerundet), danach Uhr anhalten und auf null setzen
-    function swTake(uid){
-      const tr = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (!tr) return;
-      const ms = swElapsed();
-      if (ms < 15000) { showToast('Die Stoppuhr steht noch bei null', 'fa-stopwatch'); swShow(); return; }
-      const el = tr.querySelector('[data-f="zeit"]'); if (!el || el.disabled) return;
-      const min = Math.max(0.5, Math.round(ms / 30000) / 2);
-      if (swState.run) swToggle();
-      swReset();
-      el.value = String(min);
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-      showToast('Prüfzeit ' + String(min).replace('.', ',') + ' min übernommen, Uhr auf null', 'fa-stopwatch');
-    }
 
     // ==================== KARTE ZUM DRUCKEN (A4) ====================
     let pmap = null, pLayer = null, pBase = null;
@@ -2072,55 +2068,6 @@
       pmap.invalidateSize(); fitPrintMap();
     }
 
-    // ==================== JAHRESBERICHT MIT MÄNGELLISTE ====================
-    // Liest die Protokolle und Historien dieses Geräts für alle eigenen Ortsteile (Stand: zuletzt geöffnete bzw. synchronisierte Daten)
-    function reportData(){
-      const rnd = curRound(), out = [];
-      [...new Set(existingWaterPoints.filter(isShallow).map(ortsteilOf))].filter(o => ownsName(o)).sort((a, b) => a.localeCompare(b, 'de')).forEach(ot => {
-        let pd = {}, hs = {};
-        try { pd = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e){}
-        try { hs = JSON.parse(localStorage.getItem(histKey(ot)) || '{}'); } catch(e){}
-        existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
-          .sort((a, b) => (wellLabel(a) + getLoc(a)).localeCompare(wellLabel(b) + getLoc(b), 'de', { numeric: true }))
-          .forEach(pt => {
-            const d = pd[pt.uid] || {}, h = hs[pt.uid] || {}, rows = Object.keys(h).map(y => Object.assign({ y }, h[y])), r0 = roundOf(d.date);
-            const done = r0 === rnd && ['pump', 'zeit', 'leistung', 'aufbau', 'eingang', 'ausgang'].some(f => d[f]);
-            if (r0 && (d.leistung || d.eingang || d.ausgang)) { const c = Object.assign({ y: r0 }, d), i = rows.findIndex(r => r.y === r0); if (i >= 0) rows[i] = c; else rows.push(c); }
-            rows.sort((a, b) => a.y.localeCompare(b.y));
-            const m = rows.filter(r => parseFloat(r.leistung) > 0), cur = m[m.length - 1], prev = m[m.length - 2];
-            const pct = done && prev && cur.y === rnd ? Math.round((parseFloat(cur.leistung) - parseFloat(prev.leistung)) / parseFloat(prev.leistung) * 100) : null;
-            const mg = [];
-            if (!done) mg.push('Im aktuellen Durchgang nicht geprüft');
-            if (pct !== null && pct <= -20) mg.push('Leistung ' + pct + ' % (' + roundLabel(prev.y) + ' → ' + roundLabel(cur.y) + ')');
-            if (done) Object.values(plausiCheck(d)).forEach(x => mg.push('Auffälliger Wert: ' + x));
-            if (d.mangel) mg.push(r0 === rnd ? d.mangel : d.mangel + ' (gemeldet ' + roundLabel(r0) + ')');
-            out.push({ ot, pt, d: done ? d : {}, done, pct, mg });
-          });
-      });
-      return out;
-    }
-    function openReport(){ toggleModal('reportModal', true); renderReport(); }
-    function renderReport(){
-      const rows = reportData(), w = currentWehr() || {}, cell = 'p-1 border border-slate-400', nm = v => v ? String(v).replace('.', ',') : '';
-      const by = {}; rows.forEach(r => (by[r.ot] = by[r.ot] || []).push(r));
-      document.getElementById('repHead').textContent = (w.name || '') + ' | Durchgang ' + roundLabel(curRound()) + ' | Stand ' + new Date().toLocaleDateString('de-DE') + ' | Daten dieses Geräts';
-      document.getElementById('repSum').innerHTML = Object.keys(by).map(o => {
-        const l = by[o], q = l.filter(r => r.done && parseFloat(r.d.leistung) > 0).map(r => parseFloat(r.d.leistung));
-        return `<tr><td class="${cell}">${esc(o)}</td><td class="${cell}">${l.length}</td><td class="${cell}">${l.filter(r => r.done).length}</td><td class="${cell}">${q.length ? Math.round(q.reduce((a, b) => a + b, 0) / q.length) : ''}</td><td class="${cell}">${l.reduce((n, r) => n + r.mg.length, 0)}</td></tr>`;
-      }).join('') || `<tr><td colspan="5" class="${cell} text-center text-slate-500">Keine Flachspiegelbrunnen in euren Ortsteilen.</td></tr>`;
-      const mgRows = []; rows.forEach(r => r.mg.forEach(x => mgRows.push([r, x])));
-      document.getElementById('repMg').innerHTML = mgRows.map(([r, x]) => `<tr><td class="${cell}">${esc(r.ot)}</td><td class="${cell}"><b>${esc(wellLabel(r.pt))}</b> ${esc(getLoc(r.pt))}</td><td class="${cell}">${esc(x)}</td></tr>`).join('') || `<tr><td colspan="3" class="${cell} text-center text-slate-500">Keine Mängel.</td></tr>`;
-      document.getElementById('repAll').innerHTML = rows.map((r, i) => {
-        const t = r.pct === null ? '' : (r.pct >= 10 ? '↑ ' : r.pct <= -10 ? '↓ ' : '→ ') + (r.pct > 0 ? '+' : '') + r.pct + ' %';
-        return `<tr><td class="${cell} text-center">${i + 1}</td><td class="${cell}">${esc(r.ot)}</td><td class="${cell}"><b>${esc(wellLabel(r.pt))}</b> ${esc(getLoc(r.pt))}</td><td class="${cell}">${esc(r.d.date ? r.d.date.split('-').reverse().join('.') : '')}</td><td class="${cell}">${esc(nm(r.d.leistung))}</td><td class="${cell}">${esc(t)}</td><td class="${cell}">${esc(nm(r.d.eingang))}</td><td class="${cell}">${esc(nm(r.d.ausgang))}</td><td class="${cell}">${esc(r.d.pruefer || '')}</td></tr>`;
-      }).join('');
-    }
-    function reportCsv(){
-      const rows = [['Ortsteil', 'Brunnen', 'Ortsangabe', 'Mangel', 'Koordinaten', 'OSM-ID']];
-      reportData().forEach(r => r.mg.forEach(x => rows.push([r.ot, wellLabel(r.pt), getLoc(r.pt), x, r.pt.lat.toFixed(5) + ', ' + r.pt.lon.toFixed(5), r.pt.uid])));
-      downloadText('Maengelliste_' + curRound() + '.csv', '\ufeff' + rows.map(r => r.map(v => csvCell(v)).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
-    }
-
     // ==================== SEITENMENÜ ====================
     function openMenu(){
       renderMenu();
@@ -2136,7 +2083,7 @@
       document.getElementById('menuWehr').textContent = w ? w.name : 'Keine Feuerwehr gewählt';
       document.getElementById('menuOt').textContent = w ? 'Ortsteile: ' + ((w.ortsteile || []).join(', ') || 'alle') : '';
       document.getElementById('menuQ').textContent = offlineQueue.length ? '(' + offlineQueue.length + ')' : '';
-      document.getElementById('menuProtoTitle').textContent = 'Prüfprotokolle | ' + roundLabel(curRound()) + ' geprüft';
+      document.getElementById('menuProtoTitle').textContent = 'Prüfprotokolle | ' + thisYear() + ' geprüft';
       testedMap = buildTested(); renderVerInfo();
       const groups = {};
       existingWaterPoints.filter(isShallow).forEach(p => { const o = ortsteilOf(p); (groups[o] = groups[o] || []).push(p); });
@@ -2167,16 +2114,6 @@
       const out = document.getElementById('diagOut'), rows = [];
       out.textContent = 'Teste…';
       rows.push(`Seite: ${location.protocol}//${location.host || 'lokale Datei'}, online: ${navigator.onLine ? 'ja' : 'nein'}`);
-      rows.push('Sync-Konfiguration: ' + (fbOk() ? 'geladen' : 'FEHLT (firebase-config.js)'));
-      if (fbOk()) {
-        const u = (FB.info && FB.info.dbUrl) || '';
-        rows.push('Datenbank-URL: ' + (u ? new URL(u).host : 'FEHLT in der Konfiguration'));
-        rows.push('Konto: ' + (FB.wehrId() || 'nicht angemeldet') + ', Verbindung: ' + (syncConn ? 'online' : 'offline'));
-        if (u) { try { const r = await withTimeout(fetch(u.replace(/\/$/, '') + '/.json?shallow=true'), 10000); rows.push(r ? 'Datenbank erreichbar, HTTP ' + r.status + ' (401 ist normal)' : 'Datenbank: Zeitüberschreitung'); } catch (e) { rows.push('Datenbank nicht erreichbar: ' + e.message); } }
-        if (u && FB.token) { try { const t = await withTimeout(FB.token(), 8000); if (!t) rows.push('Token: nicht erhalten (Zeitüberschreitung oder nicht angemeldet)'); else { const o = bgOts()[0]; if (o) { const r = await withTimeout(fetch(u.replace(/\/$/, '') + '/protokolle/' + encodeURIComponent(otKey(o)) + '.json?shallow=true&auth=' + t), 10000); rows.push('Lesetest ' + o + ': ' + (r ? 'HTTP ' + r.status + (r.status === 200 ? ' (ok)' : ' (kein Zugriff: Daten unter zugang und Regeln prüfen)') : 'Zeitüberschreitung')); } } } catch (e) { rows.push('Token-Test Fehler: ' + e.message); } }
-      }
-      if (fbOk() && FB.log && FB.log.length) rows.push('Verbindungsprotokoll: ' + FB.log.slice(-8).join(' | '));
-      if (cspLog.length) rows.push('Blockiert: ' + cspLog.join(' | '));
       const q = encodeURIComponent('[out:json][timeout:10];node["emergency"="fire_hydrant"](51.85,14.12,51.87,14.15);out body;');
       for (const url of OVERPASS_MIRRORS) {
         const t0 = performance.now(); let msg;
@@ -2457,7 +2394,6 @@
       if (!saveQueue()) { offlineQueue.pop(); return; }
       digestAdd(record);
       audit(record.osmId ? 'Prüfung gesendet' : 'Neue Stelle erfasst', getReadableType(record.type), { uid: record.osmId, lat: record.lat, lon: record.lng });
-      if (record.osmId) autoMangel(record);
 
       updateQueueBadge();
       toggleModal('formModal', false);
@@ -2471,34 +2407,6 @@
       }).addTo(map).bindPopup('<b>Erfassung Gespeichert!</b><br>Bereit zur OSM-Synchronisation.').openPopup();
 
       showToast("Erfassung lokal für FFW Schmogrow gespeichert", "fa-check");
-    }
-
-    // Brunnen haben keine Schilder: Feld bei Brunnen ausblenden
-    function signToggle(){
-      const t = document.getElementById('formType').value, well = t === 'shallow_well' || t === 'deep_well', sel = document.getElementById('formSign');
-      sel.parentElement.classList.toggle('hidden', well); if (well) sel.value = 'yes';
-    }
-    function pushCell(ot, uid, fields){
-      const w = currentWehr();
-      if (!fbOk() || !w || FB.wehrId() !== w.id || !ownsName(ot)) return;
-      const c = syncClean(fields); if (Object.keys(c).length) FB.push(otKey(ot), uKey(uid), c);
-    }
-    // Defekt oder eingeschränkt nutzbar (aus "Gegebenheiten prüfen") wird als Mangel im Prüfprotokoll des Brunnens vermerkt
-    function autoMangel(rec){
-      if (rec.operational === 'yes') return;
-      const pt = existingWaterPoints.find(p => p.uid === rec.osmId); if (!pt || !isShallow(pt)) return;
-      const ot = ortsteilOf(pt); if (!ot) return;
-      const text = ((rec.operational === 'no' ? 'Defekt / außer Betrieb' : 'Eingeschränkt nutzbar') + (rec.notes ? ': ' + rec.notes : '')).slice(0, 120), live = protoOt === ot;
-      let pd = protoData; if (!live) { try { pd = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e){ pd = {}; } }
-      const d = pd[pt.uid] || (pd[pt.uid] = {}), up = {};
-      if ((d.mangel || '').includes(text)) return;
-      d.mangel = [d.mangel, text].filter(Boolean).join('; ').slice(0, 120); up.mangel = d.mangel;
-      if (!d.date) { d.date = todayISO(); up.date = d.date; }
-      if (live) { protoSave(); if (!document.getElementById('protoModal').classList.contains('hidden')) renderProtocol(); }
-      else { try { localStorage.setItem(protoKey(ot), JSON.stringify(pd)); } catch(e){} }
-      pushCell(ot, pt.uid, up);
-      audit('Mangel eingetragen', text, pt);
-      showToast('Mangel im Prüfprotokoll eingetragen', 'fa-clipboard-list');
     }
 
     // ==================== EXAKTE OSM SYNCHRONISATION ====================
@@ -2564,7 +2472,7 @@
         `[${(currentWehr() || {}).name || 'FFW'} - Löschwassererfassung]`, `Typ: ${getReadableType(rec.type)}`, TAGS_BY_TYPE[rec.type] || '',
         rec.diameter && `fire_hydrant:diameter=${rec.diameter}`, rec.flow && `fire_hydrant:flow_rate=${rec.flow}`,
         `operational_status=${rec.operational}`, c && `Storz-Anschlüsse: ${c}`,
-        /_well$/.test(rec.type) ? '' : `Hinweisschild: ${rec.sign === 'yes' ? 'vorhanden' : 'beschädigt/fehlt'}`, rec.notes && `Hinweis: ${rec.notes}`,
+        `Hinweisschild: ${rec.sign === 'yes' ? 'vorhanden' : 'beschädigt/fehlt'}`, rec.notes && `Hinweis: ${rec.notes}`,
         rec.osmId && `Prüfung bestehender Punkt: https://www.openstreetmap.org/${rec.osmId}`,
         rec.image && '(Foto liegt bei der FFW Schmogrow vor)'
       ].filter(Boolean).join('\n');
@@ -2679,7 +2587,6 @@
 
     // ==================== UTILS ====================
     function toggleModal(modalId, show) {
-      if (modalId === 'formModal' && show) setTimeout(signToggle, 0);
       const el = document.getElementById(modalId);
       if (show === undefined) el.classList.toggle('hidden');
       else if (show) el.classList.remove('hidden');
