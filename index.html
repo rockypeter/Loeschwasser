@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de" class="h-full w-full overflow-hidden select-none">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
@@ -192,6 +192,7 @@
       #protoBody td { padding:6px !important; }
       #protoSheet thead th { background:#e2e8f0; color:#0f172a; font-size:12px; }
     }
+      @media print { #protoBody input::placeholder { color: transparent !important; } }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -322,7 +323,7 @@
         <button onclick="protoMail()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-envelope"></i>Per E-Mail sichern</button>
         <button id="fbBtn" onclick="openSync()" class="px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 bg-slate-200 text-slate-800"><i class="fa-solid fa-cloud"></i><span id="fbBtnTxt">Sync</span></button>
         <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="protoOtSel" onchange="protoSwitch(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
-        <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert.</span>
+        <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert. Graue Zahlen = Vorjahreswerte.</span>
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
       <div class="overflow-auto p-3 text-xs">
@@ -377,6 +378,7 @@
       <div><div class="msec">Listen und Karten</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openList()"><i class="fa-solid fa-list"></i>Löschwasserliste und Karte A4</button>
         <label class="mi cursor-pointer"><i class="fa-solid fa-file-import"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();importPoints(event)"></label>
+        <button class="mi" onclick="closeMenu();preloadTiles()"><i class="fa-solid fa-map-location-dot"></i>Karte für eigene Ortsteile offline laden</button>
       </div></div>
       <div><div class="msec">Werkzeuge</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
@@ -390,6 +392,7 @@
       <div><div class="msec">Hilfe</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openHelp()"><i class="fa-solid fa-circle-question"></i>So geht’s</button>
         <button class="mi" onclick="closeMenu();openFeedback()"><i class="fa-solid fa-envelope"></i>Fehler oder Idee melden</button>
+        <button class="mi" onclick="closeMenu();openQr()"><i class="fa-solid fa-qrcode"></i>App aufs Handy (QR-Code)</button>
       </div></div>
       <div><div class="msec">Technik</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openWehrDialog()"><i class="fa-solid fa-fire-extinguisher"></i>Feuerwehr wechseln</button>
@@ -473,6 +476,17 @@
           <table class="w-full border-collapse"><thead><tr class="bg-slate-200 text-left"><th class="p-1 border border-slate-400 w-8">Nr.</th><th class="p-1 border border-slate-400">Art</th><th class="p-1 border border-slate-400">Bezeichnung / Ortsangabe</th><th class="p-1 border border-slate-400">Nennweite</th><th class="p-1 border border-slate-400">Durchfluss</th><th class="p-1 border border-slate-400">Kapazität</th></tr></thead><tbody id="mpListBody"></tbody></table>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- QR-CODE ZUR APP -->
+  <div id="qrModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 flex items-center justify-center p-3">
+    <div class="sheet bg-white text-slate-900 rounded-2xl max-w-sm w-full p-4 text-center shadow-2xl">
+      <div class="no-print flex gap-2 mb-2"><button onclick="printSheet('qrModal')" class="flex-1 px-3 py-2 bg-red-600 text-white rounded-lg font-bold text-sm"><i class="fa-solid fa-print"></i> Drucken / PDF</button><button onclick="toggleModal('qrModal')" class="w-10 h-10 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button></div>
+      <h2 class="font-extrabold text-lg">Löschwasser-App</h2>
+      <div id="qrBox" class="mx-auto my-3 w-64 max-w-full text-sm text-slate-600"></div>
+      <p id="qrUrl" class="text-xs break-all text-slate-600"></p>
+      <p class="text-xs mt-2 text-slate-700">Code scannen, Seite öffnen, dann im Browser „Zum Startbildschirm hinzufügen“ wählen.</p>
     </div>
   </div>
 
@@ -936,7 +950,7 @@
       });
 
       // OSM Standard Vektorkarte
-      osmTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      osmTileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxNativeZoom: 19,
         maxZoom: 22,
         attribution: '&copy; OpenStreetMap'
@@ -1293,8 +1307,8 @@
             <div class="text-[10px] text-slate-500 mt-0.5">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}</div></td>
           <td class="${cell}"><input type="date" data-f="date" value="${esc(d.date || '')}" class="${inp}"></td>
           <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe eintragen" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Andere' ? '' : 'hidden'}"></td>
-          <td class="${cell}"><input type="hidden" data-f="aufbau" value="${esc(d.aufbau || '')}"><div data-legacy class="hidden text-[10px] text-amber-700 mb-1"></div>${[0, 1, 2].map(i => `<div data-slotwrap="${i}" class="flex gap-1 ${i ? 'mt-1 hidden' : ''}"><select data-slot="${i}" class="${inp}">${ROHR_OPTS}</select><input type="number" data-slotv="${i}" min="0" step="1" inputmode="numeric" placeholder="l/min" title="Eigene Leistung in l/min" class="${inp} w-24 hidden"></div>`).join('')}</td>
-          <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"></td>
+          <td class="${cell}"><input type="hidden" data-f="aufbau" value="${esc(d.aufbau || '')}"><div data-legacy class="hidden text-[10px] text-amber-700 mb-1"></div>${[0, 1, 2].map(i => `<div data-slotwrap="${i}" class="flex gap-1 ${i ? 'mt-1 hidden' : ''}"><select data-slot="${i}" class="${inp}">${ROHR_OPTS}</select><input type="number" data-slotv="${i}" min="0" step="1" inputmode="numeric" placeholder="l/min" title="Eigene Leistung in l/min" class="${inp} w-24 hidden"></div>`).join('')}<button type="button" data-same onclick="swSame(this)" class="no-print hidden mt-1 w-full px-1 py-1 bg-slate-200 text-slate-800 rounded text-[11px] font-bold"></button></td>
+          <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"><button type="button" onclick="swTake(this)" title="Zeit der Stoppuhr übernehmen" class="no-print mt-1 w-full px-1 py-1 bg-cyan-700 text-white rounded text-[11px] font-bold"><i class="fa-solid fa-stopwatch"></i> übernehmen</button></td>
           <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" title="Wird aus Strahlrohren und Ausgangsdruck berechnet, kann von Hand korrigiert werden" value="${esc(d.leistung || '')}" class="${inp}"><div data-vol class="text-[10px] text-slate-500 mt-0.5"></div><div data-trend class="text-[10px] font-bold"></div></td>
           <td class="${cell}"><input type="number" data-f="eingang" step="0.01" max="0" title="Eingangsdruck in bar. Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ." placeholder="-0,40" value="${esc(d.eingang || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="ausgang" min="0" step="0.1" inputmode="decimal" title="Ausgangsdruck in bar" placeholder="0,0" value="${esc(d.ausgang || '')}" class="${inp}"></td>
@@ -1363,6 +1377,18 @@
         const el = tr.querySelector('[data-vol]'); if (!el) return;
         const d = protoData[tr.dataset.uid] || {}, q = parseFloat(d.leistung), t = parseFloat(d.zeit);
         el.textContent = q > 0 && t > 0 ? '≈ ' + Math.round(q * t).toLocaleString('de-DE') + ' l in ' + String(t).replace('.', ',') + ' min' : '';
+        const pv = prevOf(tr.dataset.uid);
+        ['zeit', 'leistung', 'eingang', 'ausgang'].forEach(f => {
+          const i = tr.querySelector(`[data-f="${f}"]`); if (!i) return;
+          if (i.dataset.ph0 === undefined) i.dataset.ph0 = i.placeholder || '';
+          i.placeholder = pv && pv[f] ? String(pv[f]).replace('.', ',') : i.dataset.ph0;
+        });
+        const sb = tr.querySelector('[data-same]');
+        if (sb) {
+          const dd = protoData[tr.dataset.uid] || {}, ok = pv && ((pv.aufbau && aufbauParse(pv.aufbau) !== null) || pv.pump) && !dd.aufbau && !dd.pump;
+          sb.classList.toggle('hidden', !ok);
+          if (ok) sb.textContent = 'Wie ' + pv.y + ': ' + [pv.pump === 'Andere' ? (pv.pumpOther || 'Andere') : pv.pump, pv.aufbau && aufbauParse(pv.aufbau) !== null ? aufbauLabel(pv.aufbau) : ''].filter(Boolean).join(', ');
+        }
         const te = tr.querySelector('[data-trend]'), tt = trendOf(tr.dataset.uid);
         if (te) { te.textContent = tt ? tt.arrow + ' ' + (tt.pct > 0 ? '+' : '') + tt.pct + ' % ggü. ' + tt.from : ''; te.style.color = tt ? trendColor(tt.pct) : ''; }
       });
@@ -1462,6 +1488,75 @@
         + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700 align-top"><td class="py-1 pr-2 font-bold">${esc(r.y)}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>${r.aufbau ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">${esc(aufbauLabel(r.aufbau))}${r.pump ? ' | ' + esc(r.pump === 'Andere' ? (r.pumpOther || 'Andere') : r.pump) : ''}</td></tr>` : ''}`).join('') + '</table></div>';
       document.getElementById('verlaufBody').innerHTML = html;
       toggleModal('verlaufModal', true);
+    }
+    // Letzte Messung aus früheren Jahren (nur wenn die Zeile für dieses Jahr leer ist bzw. schon neu begonnen wurde)
+    function prevOf(uid){
+      const d = protoData[uid] || {};
+      if (d.date && d.date.slice(0, 4) < thisYear()) return null;
+      const h = protoHist[uid] || {}, ys = Object.keys(h).filter(y => y < thisYear()).sort();
+      return ys.length ? Object.assign({ y: ys[ys.length - 1] }, h[ys[ys.length - 1]]) : null;
+    }
+    // Zeit der Stoppuhr in die Prüfzeit übernehmen (Minuten, auf 0,5 gerundet)
+    function swTake(btn){
+      const el = btn.closest('tr').querySelector('[data-f=zeit]'), min = Math.round(swElapsed() / 60000 * 2) / 2;
+      if (!(min > 0)) { showToast('Stoppuhr zeigt noch keine Zeit', 'fa-stopwatch'); return; }
+      if (swState.run) swToggle();
+      el.value = String(min);
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      showToast('Prüfzeit ' + String(min).replace('.', ',') + ' min übernommen', 'fa-stopwatch');
+    }
+    // Karte der eigenen Ortsteile für offline vorladen (OSM-Kacheln, wenige hundert, sparsam geladen)
+    async function preloadTiles(){
+      const w = currentWehr(); if (!w) { openWehrDialog(); return; }
+      if (!navigator.onLine) { showToast('Kein Netz', 'fa-triangle-exclamation'); return; }
+      const pts = existingWaterPoints.filter(p => ortsteilOf(p) && ownsPoint(p, w));
+      if (!pts.length) { showToast('Keine Punkte in den eigenen Ortsteilen', 'fa-info-circle'); return; }
+      const la = pts.map(p => p.lat), lo = pts.map(p => p.lon), pad = 0.004;
+      const S = Math.min(...la) - pad, N = Math.max(...la) + pad, W = Math.min(...lo) - pad * 1.6, E = Math.max(...lo) + pad * 1.6;
+      const tx = (x, z) => Math.floor((x + 180) / 360 * 2 ** z);
+      const ty = (y, z) => { const r = y * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * 2 ** z); };
+      const build = zs => { const u = []; zs.forEach(z => { for (let x = tx(W, z); x <= tx(E, z); x++) for (let y = ty(N, z); y <= ty(S, z); y++) u.push(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`); }); return u; };
+      let zs = [15, 16, 17, 18], urls = build(zs);
+      while (urls.length > 900 && zs.length > 1) { zs.pop(); urls = build(zs); }
+      if (urls.length > 900) { showToast('Gebiet zu groß zum Vorladen', 'fa-triangle-exclamation'); return; }
+      if (!confirm(`${urls.length} Kartenkacheln laden (ca. ${Math.max(1, Math.round(urls.length * 0.02))} MB, Zoom ${zs[0]} bis ${zs[zs.length - 1]})?`)) return;
+      let fail = 0;
+      for (let i = 0; i < urls.length; i += 2) {
+        await Promise.all(urls.slice(i, i + 2).map(u => fetch(u).then(r => { if (!r.ok) throw 0; }).catch(() => fail++)));
+        const done = Math.min(i + 2, urls.length);
+        if (done % 20 === 0 || done === urls.length) setStatus(`Karte laden ${done}/${urls.length}`, 'amber');
+      }
+      setStatus(`${existingWaterPoints.length} Punkte aktuell`, 'emerald');
+      showToast(fail ? `Karte geladen, ${fail} Kacheln fehlten` : 'Karte offline gespeichert', fail ? 'fa-triangle-exclamation' : 'fa-check-circle');
+    }
+    // Vorjahres-Aufbau und -Pumpe per Tipp übernehmen
+    function swSame(btn){
+      const tr = btn.closest('tr'), pv = prevOf(tr.dataset.uid); if (!pv) return;
+      const fire = el => el.dispatchEvent(new Event('change', { bubbles: true }));
+      if (pv.pump) {
+        const sel = tr.querySelector('[data-f=pump]'); sel.value = pv.pump; fire(sel);
+        if (pv.pump === 'Andere' && pv.pumpOther) { const o = tr.querySelector('[data-f=pumpOther]'); o.value = pv.pumpOther; fire(o); }
+      }
+      if (pv.aufbau && aufbauParse(pv.aufbau) !== null) { aufbauToSlots(tr, pv.aufbau); fire(tr.querySelector('[data-slot="0"]')); }
+    }
+    // Zeitstempel im Foto
+    const nowStamp = () => new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+    function photoStamp(uid){ const pt = protoWells.find(p => p.uid === uid); return (pt ? wellLabel(pt) + (getLoc(pt) ? ' | ' + getLoc(pt) : '') + ' | ' : '') + nowStamp(); }
+    function drawStamp(c, text){
+      const g = c.getContext('2d'), fs = Math.max(12, Math.round(c.width / 38)), h = fs * 1.7;
+      g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(0, c.height - h, c.width, h);
+      g.fillStyle = '#fff'; g.font = 'bold ' + fs + 'px sans-serif'; g.textBaseline = 'middle';
+      g.fillText(text, fs * 0.5, c.height - h / 2, c.width - fs);
+    }
+    // QR-Code zum Link der App
+    function openQr(){
+      const url = location.href.split('#')[0].split('?')[0].replace(/index\.html$/, ''), box = document.getElementById('qrBox');
+      document.getElementById('qrUrl').textContent = url; toggleModal('qrModal', true);
+      const draw = () => { try { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag(8, 4); const sv = box.querySelector('svg'); if (sv) { sv.removeAttribute('width'); sv.removeAttribute('height'); sv.style.width = '100%'; sv.style.height = 'auto'; } } catch(e) { box.textContent = 'QR-Code nicht verfügbar, Link abtippen'; } };
+      if (window.qrcode) return draw();
+      box.textContent = 'Lade…';
+      const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+      sc.onload = draw; sc.onerror = () => { box.textContent = 'QR-Code braucht Netz, Link abtippen'; }; document.head.appendChild(sc);
     }
     function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); refreshPlausi(); }
     function protoEdit(e){
@@ -1694,13 +1789,14 @@
       if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + thisYear() + ' geprüft';
     }
 
-    function shrinkImage(file, max = 900, q = 0.65){
+    function shrinkImage(file, max = 900, q = 0.65, stamp = ''){
       return new Promise((res, rej) => {
         const img = new Image(), url = URL.createObjectURL(file);
         img.onload = () => {
           const sc = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
           c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
           c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          if (stamp) drawStamp(c, stamp);
           URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', q));
         };
         img.onerror = () => rej(new Error('Bild nicht lesbar'));
@@ -1713,7 +1809,7 @@
     }
     async function protoPhoto(uid, input){
       const f = input.files[0]; if (!f) return;
-      try { const d = await shrinkImage(f); await cacheSet('photo:' + uid, d); setPhoto(uid, d); audit('Foto gespeichert', '', { uid }); showToast('Foto gespeichert', 'fa-camera'); }
+      try { const d = await shrinkImage(f, 900, 0.65, photoStamp(uid)); await cacheSet('photo:' + uid, d); setPhoto(uid, d); audit('Foto gespeichert', '', { uid }); showToast('Foto gespeichert', 'fa-camera'); }
       catch(e) { showToast('Foto fehlgeschlagen', 'fa-triangle-exclamation'); }
       input.value = '';
     }
@@ -2299,6 +2395,7 @@
         c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         URL.revokeObjectURL(url);
+        drawStamp(c, nowStamp() + ' | ' + (parseFloat(document.getElementById('formLat').value) || 0).toFixed(5) + ', ' + (parseFloat(document.getElementById('formLng').value) || 0).toFixed(5));
         capturedImageBase64 = c.toDataURL('image/jpeg', 0.7);
         document.getElementById('imagePreview').src = capturedImageBase64;
         document.getElementById('imagePreviewContainer').classList.remove('hidden');
