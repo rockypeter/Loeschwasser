@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de" class="h-full w-full overflow-hidden select-none">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://unpkg.com https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
@@ -12,36 +12,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Löschwasserentnahmestellen</title>
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            ffw: {
-              red: '#D32F2F',
-              darkred: '#9A0007',
-              bright: '#EF4444',
-              yellow: '#F59E0B',
-              dark: '#0f172a',
-              panel: '#1e293b'
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Tailwind CSS (beim Veröffentlichen gebaut) -->
+  <link rel="stylesheet" href="tailwind.css">
 
   <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="leaflet/leaflet.css"/>
+  <script src="leaflet/leaflet.js"></script>
 
   <!-- Sync (Firebase); Zugangsdaten kommen aus firebase-config.js (wird beim Veröffentlichen aus einem GitHub-Secret erzeugt) -->
   <script type="module" src="fb-sync.js"></script>
 
   <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="fontawesome/css/all.min.css"/>
 
   <style>
     * { touch-action: manipulation; }
@@ -848,7 +830,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-05 optik';
+    const APP_VERSION = '2026-11-06 lokal';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1578,8 +1560,8 @@
       const draw = () => { try { const q = qrcode(0, 'M'); q.addData(url); q.make(); box.innerHTML = q.createSvgTag(8, 4); const sv = box.querySelector('svg'); if (sv) { sv.removeAttribute('width'); sv.removeAttribute('height'); sv.style.width = '100%'; sv.style.height = 'auto'; } } catch(e) { box.textContent = 'QR-Code nicht verfügbar, Link abtippen'; } };
       if (window.qrcode) return draw();
       box.textContent = 'Lade…';
-      const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
-      sc.onload = draw; sc.onerror = () => { box.textContent = 'QR-Code braucht Netz, Link abtippen'; }; document.head.appendChild(sc);
+            const load = (src, fail) => { const sc = document.createElement('script'); sc.src = src; sc.onload = draw; sc.onerror = fail; document.head.appendChild(sc); };
+      load('qrcode.js', () => load('https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js', () => { box.textContent = 'QR-Code braucht Netz, Link abtippen'; }));
     }
     // ==================== LEISTUNG AUF DER KARTE, VERSORGUNG, EINSATZ, TROCKENJAHR ====================
     const PERF_SOLL = 800, COVER_M = 300;

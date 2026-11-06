@@ -100,4 +100,5 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
 - Fotos sind nicht in der Sicherung enthalten. Der Zeitpunkt jedes Fotos steht im Änderungsprotokoll und im Bild selbst.
 - Protokolle und Fotos liegen zuerst auf dem Gerät. Bei aktivem Sync liegen die Protokolleinträge (ohne Fotos) zusätzlich
   in der Firebase-Datenbank der Wehr, geschützt durch PIN-Anmeldung. Gespeichert werden auch die Namen der Prüfer.
+- Design-Dateien (Tailwind, Leaflet, FontAwesome, QR-Bibliothek) werden beim Veröffentlichen gebaut und mit der Seite ausgeliefert, nicht mehr aus dem Netz geladen. Nach dem ersten Start funktioniert die App deshalb auch ohne Netz mit vollem Design.
 - Die Stellendaten stammen aus OpenStreetMap (© OpenStreetMap-Mitwirkende).
