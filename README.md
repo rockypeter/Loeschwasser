@@ -7,8 +7,13 @@ Ohne Netz bleibt sie benutzbar. Die Oberfläche ist hell und kontrastreich, dami
 ## Karte und Stellen
 - Die Stellen kommen aus OpenStreetMap und werden jede Nacht automatisch aktualisiert. Farben zeigen die Art:
   Unterflurhydrant, Überflurhydrant, Flachspiegelbrunnen, Tiefbrunnen, Zisterne/Tank, Löschteich/Saugstelle.
+- **Legende als Filter:** Eine Art in der Legende antippen blendet sie aus oder wieder ein. Die Auswahl bleibt gespeichert.
+- Punkte außerhalb des Amts (ohne Ortsteil) erscheinen klein und blass. Flachspiegelbrunnen bleiben immer voll sichtbar.
 - Bei Flachspiegelbrunnen zeigt ein Ring den Prüfstand: **grün** = dieses Jahr geprüft, **orange** = noch offen.
 - Beim Antippen einer Stelle erscheinen ihre Daten und der Prüfstatus.
+- **Legende anklickbar:** Eine Art antippen blendet sie aus oder wieder ein. Die Auswahl bleibt auf dem Gerät gespeichert.
+- **Punkte außerhalb des Amts Burg** (Nachbargemeinden) erscheinen kleiner und blasser, Flachspiegelbrunnen bleiben immer voll sichtbar.
+- **Update-Hinweis:** Gibt es eine neue App-Version, erscheint oben ein gelber Balken „Neue Version verfügbar“. Die App prüft beim Öffnen und alle zehn Minuten.
 - **Karte offline:** Menü → Karte für eigene Ortsteile offline laden. Das speichert die OSM-Straßenkarte der eigenen Ortsteile
   (Zoom 15 bis 18, höchstens 900 Kacheln) auf dem Gerät. Am besten einmal im WLAN. Das Luftbild wird nicht gespeichert.
 - Die Liste mit Karte (A4) lässt sich pro Ortsteil oder für alle drucken oder als CSV speichern.
@@ -80,6 +85,7 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
 - Jede Zelle wird einzeln gespeichert, Änderungen erscheinen bei den anderen Trupps sofort. Am Ende druckt oder speichert
   ein Gerät das vollständige Protokoll.
 - Der Knopf oben im Protokoll zeigt den Zustand: live, wartet (offline) oder nicht angemeldet.
+- Wenn der Sync nicht läuft: Menü → Technik zeigt eine Zeile „Sync“ mit Konfiguration, Konto, Verbindung und blockierten Adressen.
 - Offline Erfasstes wird beim nächsten Verbinden hochgeladen. Wird dieselbe Zelle von zwei Trupps geändert, gilt die
   letzte Änderung. Fotos werden nicht synchronisiert.
 
@@ -91,6 +97,7 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
 ## Weitere Funktionen
 - **Sicherung:** Protokolle, Ortsangaben und Änderungsprotokoll lassen sich als Datei speichern und wieder einspielen.
 - **Punkte aus Datei importieren:** Für den Einsatz ohne aktuelle Daten.
+- **Update-Hinweis:** Gibt es eine neue App-Version, erscheint oben ein gelber Balken mit „Jetzt laden“. Geprüft wird beim Start und alle zehn Minuten.
 - **Startpunkt:** Die Kartenmitte lässt sich als Startansicht merken.
 - **QR-Code zur App:** Menü → Hilfe → App aufs Handy. Zum Scannen oder Ausdrucken, damit neue Kameraden die App aufs Handy bekommen.
   Der Code wird beim ersten Öffnen mit Netz erzeugt.

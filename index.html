@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="de" class="h-full w-full overflow-hidden select-none">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
+  <script>window.__csp = []; addEventListener('securitypolicyviolation', e => { if (window.__csp.length < 8) window.__csp.push((e.violatedDirective || '') + ' ' + String(e.blockedURI || '').slice(0, 70)); });</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
   <link rel="manifest" href="manifest.webmanifest">
@@ -273,9 +274,16 @@
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span> Zisterne/Tank</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span> Löschteich/Saugst.</div>
         <div id="perfLegend" class="hidden col-span-2 flex flex-wrap gap-x-3 gap-y-1 pt-1 border-t border-slate-800 text-slate-300"><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22C55E"></i>ab 800 l/min</div><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#EAB308"></i>400 bis 799</div><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#EF4444"></i>unter 400</div><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#94A3B8"></i>nicht gemessen</div></div>
-        <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = dieses Jahr geprüft, oranger Ring = noch offen</div>
+        <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = dieses Jahr geprüft, oranger Ring = noch offen. Arten antippen = ein-/ausblenden. Kleine blasse Punkte liegen außerhalb des Amts.</div>
       </div>
     </div>
+  </div>
+
+  <!-- UPDATE-HINWEIS -->
+  <div id="updBar" class="hidden fixed top-14 inset-x-0 z-[480] bg-amber-400 text-slate-900 px-3 py-2 flex items-center gap-2 text-sm font-bold shadow">
+    <i class="fa-solid fa-circle-arrow-up"></i><span id="updTxt" class="flex-1">Neue Version verfügbar</span>
+    <button onclick="location.reload()" class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-extrabold">Jetzt laden</button>
+    <button onclick="document.getElementById('updBar').classList.add('hidden')" class="w-8 h-8 rounded-full bg-black/10 font-bold">✕</button>
   </div>
 
   <!-- TAP ON MAP BANNER -->
@@ -830,7 +838,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-06 lokal';
+    const APP_VERSION = '2026-11-06 sync-diagnose';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -914,8 +922,8 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       initMap(); initLegendDrag(); initWehr(); swRender(); loadAmtBurgData(false); updateQueueBadge();
-      setTimeout(checkDigest, 3000);
-      document.addEventListener('visibilitychange', () => { if (document.hidden) leaveSync(); });
+      setTimeout(checkDigest, 3000); setTimeout(checkUpdate, 8000); setInterval(checkUpdate, 600000); initLegendFilter();
+      document.addEventListener('visibilitychange', () => { if (document.hidden) leaveSync(); else checkUpdate(); });
       window.addEventListener('pagehide', leaveSync);
       if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
     });
@@ -1188,7 +1196,8 @@
     function renderSinglePointMarker(pt) {
       const tags = pt.tags || {};
       const style = getMarkerStyle(tags);
-      const marker = L.circleMarker([pt.lat, pt.lon], { radius: 11, fillColor: style.color, ...ringOpts(pt, style), fillOpacity: 0.95 });
+      const out = isOut(pt, style);
+      const marker = L.circleMarker([pt.lat, pt.lon], { radius: out ? 6 : 11, fillColor: style.color, ...ringOpts(pt, style), fillOpacity: out ? 0.5 : 0.95 });
       const st = tags['operational_status'];
       const popupHtml = `
         <div class="space-y-2 p-1 text-xs">
@@ -1204,7 +1213,7 @@
           </button>
         </div>`;
       marker.bindPopup(popupHtml);
-      mapMarkersGroup.addLayer(marker);
+      if (!hiddenTypes.has(style.title)) mapMarkersGroup.addLayer(marker);
       markerByUid.set(pt.uid, { marker, sig: sig(pt) });
     }
 
@@ -1640,7 +1649,9 @@
     }
     function einsatzGo(uid){
       const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
-      toggleModal('einsatzModal', false); map.setView([pt.lat, pt.lon], 18);
+      toggleModal('einsatzModal', false);
+      const tt = getMarkerStyle(pt.tags || {}).title; if (hiddenTypes.has(tt)) { hiddenTypes.delete(tt); try { localStorage.setItem('ffw_hidden_types', JSON.stringify([...hiddenTypes])); } catch(e){} applyTypeFilter(); document.querySelectorAll('#legend .grid > div:not(.col-span-2)').forEach((r, i) => { if (LEG_TYPES[i] === tt) r.classList.remove('opacity-40'); }); }
+      map.setView([pt.lat, pt.lon], 18);
       setTimeout(() => { const o = markerByUid.get(uid); if (o) o.marker.openPopup(); }, 300);
     }
     // Trockenjahr-Übersicht: Durchschnittsleistung aller Brunnen je Jahr
@@ -1660,6 +1671,41 @@
         + '</table><p class="text-[11px] text-slate-400 mt-2">* Veränderung gegenüber dem Vorjahr, nur Brunnen, die in beiden Jahren gemessen wurden. Es zählen die Messungen auf diesem Gerät.</p></div>';
       document.getElementById('verlaufBody').innerHTML = html;
       toggleModal('verlaufModal', true);
+    }
+    // ==================== UPDATE-HINWEIS, LEGENDE ALS FILTER, PUNKTE AUSSERHALB ====================
+    let lastUpd = 0;
+    async function checkUpdate(){
+      if (!navigator.onLine || Date.now() - lastUpd < 540000) return;
+      lastUpd = Date.now();
+      try {
+        const r = await fetch('index.html', { cache: 'no-cache' }); if (!r.ok) return;
+        const m = /APP_VERSION = '([^']*)'/.exec(await r.text());
+        if (m && m[1] !== APP_VERSION) { document.getElementById('updTxt').textContent = 'Neue Version verfügbar (' + m[1] + ')'; document.getElementById('updBar').classList.remove('hidden'); }
+      } catch(e){}
+    }
+    // Punkte ohne Ortsteil (außerhalb des Amts) werden klein und blass gezeichnet, Flachspiegelbrunnen immer voll
+    const isOut = (pt, style) => !pt.ortsteil && style.title !== 'Flachspiegelbrunnen';
+    const LEG_TYPES = ['Unterflurhydrant', 'Überflurhydrant', 'Flachspiegelbrunnen', 'Tiefbrunnen', 'Löschwasserbehälter / Zisterne', 'Saugstelle / Löschteich'];
+    var hiddenTypes = new Set(); try { hiddenTypes = new Set(JSON.parse(localStorage.getItem('ffw_hidden_types') || '[]')); } catch(e){}
+    function applyTypeFilter(){
+      existingWaterPoints.forEach(pt => {
+        const o = markerByUid.get(pt.uid); if (!o) return;
+        if (hiddenTypes.has(getMarkerStyle(pt.tags || {}).title)) mapMarkersGroup.removeLayer(o.marker); else mapMarkersGroup.addLayer(o.marker);
+      });
+    }
+    function initLegendFilter(){
+      const rows = document.querySelectorAll('#legend .grid > div:not(.col-span-2)');
+      rows.forEach((row, i) => {
+        const typ = LEG_TYPES[i]; if (!typ) return;
+        row.style.cursor = 'pointer'; row.classList.add('py-1');
+        const paint = () => row.classList.toggle('opacity-40', hiddenTypes.has(typ)); paint();
+        row.addEventListener('click', () => {
+          if (hiddenTypes.has(typ)) hiddenTypes.delete(typ); else hiddenTypes.add(typ);
+          try { localStorage.setItem('ffw_hidden_types', JSON.stringify([...hiddenTypes])); } catch(e){}
+          paint(); applyTypeFilter();
+          showToast(typ + (hiddenTypes.has(typ) ? ' ausgeblendet' : ' eingeblendet'), 'fa-eye');
+        });
+      });
     }
     function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); refreshPlausi(); }
     function protoEdit(e){
@@ -1738,6 +1784,7 @@
       if (b) b.className = 'px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 ' + c;
       if (x) x.textContent = t;
       if (m) m.textContent = fbOk() && currentWehr() && FB.wehrId() === currentWehr().id ? (syncConn ? 'live' : 'offline') : '';
+      try { renderVerInfo(); } catch(e){}
     }
     function syncStop(){ if (syncUnsub) { try { syncUnsub(); } catch(e){} } if (syncUnsubH) { try { syncUnsubH(); } catch(e){} } syncUnsub = null; syncUnsubH = null; syncOt = null; syncSeen = new Set(); syncFirst = true; syncHistFirst = true; }
     function syncStart(){
@@ -1880,7 +1927,7 @@
     const isTestedNow = uid => !!testedMap[uid] && testedMap[uid].slice(0, 4) === thisYear();
     function statusText(pt){ const d = testedMap[pt.uid]; return d ? (isTestedNow(pt.uid) ? 'geprüft am ' : 'zuletzt geprüft am ') + d.split('-').reverse().join('.') : 'noch nicht geprüft'; }
     function ringOpts(pt, style){
-      if (style.title !== 'Flachspiegelbrunnen') return { color: '#1E293B', weight: 3 };
+      if (style.title !== 'Flachspiegelbrunnen') return isOut(pt, style) ? { color: '#64748B', weight: 1.5, opacity: 0.6 } : { color: '#1E293B', weight: 3 };
       return isTestedNow(pt.uid) ? { color: '#22C55E', weight: 4.5 } : { color: '#F59E0B', weight: 4.5 };
     }
     function refreshRings(){
@@ -1953,10 +2000,16 @@
       a.download = `Loeschwasserliste_${todayISO()}.csv`; a.click();
     }
 
+    function syncDiag(){
+      if (!window.FB) return 'fb-sync.js nicht geladen';
+      if (!FB.ok) return 'nicht eingerichtet (' + (FB.err || 'keine Angabe') + ')';
+      const who = FB.wehrId ? FB.wehrId() : '';
+      return 'Konfiguration ok, Konto ' + (who || 'nicht angemeldet') + ', Verbindung ' + (syncConn ? 'ja' : 'nein') + (FB.host ? ', ' + FB.host : '') + ((window.__csp || []).length ? ', blockiert: ' + window.__csp.slice(0, 3).join(' | ') : '');
+    }
     function renderVerInfo(){
       const el = document.getElementById('verInfo'); if (!el) return;
       const f = t => t ? new Date(t).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
-      el.innerHTML = `Feuerwehr: ${(currentWehr() || {}).name || '– nicht gewählt'}<br>Eigene Ortsteile: ${((currentWehr() || {}).ortsteile || []).join(', ') || 'alle'}<br>App-Version: ${APP_VERSION}<br>Datenstand: ${f(dataTs)}<br>Punkte: ${existingWaterPoints.length}<br>Offline-Modus: ${navigator.serviceWorker && navigator.serviceWorker.controller ? 'aktiv' : 'aus'}`;
+      el.innerHTML = `Feuerwehr: ${(currentWehr() || {}).name || '– nicht gewählt'}<br>Eigene Ortsteile: ${((currentWehr() || {}).ortsteile || []).join(', ') || 'alle'}<br>App-Version: ${APP_VERSION}<br>Datenstand: ${f(dataTs)}<br>Punkte: ${existingWaterPoints.length}<br>Offline-Modus: ${navigator.serviceWorker && navigator.serviceWorker.controller ? 'aktiv' : 'aus'}<br>Sync: ${esc(syncDiag())}`;
     }
     async function forceUpdate(){
       try {

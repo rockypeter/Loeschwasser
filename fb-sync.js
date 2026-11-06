@@ -35,9 +35,11 @@ window.FB = FB;
     FB.listenHist = (ot, cb, err) => onValue(ref(db, 'historie/' + ot), s => cb(s.val() || {}), err);
     FB.setHist = (ot, key, year, rec) => set(ref(db, 'historie/' + ot + '/' + key + '/' + year), rec).catch(() => {});
     FB.info = { dbUrl: firebaseConfig.databaseURL || '' }; // nur für die Diagnose im Menü
+    try { FB.host = new URL(firebaseConfig.databaseURL).host; } catch (x) { FB.err = 'databaseURL fehlt in der Konfiguration'; }
     FB.ok = true;
   } catch (e) {
     FB.ok = false; // keine Konfiguration oder offline ohne Cache: App läuft lokal weiter
+    FB.err = String((e && (e.code || e.message)) || e).slice(0, 120);
   }
   window.dispatchEvent(new Event('fbsync-ready'));
 })();
