@@ -193,6 +193,11 @@
       #protoSheet thead th { background:#e2e8f0; color:#0f172a; font-size:12px; }
     }
       @media print { #protoBody input::placeholder { color: transparent !important; } }
+      .perf-tip { background:transparent !important; border:0 !important; box-shadow:none !important; color:#0f172a !important; font:800 9px/1 sans-serif !important; padding:0 !important; text-shadow:0 0 2px #fff; }
+    .perf-tip::before { display:none !important; }
+    .right-3.top-16 > button.on { background:#fde68a !important; border-color:#b45309 !important; }
+    #btnEinsatz { background:#b91c1c !important; border-color:#7f1d1d !important; }
+    #btnEinsatz i { color:#fff !important; }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -258,6 +263,9 @@
       <i id="reloadIcon" class="fa-solid fa-arrows-rotate text-xl text-amber-400"></i>
     </button>
 
+    <button id="btnEinsatz" onclick="openEinsatz()" title="Wasser in der Nähe" class="hidden w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur"><i class="fa-solid fa-fire text-xl"></i></button>
+    <button id="btnPerf" onclick="togglePerf()" title="Leistung anzeigen" class="w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur"><i class="fa-solid fa-gauge-high text-xl"></i></button>
+    <button id="btnCover" onclick="toggleCover()" title="Versorgung 300 m" class="w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur"><i class="fa-solid fa-bullseye text-xl"></i></button>
     <!-- Map Layer Switcher (Satellit / Karte) -->
     <button onclick="toggleMapLayer()" title="Kartentyp wechseln" class="w-12 h-12 bg-slate-900/95 border-2 border-slate-700 rounded-2xl text-white flex items-center justify-center shadow-2xl active:scale-90 transition backdrop-blur">
       <i id="layerIcon" class="fa-solid fa-map text-xl text-amber-400"></i>
@@ -282,6 +290,7 @@
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-teal-400 shrink-0"></span> Tiefbrunnen</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span> Zisterne/Tank</div>
         <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0"></span> Löschteich/Saugst.</div>
+        <div id="perfLegend" class="hidden col-span-2 flex flex-wrap gap-x-3 gap-y-1 pt-1 border-t border-slate-800 text-slate-300"><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22C55E"></i>ab 800 l/min</div><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#EAB308"></i>400 bis 799</div><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#EF4444"></i>unter 400</div><div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#94A3B8"></i>nicht gemessen</div></div>
         <div class="col-span-2 text-[10px] text-slate-400 pt-1 border-t border-slate-800">Flachspiegelbrunnen: grüner Ring = dieses Jahr geprüft, oranger Ring = noch offen</div>
       </div>
     </div>
@@ -342,7 +351,7 @@
   <!-- LEISTUNGSVERLAUF JE BRUNNEN -->
   <div id="verlaufModal" class="hidden fixed inset-0 z-[630] bg-black/70 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 w-full max-w-md max-h-[90vh] overflow-auto text-slate-200 text-sm">
-      <div class="flex items-center mb-2"><h2 class="font-extrabold text-white flex-1"><i class="fa-solid fa-chart-line text-cyan-400 mr-1.5"></i>Leistung über die Jahre</h2><button onclick="toggleModal('verlaufModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button></div>
+      <div class="flex items-center mb-2"><h2 class="font-extrabold text-white flex-1"><i class="fa-solid fa-chart-line text-cyan-400 mr-1.5"></i><span id="verlaufTitle">Leistung über die Jahre</span></h2><button onclick="toggleModal('verlaufModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button></div>
       <div id="verlaufBody"></div>
     </div>
   </div>
@@ -379,6 +388,7 @@
         <button class="mi" onclick="closeMenu();openList()"><i class="fa-solid fa-list"></i>Löschwasserliste und Karte A4</button>
         <label class="mi cursor-pointer"><i class="fa-solid fa-file-import"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();importPoints(event)"></label>
         <button class="mi" onclick="closeMenu();preloadTiles()"><i class="fa-solid fa-map-location-dot"></i>Karte für eigene Ortsteile offline laden</button>
+        <button class="mi" onclick="closeMenu();openTrocken()"><i class="fa-solid fa-chart-column"></i>Trockenjahr-Übersicht (alle Brunnen)</button>
       </div></div>
       <div><div class="msec">Werkzeuge</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
@@ -476,6 +486,15 @@
           <table class="w-full border-collapse"><thead><tr class="bg-slate-200 text-left"><th class="p-1 border border-slate-400 w-8">Nr.</th><th class="p-1 border border-slate-400">Art</th><th class="p-1 border border-slate-400">Bezeichnung / Ortsangabe</th><th class="p-1 border border-slate-400">Nennweite</th><th class="p-1 border border-slate-400">Durchfluss</th><th class="p-1 border border-slate-400">Kapazität</th></tr></thead><tbody id="mpListBody"></tbody></table>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- EINSATZ: WASSER IN DER NÄHE -->
+  <div id="einsatzModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 bg-red-700 text-white shrink-0"><i class="fa-solid fa-fire"></i><h2 class="font-extrabold flex-1">Wasser in der Nähe</h2><button onclick="toggleModal('einsatzModal')" class="w-9 h-9 rounded-full bg-black/25 font-bold">✕</button></div>
+      <div class="px-4 py-2 text-xs text-slate-600 border-b border-slate-200 shrink-0 flex items-center gap-2"><span id="einsatzWhere" class="flex-1"></span><button onclick="einsatzPickStart()" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800">Ort wählen</button><button onclick="openEinsatz()" title="Eigener Standort" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800"><i class="fa-solid fa-location-crosshairs"></i></button></div>
+      <div id="einsatzList" class="overflow-y-auto p-3 space-y-2"></div>
     </div>
   </div>
 
@@ -961,6 +980,8 @@
       map.on('click', function(e) {
         if (isNewPointMode) {
           handleMapClickForNewPoint(e.latlng);
+        } else if (einsatzPick) {
+          einsatzPick = false; einsatzAt(e.latlng.lat, e.latlng.lng, 'gewählter Ort');
         }
       });
 
@@ -1159,6 +1180,7 @@
         markerByUid.delete(p.uid); return false;
       });
       document.getElementById('pointCount').textContent = `${existingWaterPoints.length} Punkte`;
+      if (showPerf) applyPerf(); if (showCover) drawCover();
       scheduleSave();
       if (!window._centered && existingWaterPoints.length && currentWehr()) { window._centered = true; centerOnWehr(false); }
       return added;
@@ -1478,6 +1500,7 @@
     }
     function openVerlauf(uid){
       const pt = protoWells.find(p => p.uid === uid); if (!pt) return;
+      document.getElementById('verlaufTitle').textContent = 'Leistung über die Jahre';
       const rows = histSeries(uid), t = trendOf(uid);
       const fd = s => (s ? new Date(s + 'T00:00:00').toLocaleDateString('de-DE') : '-'), nm = v => (v ? String(v).replace('.', ',') : '-');
       let html = `<div class="font-bold text-white">${esc(wellLabel(pt))}${getLoc(pt) ? ' <span class="text-slate-400 font-normal">(' + esc(getLoc(pt)) + ')</span>' : ''}</div>`;
@@ -1557,6 +1580,104 @@
       box.textContent = 'Lade…';
       const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
       sc.onload = draw; sc.onerror = () => { box.textContent = 'QR-Code braucht Netz, Link abtippen'; }; document.head.appendChild(sc);
+    }
+    // ==================== LEISTUNG AUF DER KARTE, VERSORGUNG, EINSATZ, TROCKENJAHR ====================
+    const PERF_SOLL = 800, COVER_M = 300;
+    let showPerf = false, showCover = false, coverLayer = null, einsatzPick = false;
+    // Alle gemessenen Leistungen auf diesem Gerät: uid -> { Jahr: l/min }
+    function perfAll(){
+      const m = {}, put = (u, y, v) => { v = parseFloat(v); if (!(v > 0) || !/^\d{4}$/.test(y)) return; (m[u] = m[u] || {})[y] = v; };
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i); if (!k) continue;
+          if (k.startsWith('ffw_hist_')) { const h = JSON.parse(localStorage.getItem(k) || '{}'); Object.keys(h).forEach(u => Object.keys(h[u] || {}).forEach(y => put(u, y, (h[u][y] || {}).leistung))); }
+        }
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i); if (!k) continue;
+          if (k.startsWith('ffw_proto_')) { const d = JSON.parse(localStorage.getItem(k) || '{}'); Object.keys(d).forEach(u => put(u, String((d[u] || {}).date || '').slice(0, 4), (d[u] || {}).leistung)); }
+        }
+      } catch(e){}
+      return m;
+    }
+    const latestPerf = (m, uid) => { const o = m[uid]; if (!o) return null; const y = Object.keys(o).sort().pop(); return { y, v: o[y] }; };
+    const perfColor = v => v >= PERF_SOLL ? '#22C55E' : v >= PERF_SOLL / 2 ? '#EAB308' : '#EF4444';
+    function applyPerf(){
+      const m = perfAll();
+      existingWaterPoints.forEach(pt => {
+        const o = markerByUid.get(pt.uid); if (!o) return;
+        const st = getMarkerStyle(pt.tags || {}), well = st.title === 'Flachspiegelbrunnen' || st.title === 'Tiefbrunnen', p = latestPerf(m, pt.uid);
+        o.marker.unbindTooltip();
+        if (showPerf && well) {
+          o.marker.setStyle({ fillColor: p ? perfColor(p.v) : '#94A3B8' });
+          if (p) o.marker.bindTooltip(String(Math.round(p.v)), { permanent: true, direction: 'center', className: 'perf-tip' });
+        } else o.marker.setStyle({ fillColor: st.color });
+      });
+    }
+    function togglePerf(){
+      showPerf = !showPerf; document.getElementById('btnPerf').classList.toggle('on', showPerf); document.getElementById('perfLegend').classList.toggle('hidden', !showPerf);
+      applyPerf(); showToast(showPerf ? 'Leistung: Brunnen nach l/min eingefärbt, Richtwert ' + PERF_SOLL : 'Leistungsansicht aus', 'fa-gauge-high');
+    }
+    function drawCover(){
+      if (coverLayer) { map.removeLayer(coverLayer); coverLayer = null; }
+      if (!showCover) return;
+      coverLayer = L.layerGroup(existingWaterPoints.filter(p => (p.tags || {}).operational_status !== 'no').map(p => L.circle([p.lat, p.lon], { radius: COVER_M, stroke: false, fillColor: '#16A34A', fillOpacity: 0.13, interactive: false }))).addTo(map);
+      coverLayer.eachLayer(l => l.bringToBack());
+    }
+    function toggleCover(){
+      showCover = !showCover; document.getElementById('btnCover').classList.toggle('on', showCover);
+      drawCover(); showToast(showCover ? 'Grün: Löschwasser innerhalb ' + COVER_M + ' m erreichbar, ohne Färbung = Lücke' : 'Versorgungskarte aus', 'fa-bullseye');
+    }
+    // Einsatzmodus: nächste Entnahmestellen zu einem Ort (läuft auch offline)
+    async function openEinsatz(){
+      toggleModal('einsatzModal', true);
+      document.getElementById('einsatzWhere').textContent = 'Standort wird ermittelt…';
+      const pos = await getPosition(5000);
+      if (!pos) { document.getElementById('einsatzWhere').textContent = 'Kein Standort, bitte „Ort wählen“'; document.getElementById('einsatzList').innerHTML = ''; return; }
+      einsatzAt(pos.lat, pos.lng, 'Standort (±' + Math.round(pos.acc) + ' m)');
+    }
+    function einsatzPickStart(){ toggleModal('einsatzModal', false); einsatzPick = true; showToast('Einsatzort auf der Karte antippen', 'fa-hand-pointer'); }
+    function einsatzAt(la, lo, label){
+      toggleModal('einsatzModal', true);
+      document.getElementById('einsatzWhere').textContent = 'Von: ' + label;
+      const perf = perfAll(), dirs = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+      const brg = (a, b, c, d) => { const f = x => x * Math.PI / 180, y = Math.sin(f(d - b)) * Math.cos(f(c)), x = Math.cos(f(a)) * Math.sin(f(c)) - Math.sin(f(a)) * Math.cos(f(c)) * Math.cos(f(d - b)); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; };
+      const rows = existingWaterPoints.filter(p => (p.tags || {}).operational_status !== 'no').map(p => ({ p, d: haversineDistance(la, lo, p.lat, p.lon) })).sort((a, b) => a.d - b.d).slice(0, 6);
+      let html = rows.length && rows[0].d > COVER_M ? `<div class="p-2 rounded-xl bg-amber-100 text-amber-900 text-xs font-bold">Achtung: Die nächste Stelle ist mehr als ${COVER_M} m entfernt.</div>` : '';
+      html += rows.map(({ p, d }) => {
+        const t = p.tags || {}, st = getMarkerStyle(t), pf = latestPerf(perf, p.uid), b = brg(la, lo, p.lat, p.lon);
+        const q = pf ? Math.round(pf.v) + ' l/min (' + pf.y + ')' : (pickTag(t, ['flow_rate', 'fire_hydrant:flow_rate', 'fire_hydrant:flow_capacity', 'flow_capacity'], /flow/) || pickTag(t, ['capacity', 'water_volume', 'water_tank:volume', 'volume'], /(volume|capacity)/) || 'Leistung unbekannt');
+        const dn = pickTag(t, ['fire_hydrant:diameter', 'diameter'], /diameter/), nm = [t.ref, t.name].filter(Boolean).join(' – '), lc = getLoc(p);
+        const dist = d < 1000 ? Math.round(d) + ' m' : (d / 1000).toFixed(1).replace('.', ',') + ' km';
+        return `<div onclick="einsatzGo(${jq(p.uid)})" class="flex items-center gap-3 p-3 rounded-2xl border border-slate-300 bg-slate-50 active:bg-red-50">
+          <div class="w-14 text-center shrink-0"><i class="fa-solid fa-arrow-up text-2xl text-red-700" style="display:inline-block;transform:rotate(${Math.round(b)}deg)"></i><div class="text-[11px] font-bold">${dirs[Math.round(b / 45) % 8]}</div></div>
+          <div class="flex-1 min-w-0"><div class="font-extrabold text-sm">${esc(st.title)} · ${esc(dist)}</div><div class="text-xs text-slate-700">${esc(q)}${dn ? ' | ' + esc(/^\d+$/.test(dn) ? 'DN ' + dn : dn) : ''}</div><div class="text-xs text-slate-500 truncate">${esc([nm, lc].filter(Boolean).join(' | '))}</div></div>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="px-3 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold">Route</a></div>`;
+      }).join('') || '<p class="text-sm text-slate-500">Keine Stellen geladen.</p>';
+      html += '<p class="text-[11px] text-slate-500">Der Pfeil zeigt die Richtung bezogen auf Norden (Karte oben). Defekte Stellen sind ausgeblendet.</p>';
+      document.getElementById('einsatzList').innerHTML = html;
+    }
+    function einsatzGo(uid){
+      const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
+      toggleModal('einsatzModal', false); map.setView([pt.lat, pt.lon], 18);
+      setTimeout(() => { const o = markerByUid.get(uid); if (o) o.marker.openPopup(); }, 300);
+    }
+    // Trockenjahr-Übersicht: Durchschnittsleistung aller Brunnen je Jahr
+    function openTrocken(){
+      const all = perfAll(), years = {};
+      Object.keys(all).forEach(u => Object.keys(all[u]).forEach(y => { (years[y] = years[y] || {})[u] = all[u][y]; }));
+      const ys = Object.keys(years).sort();
+      document.getElementById('verlaufTitle').textContent = 'Alle Brunnen im Vergleich';
+      const rows = ys.map((y, i) => {
+        const v = Object.values(years[y]), avg = v.reduce((a, b) => a + b, 0) / v.length; let ch = null;
+        if (i) { const pr = years[ys[i - 1]], com = Object.keys(years[y]).filter(u => u in pr); if (com.length) { const a = com.reduce((x, u) => x + pr[u], 0) / com.length, b = com.reduce((x, u) => x + years[y][u], 0) / com.length; ch = Math.round((b - a) / a * 100); } }
+        return { y, avg, n: v.length, low: v.filter(x => x < PERF_SOLL).length, ch };
+      });
+      let html = rows.length ? verlaufSvg(rows.map(r => ({ y: r.y, leistung: r.avg }))) : '<p class="text-slate-400">Noch keine Leistung eingetragen.</p>';
+      if (rows.length) html += '<div class="mt-3 overflow-x-auto"><table class="w-full text-xs border-collapse"><tr class="text-slate-400 text-left"><th class="py-1 pr-2">Jahr</th><th class="pr-2">Brunnen</th><th class="pr-2">Ø l/min</th><th class="pr-2">unter ' + PERF_SOLL + '</th><th>Änderung*</th></tr>'
+        + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700"><td class="py-1 pr-2 font-bold">${esc(r.y)}</td><td class="pr-2">${r.n}</td><td class="pr-2">${Math.round(r.avg)}</td><td class="pr-2">${r.low}</td><td style="color:${r.ch == null ? 'inherit' : trendColor(r.ch)};font-weight:700">${r.ch == null ? '-' : (r.ch > 0 ? '+' : '') + r.ch + ' %'}</td></tr>`).join('')
+        + '</table><p class="text-[11px] text-slate-400 mt-2">* Veränderung gegenüber dem Vorjahr, nur Brunnen, die in beiden Jahren gemessen wurden. Es zählen die Messungen auf diesem Gerät.</p></div>';
+      document.getElementById('verlaufBody').innerHTML = html;
+      toggleModal('verlaufModal', true);
     }
     function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); refreshPlausi(); }
     function protoEdit(e){
@@ -1783,6 +1904,7 @@
     function refreshRings(){
       testedMap = buildTested();
       existingWaterPoints.forEach(pt => { const o = markerByUid.get(pt.uid); if (o) o.marker.setStyle(ringOpts(pt, getMarkerStyle(pt.tags || {}))); });
+      if (showPerf) applyPerf();
     }
     function protoHeader(){
       const gem = (protoWells[0] || {}).gemeinde, n = protoWells.filter(p => isTestedNow(p.uid)).length, t = document.getElementById('protoTitle');
@@ -1925,6 +2047,7 @@
       if (lg) lg.innerHTML = w.logo ? `<img src="${esc(w.logo)}" class="w-full h-full object-contain rounded-full">` : (w.zentral ? logoOrig : '<i class="fa-solid fa-droplet text-red-600 text-xl"></i>');
       const fo = document.getElementById('footerOwner'); if (fo) fo.textContent = w.zentral ? 'Freiwillige Feuerwehr Schmogrow' : w.name + ' | Software: FFW Schmogrow';
       renderVerInfo();
+      const eb = document.getElementById('btnEinsatz'); if (eb) eb.classList.toggle('hidden', !(w.zentral || w.einsatz));
       if (recenter) { window._centered = true; centerOnWehr(true); }
     }
     function centerOnWehr(force){
