@@ -164,7 +164,7 @@ jobs:
           set -e
           mkdir /tmp/b && cd /tmp/b
           npm init -y >/dev/null
-          npm install --ignore-scripts --no-audit --no-fund --save-exact tailwindcss@3.4.17 leaflet@1.9.4 @fortawesome/fontawesome-free@6.4.0
+          npm install --ignore-scripts --no-audit --no-fund --save-exact tailwindcss@3.4.17 leaflet@1.9.4 @fortawesome/fontawesome-free@6.4.0 qrcode-generator@1.4.4
           cp "$GITHUB_WORKSPACE/index.html" .
           printf '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n' > in.css
           cat > tailwind.config.js <<'CFG'
@@ -180,6 +180,7 @@ jobs:
           cp -r node_modules/leaflet/dist/images "$GITHUB_WORKSPACE/_site/leaflet/"
           cp node_modules/@fortawesome/fontawesome-free/css/all.min.css "$GITHUB_WORKSPACE/_site/fontawesome/css/"
           cp -r node_modules/@fortawesome/fontawesome-free/webfonts "$GITHUB_WORKSPACE/_site/fontawesome/"
+          cp node_modules/qrcode-generator/qrcode.js "$GITHUB_WORKSPACE/_site/qrcode.js" || echo "::warning::qrcode.js fehlt, QR-Code lädt dann aus dem Netz"
           cd "$GITHUB_WORKSPACE"
           for f in _site/tailwind.css _site/leaflet/leaflet.js _site/leaflet/leaflet.css _site/fontawesome/css/all.min.css; do
             test -s "$f" || { echo "::error::$f wurde nicht erzeugt"; exit 1; }
