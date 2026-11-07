@@ -182,6 +182,8 @@
     #btnEinsatz { background:#b91c1c !important; border-color:#7f1d1d !important; }
     #btnEinsatz i { color:#fff !important; }
       :is(#formModal,#fbModal) button.mic-on { background:#dc2626 !important; color:#fff !important; border-color:#dc2626 !important; }
+      #protoSheet textarea { border:1px solid #94a3b8; font-size:14px; min-height:64px; resize:vertical; }
+    @media print { [data-anmprint] { display:block !important; white-space:pre-wrap; font-size:11px; } }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -329,9 +331,9 @@
       <div class="overflow-auto p-3 text-xs">
         <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
-        <table class="w-full border-collapse min-w-[1020px]">
+        <table class="w-full border-collapse min-w-[1180px]">
           <thead><tr class="bg-slate-200 text-left">
-            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400 min-w-[200px]">Aufbau (Strahlrohre)</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400 w-20">Eingangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 w-20">Ausgangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
+            <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400 min-w-[200px]">Aufbau (Strahlrohre)</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400 w-20">Eingangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 w-20">Ausgangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 min-w-[190px]">Anmerkung</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
@@ -841,7 +843,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-07 signal-kompass';
+    const APP_VERSION = '2026-11-07 anmerkung';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1224,9 +1226,9 @@
       const emergency = tags.emergency;
       const type = tags['fire_hydrant:type'];
       const wellType = tags['well:type'];
-      const txt = [tags.name, tags.description, tags.note].join(' ').toLowerCase();
-      const wellHint = tags.water_source === 'well' || tags.man_made === 'water_well' || type === 'well' || /brunnen/.test(txt);
-      if (wellHint && (['suction_point', 'water_tank', 'fire_water_pond'].includes(emergency) || (emergency === 'fire_hydrant' && type === 'well'))) {
+      const txt = [tags.name, tags.description, tags['description:de'], tags.note].join(' ').toLowerCase();
+      const wellHint = tags.water_source === 'well' || tags.water_source === 'groundwater' || tags.man_made === 'water_well' || type === 'well' || /brunnen/.test(txt);
+      if (wellHint && (['suction_point', 'water_tank', 'fire_water_pond'].includes(emergency) || (emergency === 'fire_hydrant' && type === 'well') || (emergency === 'fire_hydrant' && tags['fire_hydrant:pressure'] === 'suction' && tags.water_source === 'groundwater'))) {
         if (wellType === 'deep' || /tiefbrunnen/.test(txt)) return { color: '#2DD4BF', title: 'Tiefbrunnen' };
         return { color: '#22D3EE', title: 'Flachspiegelbrunnen' };
       }
@@ -1297,7 +1299,7 @@
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
     async function loadProtocol(ot){
       protoOt = ot; testedMap = buildTested();
-      document.getElementById('protoBody').innerHTML = '<tr><td colspan="12" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
+      document.getElementById('protoBody').innerHTML = '<tr><td colspan="13" class="p-4 text-center text-slate-500">Standort wird ermittelt…</td></tr>';
       protoPos = (currentWehr() || {}).gps !== false ? await getPosition() : null;
       protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
         .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
@@ -1329,12 +1331,13 @@
           <td class="${cell}"><input type="number" data-f="eingang" step="0.01" max="0" title="Eingangsdruck in bar. Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ." placeholder="-0,40" value="${esc(d.eingang || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="ausgang" min="0" step="0.1" inputmode="decimal" title="Ausgangsdruck in bar" placeholder="0,0" value="${esc(d.ausgang || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"></td>
+          <td class="${cell}"><textarea data-f="anm" rows="3" maxlength="300" placeholder="z. B. Deckeldichtung fehlt" class="${inp} no-print">${esc(d.anm || '')}</textarea><div data-anmprint class="hidden"></div></td>
           <td class="${cell} text-center"><img data-photo="${esc(pt.uid)}" class="hidden mx-auto w-16 h-16 object-cover rounded border border-slate-300 mb-1">
             <label class="no-print inline-block px-2 py-1 bg-slate-200 rounded cursor-pointer"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="protoPhoto(${jq(pt.uid)}, this)"></label>
             <button onclick="delPhoto(${jq(pt.uid)})" title="Foto löschen" class="no-print text-slate-400 hover:text-red-600 text-[10px]">✕</button></td>
           <td class="no-print ${cell} text-center"><button onclick="protoClear(${jq(pt.uid)})" title="Zeile leeren" class="text-slate-400 hover:text-red-600 font-bold">✕</button></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="12" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
+      }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
       refreshVols(); refreshPlausi(); loadPhotos(); lockRows();
     }
@@ -1394,6 +1397,7 @@
         const d = protoData[tr.dataset.uid] || {}, q = parseFloat(d.leistung), t = parseFloat(d.zeit);
         el.textContent = q > 0 && t > 0 ? '≈ ' + Math.round(q * t).toLocaleString('de-DE') + ' l in ' + String(t).replace('.', ',') + ' min' : '';
         const pv = prevOf(tr.dataset.uid);
+        const ap = tr.querySelector('[data-anmprint]'); if (ap) ap.textContent = d.anm || '';
         ['zeit', 'leistung', 'eingang', 'ausgang'].forEach(f => {
           const i = tr.querySelector(`[data-f="${f}"]`); if (!i) return;
           if (i.dataset.ph0 === undefined) i.dataset.ph0 = i.placeholder || '';
@@ -1441,7 +1445,7 @@
     }
     // ==================== HISTORIE, VERLAUF, TREND ====================
     // Beim ersten Eintrag in einem neuen Jahr wandern die Werte des Vorjahres automatisch in die Historie des Brunnens.
-    const HIST_F = ['date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer'];
+    const HIST_F = ['date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer', 'anm'];
     const histKey = o => 'ffw_hist_' + (o || 'ohne_zuordnung');
     let protoHist = {};
     function histSave(){ try { localStorage.setItem(histKey(protoOt), JSON.stringify(protoHist)); } catch(e){} }
@@ -1502,7 +1506,7 @@
       html += verlaufSvg(rows) || '<p class="text-slate-400 mt-3">Noch keine Leistung eingetragen.</p>';
       if (rows.filter(r => parseFloat(r.leistung) > 0).length < 2) html += '<p class="text-xs text-slate-400 mt-2">Bisher höchstens eine Messung. Der Verlauf entsteht ab dem nächsten Jahr: Beim ersten Eintrag im neuen Jahr werden die Werte des Vorjahres automatisch in die Historie übernommen.</p>';
       if (rows.length) html += '<div class="mt-3 overflow-x-auto"><table class="w-full text-xs border-collapse"><tr class="text-slate-400 text-left"><th class="py-1 pr-2">Jahr</th><th class="pr-2">Datum</th><th class="pr-2">l/min</th><th class="pr-2">Eingang bar</th><th class="pr-2">Ausgang bar</th><th>Zeit min</th></tr>'
-        + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700 align-top"><td class="py-1 pr-2 font-bold">${esc(r.y)}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>${r.aufbau ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">${esc(aufbauLabel(r.aufbau))}${r.pump ? ' | ' + esc(r.pump === 'Andere' ? (r.pumpOther || 'Andere') : r.pump) : ''}</td></tr>` : ''}`).join('') + '</table></div>';
+        + rows.slice().reverse().map(r => `<tr class="border-t border-slate-700 align-top"><td class="py-1 pr-2 font-bold">${esc(r.y)}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>${r.aufbau ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">${esc(aufbauLabel(r.aufbau))}${r.pump ? ' | ' + esc(r.pump === 'Andere' ? (r.pumpOther || 'Andere') : r.pump) : ''}</td></tr>` : ''}${r.anm ? `<tr><td></td><td colspan="5" class="pb-1 text-[10px] text-slate-400">Anmerkung: ${esc(r.anm)}</td></tr>` : ''}`).join('') + '</table></div>';
       document.getElementById('verlaufBody').innerHTML = html;
       toggleModal('verlaufModal', true);
     }
@@ -1796,9 +1800,9 @@
     }
     function protoClear(uid){ audit('Protokollzeile geleert', '', existingWaterPoints.find(p => p.uid === uid) || { uid }); delete protoData[uid]; protoSave(); renderProtocol(); syncDrop(uid); }
     function protoCsv(){
-      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Prüfer']].concat(protoWells.map((pt, i) => {
+      const rows = [['Nr', 'Flachspiegelbrunnen', 'Ortsangabe', 'Koordinaten', 'Datum', 'Pumpe', 'Aufbau', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Prüfer', 'Anmerkung']].concat(protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), aufbauLabel(d.aufbau), d.zeit || '', d.leistung || '', d.eingang || '', d.ausgang || '', d.pruefer || ''];
+        return [i + 1, wellLabel(pt), getLoc(pt), pt.lat.toFixed(5) + ', ' + pt.lon.toFixed(5), d.date || '', d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || ''), aufbauLabel(d.aufbau), d.zeit || '', d.leistung || '', d.eingang || '', d.ausgang || '', d.pruefer || '', d.anm || ''];
       }));
       const csv = '\ufeff' + rows.map(r => r.map(v => csvCell(v)).join(';')).join('\r\n');
       const a = document.createElement('a');
@@ -1810,7 +1814,7 @@
     // ==================== SYNC (Firebase, PIN je Feuerwehr) ====================
     // Mehrere Trupps einer Wehr arbeiten live am selben Ortsteil-Protokoll. Jede Zelle wird einzeln gespeichert,
     // so überschreiben sich Trupps nie gegenseitig (gleiche Zelle: letzte Änderung gilt). Fotos bleiben auf dem Gerät.
-    const SYNC_F = ['loc', 'date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer'];
+    const SYNC_F = ['loc', 'date', 'pump', 'pumpOther', 'aufbau', 'zeit', 'leistung', 'eingang', 'ausgang', 'pruefer', 'anm'];
     const SYNC_NUM = ['zeit', 'leistung', 'eingang', 'ausgang'];
     const otKey = o => String(o || 'ohne_zuordnung').replace(/[.$#\[\]\/\s]+/g, '_');
     const uKey = uid => String(uid).replace(/\//g, '_');
@@ -1877,7 +1881,7 @@
       const clean = {};
       Object.keys(fields).forEach(f => {
         if (!SYNC_F.includes(f)) return;
-        let v = String(fields[f] ?? '').slice(0, 120);
+        let v = String(fields[f] ?? '').slice(0, f === 'anm' ? 300 : 120);
         if (SYNC_NUM.includes(f)) { if (v === '') { clean[f] = ''; return; } const n = parseFloat(v); if (isNaN(n) || Math.abs(n) > 999999) return; v = String(Math.round(n * 10000) / 10000); }
         clean[f] = v;
       });
@@ -2173,7 +2177,7 @@
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => {
         const pt = protoWells.find(p => p.uid === tr.dataset.uid); if (!pt) return;
         const st = editStatus(pt, protoPos); if (st.ok) return;
-        tr.querySelectorAll('input,select,button').forEach(e => e.disabled = true);
+        tr.querySelectorAll('input,select,button,textarea').forEach(e => e.disabled = true);
         tr.classList.add('opacity-70');
         const d = document.createElement('div'); d.className = 'no-print text-[10px] text-amber-700'; d.textContent = 'Gesperrt: ' + st.why;
         tr.children[1].appendChild(d);
@@ -2277,7 +2281,7 @@
       const head = `Prüfprotokoll Flachspiegelbrunnen | ${document.getElementById('protoTitle').textContent} | Stand ${new Date().toLocaleDateString('de-DE')}`;
       return head + '\n\n' + protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${aufbauLabel(d.aufbau) || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Eingangsdruck: ${d.eingang || '-'} bar | Ausgangsdruck: ${d.ausgang || '-'} bar | Prüfer: ${d.pruefer || '-'}`;
+        return `${i + 1}. ${wellLabel(pt)}${getLoc(pt) ? ' (' + getLoc(pt) + ')' : ''} | ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}\n   Datum: ${d.date || '-'} | Pumpe: ${d.pump === 'Andere' ? 'Andere: ' + (d.pumpOther || '') : (d.pump || '-')} | Aufbau: ${aufbauLabel(d.aufbau) || '-'} | Prüfzeit: ${d.zeit || '-'} min | Leistung: ${d.leistung || '-'} l/min | Eingangsdruck: ${d.eingang || '-'} bar | Ausgangsdruck: ${d.ausgang || '-'} bar | Prüfer: ${d.pruefer || '-'}${d.anm ? '\n   Anmerkung: ' + d.anm : ''}`;
       }).join('\n') + '\n';
     }
     async function protoMail(){
@@ -2438,6 +2442,16 @@
         const t1 = performance.now(); let m1;
         try { const r = await withTimeout(fetch('https://' + FB.host + '/.json?shallow=true'), 15000); m1 = r ? 'HTTP ' + r.status + ' ' + (await r.text()).slice(0, 70) : 'Timeout'; } catch (e) { m1 = 'nicht erreichbar (' + e.message + ')'; }
         rows.push('Firebase-Datenbank: ' + m1 + ', ' + Math.round(performance.now() - t1) + ' ms (HTTP 401 = erreichbar, Zugriff nur mit Anmeldung)');
+        out.innerHTML = rows.map(esc).join('<br>');
+      }
+      if (window.FB && FB.host) {
+        const t2 = performance.now();
+        const wsMsg = await new Promise(res => {
+          let w, done = false; const fin = m => { if (done) return; done = true; clearTimeout(tm); try { w.close(); } catch(e){} res(m); };
+          const tm = setTimeout(() => fin('Timeout (blockiert?)'), 10000);
+          try { w = new WebSocket('wss://' + FB.host + '/.ws?v=5&ns=' + FB.host.split('.')[0]); w.onopen = () => fin('verbindet'); w.onerror = () => fin('Fehler, wahrscheinlich blockiert'); w.onclose = () => fin('sofort geschlossen'); } catch(e) { fin('nicht möglich: ' + e.message); }
+        });
+        rows.push('Firebase-WebSocket: ' + wsMsg + ', ' + Math.round(performance.now() - t2) + ' ms');
         out.innerHTML = rows.map(esc).join('<br>');
       }
       for (const url of OVERPASS_MIRRORS) {

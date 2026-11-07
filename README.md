@@ -56,6 +56,7 @@ Menü → Prüfprotokolle → Ortsteil. Pro Brunnen eine Zeile:
 | Leistung (l/min) | Wird automatisch berechnet, kann von Hand korrigiert werden |
 | Eingangsdruck (bar) | Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ. Unter −1 bar erscheint eine Warnung. |
 | Ausgangsdruck (bar) | Druck am Pumpenausgang |
+| Anmerkung | Freitext je Brunnen, z. B. Mängel (bis 300 Zeichen). Wird synchronisiert, gedruckt, in der CSV und in der Sicherung gespeichert und wandert mit der Historie ins nächste Jahr |
 | Foto | Zum Brunnen, bleibt auf dem Gerät. Unten im Bild stehen Brunnen, Ortsangabe, Datum und Uhrzeit |
 
 **Vorjahreswerte:** Ist die Zeile für das neue Jahr noch leer, stehen die Werte der letzten Messung als graue Zahlen in den Feldern
