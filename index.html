@@ -843,7 +843,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-07 anmerkung';
+    const APP_VERSION = '2026-11-07 ws-fix';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -2052,7 +2052,7 @@
       if (!window.FB) return 'fb-sync.js nicht geladen';
       if (!FB.ok) return 'nicht eingerichtet (' + (FB.err || 'keine Angabe') + ')';
       const who = FB.wehrId ? FB.wehrId() : '';
-      return 'Konfiguration ok, Konto ' + (who || 'nicht angemeldet') + ', Verbindung ' + (syncConn ? 'ja' : 'nein') + (FB.host ? ', ' + FB.host : '') + ((window.__csp || []).length ? ', blockiert: ' + window.__csp.slice(0, 3).join(' | ') : '');
+      return 'Konfiguration ok, Konto ' + (who || 'nicht angemeldet') + ', Verbindung ' + (syncConn ? 'ja' : 'nein') + (function(){ try { return localStorage.getItem('firebase:previous_websocket_failure') ? ', WS-Merker gesetzt' : ''; } catch(e) { return ''; } })() + (FB.host ? ', ' + FB.host : '') + (FB.log && FB.log.length ? ', Log: ' + FB.log.slice(-3).join(' / ') : '') + ((window.__csp || []).length ? ', blockiert: ' + window.__csp.slice(0, 3).join(' | ') : '');
     }
     function renderVerInfo(){
       const el = document.getElementById('verInfo'); if (!el) return;
