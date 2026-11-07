@@ -181,6 +181,7 @@
     .right-3.top-16 > button.on { background:#fde68a !important; border-color:#b45309 !important; }
     #btnEinsatz { background:#b91c1c !important; border-color:#7f1d1d !important; }
     #btnEinsatz i { color:#fff !important; }
+      :is(#formModal,#fbModal) button.mic-on { background:#dc2626 !important; color:#fff !important; border-color:#dc2626 !important; }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -427,6 +428,7 @@
   <div id="fbModal" class="hidden fixed inset-0 z-[560] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3">
     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-4 space-y-3 shadow-2xl">
       <div class="flex items-center"><h2 class="font-extrabold text-white text-sm flex-1"><i class="fa-solid fa-envelope text-cyan-400 mr-1.5"></i>Fehler oder Idee melden</h2><button onclick="toggleModal('fbModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold">✕</button></div>
+      <div class="flex justify-end"><button type="button" data-mic="fbText" onclick="dictate('fbText')" title="Diktieren" class="w-10 h-10 shrink-0 rounded-full bg-slate-800 text-slate-100"><i class="fa-solid fa-microphone"></i></button></div>
       <textarea id="fbText" rows="5" placeholder="Was ist passiert oder was fehlt?" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 text-sm focus:outline-none focus:border-cyan-500"></textarea>
       <p class="text-[11px] text-slate-500">Es werden Feuerwehr, App-Version und Gerätetyp mitgeschickt.</p>
       <button onclick="sendFeedback()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-2xl font-extrabold">Senden</button>
@@ -437,6 +439,7 @@
   <div id="swPill" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[580] bg-slate-900/95 border-2 border-cyan-500 rounded-2xl px-3 py-2 flex items-center gap-2 shadow-2xl backdrop-blur">
     <i class="fa-solid fa-stopwatch text-cyan-400"></i>
     <span id="swTime" class="font-mono font-extrabold text-2xl text-white tabular-nums">00:00</span>
+    <button id="swTarget" onclick="swCycle()" title="Zielzeit mit Signal" class="px-2 h-9 rounded-xl bg-slate-700 text-white text-xs font-bold">Ziel</button>
     <button id="swBtn" onclick="swToggle()" class="w-9 h-9 rounded-xl text-white bg-emerald-600"><i class="fa-solid fa-play"></i></button>
     <button onclick="swReset()" title="Zurücksetzen" class="w-9 h-9 rounded-xl bg-slate-700 text-white"><i class="fa-solid fa-rotate-left"></i></button>
     <button onclick="swHide()" title="Schließen" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 font-bold">✕</button>
@@ -482,7 +485,7 @@
   <!-- EINSATZ: WASSER IN DER NÄHE -->
   <div id="einsatzModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
     <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="flex items-center gap-2 px-4 py-3 bg-red-700 text-white shrink-0"><i class="fa-solid fa-fire"></i><h2 class="font-extrabold flex-1">Wasser in der Nähe</h2><button onclick="toggleModal('einsatzModal')" class="w-9 h-9 rounded-full bg-black/25 font-bold">✕</button></div>
+      <div class="flex items-center gap-2 px-4 py-3 bg-red-700 text-white shrink-0"><i class="fa-solid fa-fire"></i><h2 class="font-extrabold flex-1">Wasser in der Nähe</h2><button onclick="toggleModal('einsatzModal'); compassStop()" class="w-9 h-9 rounded-full bg-black/25 font-bold">✕</button></div>
       <div class="px-4 py-2 text-xs text-slate-600 border-b border-slate-200 shrink-0 flex items-center gap-2"><span id="einsatzWhere" class="flex-1"></span><button onclick="einsatzPickStart()" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800">Ort wählen</button><button onclick="openEinsatz()" title="Eigener Standort" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800"><i class="fa-solid fa-location-crosshairs"></i></button></div>
       <div id="einsatzList" class="overflow-y-auto p-3 space-y-2"></div>
     </div>
@@ -685,12 +688,12 @@
 
         <!-- Freitext Besonderheiten -->
         <div>
-          <label class="block text-slate-300 font-bold mb-1">Besonderheiten / Mängel / Zufahrt</label>
+          <div class="flex items-center mb-1"><label class="flex-1 text-slate-300 font-bold">Besonderheiten / Mängel / Zufahrt</label><button type="button" data-mic="formNotes" onclick="dictate('formNotes')" title="Diktieren" class="w-10 h-10 shrink-0 rounded-full bg-slate-800 text-slate-100"><i class="fa-solid fa-microphone"></i></button></div>
           <textarea id="formNotes" rows="2" placeholder="z.B. Zufahrt über Feldweg, Schild beschädigt..." class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2 text-slate-100 focus:outline-none focus:border-red-500"></textarea>
         </div>
 
         <div>
-          <label class="block text-slate-300 font-bold mb-1">Ortsangabe für das Prüfprotokoll <span class="text-slate-500 font-normal">(nur intern, z. B. Wendeplatz, Katzenberg)</span></label>
+          <div class="flex items-center mb-1"><label class="flex-1 text-slate-300 font-bold">Ortsangabe für das Prüfprotokoll <span class="text-slate-500 font-normal">(nur intern, z. B. Wendeplatz, Katzenberg)</span></label><button type="button" data-mic="formLoc" onclick="dictate('formLoc')" title="Diktieren" class="w-10 h-10 shrink-0 rounded-full bg-slate-800 text-slate-100"><i class="fa-solid fa-microphone"></i></button></div>
           <input type="text" id="formLoc" placeholder="z. B. Wendeplatz" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
         </div>
 
@@ -838,7 +841,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-06 sync-diagnose';
+    const APP_VERSION = '2026-11-07 signal-kompass';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1618,15 +1621,55 @@
       showCover = !showCover; document.getElementById('btnCover').classList.toggle('on', showCover);
       drawCover(); showToast(showCover ? 'Grün: Löschwasser innerhalb ' + COVER_M + ' m erreichbar, ohne Färbung = Lücke' : 'Versorgungskarte aus', 'fa-bullseye');
     }
+    // Diktieren (Spracherkennung des Browsers, bei Chrome über Google, braucht Netz und Mikrofon-Erlaubnis)
+    let dictRec = null;
+    function dictate(id){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { showToast('Diktieren wird auf diesem Gerät nicht unterstützt', 'fa-microphone-slash'); return; }
+      if (dictRec) { try { dictRec.stop(); } catch(e){} return; }
+      const el = document.getElementById(id), btn = document.querySelector(`[data-mic="${id}"]`);
+      dictRec = new SR(); dictRec.lang = 'de-DE'; dictRec.interimResults = false; dictRec.continuous = false;
+      dictRec.onresult = e => { const t = Array.from(e.results).map(r => r[0].transcript).join(' ').trim(); if (t) { el.value = (el.value ? el.value.trim() + ' ' : '') + t; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+      dictRec.onerror = e => showToast(e.error === 'not-allowed' ? 'Mikrofon nicht erlaubt' : 'Diktat fehlgeschlagen (Netz?)', 'fa-microphone-slash');
+      dictRec.onend = () => { dictRec = null; if (btn) btn.classList.remove('mic-on'); };
+      if (btn) btn.classList.add('mic-on');
+      showToast('Sprich jetzt…', 'fa-microphone');
+      try { dictRec.start(); } catch(e) { dictRec = null; if (btn) btn.classList.remove('mic-on'); }
+    }
+    if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) document.querySelectorAll('[data-mic]').forEach(b => b.classList.add('hidden'));
+    // Kompass: Pfeile drehen sich mit dem Handy (Android: absolute Ausrichtung, iOS: Kompassrichtung nach Erlaubnis)
+    let compassHeading = null, compassOn = false;
+    function compassHandler(e){
+      let h = null;
+      if (typeof e.webkitCompassHeading === 'number') h = e.webkitCompassHeading;
+      else if (e.absolute === true && typeof e.alpha === 'number') h = (360 - e.alpha) % 360;
+      else return;
+      compassHeading = (h + ((screen.orientation && screen.orientation.angle) || 0) + 360) % 360; updateArrows();
+    }
+    async function compassStart(){
+      if (compassOn) return;
+      try { if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') { if (await DeviceOrientationEvent.requestPermission() !== 'granted') return; } } catch(e) { return; }
+      compassOn = true;
+      window.addEventListener('deviceorientationabsolute', compassHandler, true); window.addEventListener('deviceorientation', compassHandler, true);
+    }
+    function compassStop(){
+      compassOn = false; compassHeading = null;
+      window.removeEventListener('deviceorientationabsolute', compassHandler, true); window.removeEventListener('deviceorientation', compassHandler, true);
+    }
+    function updateArrows(){
+      document.querySelectorAll('.einsatz-arrow').forEach(a => { const b = parseFloat(a.dataset.b) || 0; a.style.transform = 'rotate(' + Math.round(compassHeading == null ? b : (b - compassHeading + 360) % 360) + 'deg)'; });
+      const n = document.getElementById('compassNote');
+      if (n) n.textContent = (compassHeading == null ? 'Der Pfeil zeigt die Richtung bezogen auf Norden (Karte oben).' : 'Kompass aktiv: Der Pfeil zeigt vom Handy aus zur Stelle, Handy flach halten.') + ' Defekte Stellen sind ausgeblendet.';
+    }
     // Einsatzmodus: nächste Entnahmestellen zu einem Ort (läuft auch offline)
     async function openEinsatz(){
-      toggleModal('einsatzModal', true);
+      toggleModal('einsatzModal', true); compassStart();
       document.getElementById('einsatzWhere').textContent = 'Standort wird ermittelt…';
       const pos = await getPosition(5000);
       if (!pos) { document.getElementById('einsatzWhere').textContent = 'Kein Standort, bitte „Ort wählen“'; document.getElementById('einsatzList').innerHTML = ''; return; }
       einsatzAt(pos.lat, pos.lng, 'Standort (±' + Math.round(pos.acc) + ' m)');
     }
-    function einsatzPickStart(){ toggleModal('einsatzModal', false); einsatzPick = true; showToast('Einsatzort auf der Karte antippen', 'fa-hand-pointer'); }
+    function einsatzPickStart(){ compassStop(); toggleModal('einsatzModal', false); einsatzPick = true; showToast('Einsatzort auf der Karte antippen', 'fa-hand-pointer'); }
     function einsatzAt(la, lo, label){
       toggleModal('einsatzModal', true);
       document.getElementById('einsatzWhere').textContent = 'Von: ' + label;
@@ -1640,14 +1683,15 @@
         const dn = pickTag(t, ['fire_hydrant:diameter', 'diameter'], /diameter/), nm = [t.ref, t.name].filter(Boolean).join(' – '), lc = getLoc(p);
         const dist = d < 1000 ? Math.round(d) + ' m' : (d / 1000).toFixed(1).replace('.', ',') + ' km';
         return `<div onclick="einsatzGo(${jq(p.uid)})" class="flex items-center gap-3 p-3 rounded-2xl border border-slate-300 bg-slate-50 active:bg-red-50">
-          <div class="w-14 text-center shrink-0"><i class="fa-solid fa-arrow-up text-2xl text-red-700" style="display:inline-block;transform:rotate(${Math.round(b)}deg)"></i><div class="text-[11px] font-bold">${dirs[Math.round(b / 45) % 8]}</div></div>
+          <div class="w-14 text-center shrink-0"><i class="fa-solid fa-arrow-up text-2xl text-red-700 einsatz-arrow" data-b="${Math.round(b)}" style="display:inline-block;transition:transform .15s linear;transform:rotate(${Math.round(b)}deg)"></i><div class="text-[11px] font-bold">${dirs[Math.round(b / 45) % 8]}</div></div>
           <div class="flex-1 min-w-0"><div class="font-extrabold text-sm">${esc(st.title)} · ${esc(dist)}</div><div class="text-xs text-slate-700">${esc(q)}${dn ? ' | ' + esc(/^\d+$/.test(dn) ? 'DN ' + dn : dn) : ''}</div><div class="text-xs text-slate-500 truncate">${esc([nm, lc].filter(Boolean).join(' | '))}</div></div>
           <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="px-3 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold">Route</a></div>`;
       }).join('') || '<p class="text-sm text-slate-500">Keine Stellen geladen.</p>';
-      html += '<p class="text-[11px] text-slate-500">Der Pfeil zeigt die Richtung bezogen auf Norden (Karte oben). Defekte Stellen sind ausgeblendet.</p>';
+      html += '<p id="compassNote" class="text-[11px] text-slate-500"></p>';
       document.getElementById('einsatzList').innerHTML = html;
+      compassStart(); updateArrows();
     }
-    function einsatzGo(uid){
+    function einsatzGo(uid){ compassStop();
       const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
       toggleModal('einsatzModal', false);
       const tt = getMarkerStyle(pt.tags || {}).title; if (hiddenTypes.has(tt)) { hiddenTypes.delete(tt); try { localStorage.setItem('ffw_hidden_types', JSON.stringify([...hiddenTypes])); } catch(e){} applyTypeFilter(); document.querySelectorAll('#legend .grid > div:not(.col-span-2)').forEach((r, i) => { if (LEG_TYPES[i] === tt) r.classList.remove('opacity-40'); }); }
@@ -2261,6 +2305,9 @@
       const pill = document.getElementById('swPill'); if (!pill) return;
       pill.classList.toggle('hidden', !swState.show);
       document.getElementById('swTime').textContent = swFmt(swElapsed());
+      const tb = document.getElementById('swTarget'); if (tb) tb.textContent = swState.target ? '⏰ ' + swState.target + ' min' : 'Ziel';
+      if (swState.sig) pill.style.setProperty('border-color', '#dc2626', 'important'); else pill.style.removeProperty('border-color');
+      if (swState.run && swState.target && !swState.sig && swElapsed() >= swState.target * 60000) swSignal();
       const b = document.getElementById('swBtn');
       b.innerHTML = swState.run ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
       b.className = 'w-9 h-9 rounded-xl text-white ' + (swState.run ? 'bg-amber-600' : 'bg-emerald-600');
@@ -2270,11 +2317,29 @@
     async function swLock(on){ try { if (on && navigator.wakeLock) swLockObj = await navigator.wakeLock.request('screen'); else if (swLockObj) { await swLockObj.release(); swLockObj = null; } } catch(e){} }
     function swShow(){ swState.show = true; swSave(); swRender(); }
     function swToggle(){
+      try { swCtx = swCtx || new (window.AudioContext || window.webkitAudioContext)(); swCtx.resume(); } catch(e){}
       if (swState.run) { swState.acc = swElapsed(); swState.run = false; swLock(false); }
       else { swState.start = Date.now(); swState.run = true; swLock(true); }
       swSave(); swRender();
     }
-    function swReset(){ swState.acc = 0; swState.start = Date.now(); swSave(); swRender(); }
+    function swReset(){ swState.acc = 0; swState.start = Date.now(); swState.sig = false; swSave(); swRender(); }
+    let swCtx = null;
+    function swBeep(){
+      try {
+        swCtx = swCtx || new (window.AudioContext || window.webkitAudioContext)(); swCtx.resume();
+        [0, 0.4, 0.8].forEach(t => { const o = swCtx.createOscillator(), g = swCtx.createGain(), c = swCtx.currentTime + t; o.frequency.value = 880; o.connect(g); g.connect(swCtx.destination); g.gain.setValueAtTime(0.35, c); g.gain.setValueAtTime(0, c + 0.28); o.start(c); o.stop(c + 0.3); });
+      } catch(e){}
+    }
+    function swSignal(){
+      swState.sig = true; swSave();
+      try { if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 900]); } catch(e){}
+      swBeep(); showToast('Zielzeit ' + swState.target + ' min erreicht', 'fa-bell');
+    }
+    function swCycle(){
+      const L = [0, 15, 30, 45, 60], i = L.indexOf(swState.target || 0); swState.target = L[(i + 1) % L.length]; swState.sig = false; swSave(); swRender();
+      showToast(swState.target ? 'Signal nach ' + swState.target + ' min' : 'Signal aus', 'fa-bell');
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) swRender(); });
     function swHide(){ if (swState.run) swToggle(); swState.show = false; swSave(); swRender(); }
 
     // ==================== KARTE ZUM DRUCKEN (A4) ====================
@@ -2369,6 +2434,12 @@
       out.textContent = 'Teste…';
       rows.push(`Seite: ${location.protocol}//${location.host || 'lokale Datei'}, online: ${navigator.onLine ? 'ja' : 'nein'}`);
       const q = encodeURIComponent('[out:json][timeout:10];node["emergency"="fire_hydrant"](51.85,14.12,51.87,14.15);out body;');
+      if (window.FB && FB.host) {
+        const t1 = performance.now(); let m1;
+        try { const r = await withTimeout(fetch('https://' + FB.host + '/.json?shallow=true'), 15000); m1 = r ? 'HTTP ' + r.status + ' ' + (await r.text()).slice(0, 70) : 'Timeout'; } catch (e) { m1 = 'nicht erreichbar (' + e.message + ')'; }
+        rows.push('Firebase-Datenbank: ' + m1 + ', ' + Math.round(performance.now() - t1) + ' ms (HTTP 401 = erreichbar, Zugriff nur mit Anmeldung)');
+        out.innerHTML = rows.map(esc).join('<br>');
+      }
       for (const url of OVERPASS_MIRRORS) {
         const t0 = performance.now(); let msg;
         const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 40000);

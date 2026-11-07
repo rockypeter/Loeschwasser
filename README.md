@@ -98,6 +98,12 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
 - **Sicherung:** Protokolle, Ortsangaben und Änderungsprotokoll lassen sich als Datei speichern und wieder einspielen.
 - **Punkte aus Datei importieren:** Für den Einsatz ohne aktuelle Daten.
 - **Update-Hinweis:** Gibt es eine neue App-Version, erscheint oben ein gelber Balken mit „Jetzt laden“. Geprüft wird beim Start und alle zehn Minuten.
+- **Stoppuhr mit Signal:** Der Knopf „Ziel“ an der Stoppuhr schaltet eine Zielzeit durch (aus, 15, 30, 45, 60 min). Ist sie erreicht, vibriert das Handy,
+  es piept dreimal und der Rahmen der Uhr wird rot. Die Uhr läuft weiter. Auf iPhones gibt es keine Vibration.
+- **Kompass im Einsatzmodus:** Die Pfeile drehen sich mit dem Handy und zeigen von dir aus zur Stelle. Handy flach halten. Auf dem iPhone fragt die App
+  einmal nach der Erlaubnis. Ohne Kompass zeigt der Pfeil die Richtung bezogen auf Norden.
+- **Diktieren:** Das Mikrofon-Symbol neben den Textfeldern (Besonderheiten, Ortsangabe, Fehler melden) wandelt gesprochenen Text in Schrift um. Das braucht
+  Netz und die Mikrofon-Erlaubnis. Die Spracherkennung übernimmt der Browser (bei Chrome über Google).
 - **Startpunkt:** Die Kartenmitte lässt sich als Startansicht merken.
 - **QR-Code zur App:** Menü → Hilfe → App aufs Handy. Zum Scannen oder Ausdrucken, damit neue Kameraden die App aufs Handy bekommen.
   Der Code wird beim ersten Öffnen mit Netz erzeugt.
