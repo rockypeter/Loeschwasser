@@ -63,6 +63,8 @@ Menü → Prüfprotokolle → Ortsteil. Pro Brunnen eine Zeile:
 Prüfzeit, Leistung, Eingangs- und Ausgangsdruck (beim Drucken unsichtbar). Ein grauer Knopf „Wie 2025: …“ in der Aufbau-Zelle
 übernimmt Pumpe und Strahlrohre vom Vorjahr.
 
+**Am Handy:** Bei schmalem Bildschirm zeigt das Protokoll eine Karte pro Brunnen statt der breiten Tabelle. Oben stehen Pfeile (oder Wischen nach links und rechts) und der Fortschritt („Brunnen 3 von 9 · 5 geprüft“). Die Karte öffnet sich beim ersten noch nicht geprüften Brunnen. Bei Prüfzeit und den beiden Drücken gibt es −/+-Tasten, und jede Eingabe bestätigt die App mit grünem Rahmen und kurzem Vibrieren. Tablets und Drucke zeigen weiter die ganze Tabelle.
+
 **Berechnung der Leistung:** Nennwerte bei 5 bar Strahlrohrdruck: B mit Mundstück 400, B ohne Mundstück 800,
 C mit Mundstück 100, C ohne Mundstück 200 l/min. Bei anderem Druck gilt
 `Q = Nennwert × √(Druck ÷ 5)`. Als Druck gilt der Ausgangsdruck. Mehrere Strahlrohre werden addiert, „Sonstiges“

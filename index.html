@@ -189,6 +189,23 @@
     html.fs2 [class*="text-[9px]"] { font-size:13px !important; } html.fs2 [class*="text-[10px]"] { font-size:14px !important; } html.fs2 [class*="text-[11px]"] { font-size:15px !important; }
     html.fs1 .leaflet-popup-content { font-size:15px !important; } html.fs2 .leaflet-popup-content { font-size:17px !important; }
     html.fs1 #legend .grid, html.fs1 #legend .col-span-2 { font-size:13px !important; } html.fs2 #legend .grid, html.fs2 #legend .col-span-2 { font-size:15px !important; }
+      .saved-flash { box-shadow:0 0 0 3px #22c55e !important; }
+    #protoNav { display:none; }
+    @media screen and (max-width:720px) {
+      #protoNav { display:block; position:sticky; top:0; z-index:7; background:#fff; padding:6px 0 8px; }
+      #protoNav button { width:56px; height:48px; border-radius:12px; background:#e2e8f0; color:#0f172a; font-size:18px; }
+      #protoSheet table, #protoBody { display:block; min-width:0 !important; width:100%; }
+      #protoSheet thead { display:none; }
+      #protoBody tr { display:none; border:1.5px solid #94a3b8; border-radius:14px; padding:8px; margin:6px 0; background:#fff; }
+      #protoBody tr.pcur { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+      #protoBody td { display:block; border:0 !important; padding:0 !important; min-width:0; }
+      #protoBody td::before { content:attr(data-label); display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:3px; }
+      #protoBody td[data-label=""]::before { display:none; }
+      #protoBody td:nth-child(1) { display:none; }
+      #protoBody td:nth-child(2), #protoBody td:nth-child(5), #protoBody td:nth-child(10), #protoBody td:nth-child(11) { grid-column:1 / -1; }
+      #protoBody :is(input,select,textarea) { font-size:17px !important; min-height:48px; }
+      #protoBody button { min-height:44px; }
+    }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -335,6 +352,10 @@
       <div class="overflow-auto p-3 text-xs">
         <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
+        <div id="protoNav" class="no-print">
+          <div style="display:flex;align-items:center;gap:8px"><button type="button" onclick="protoGo(-1)" title="Vorheriger Brunnen"><i class="fa-solid fa-chevron-left"></i></button><div id="protoNavTxt" style="flex:1;text-align:center;font-weight:700;font-size:14px"></div><button type="button" onclick="protoGo(1)" title="Nächster Brunnen"><i class="fa-solid fa-chevron-right"></i></button></div>
+          <div style="height:6px;background:#e2e8f0;border-radius:3px;margin-top:6px"><div id="protoNavBar" style="height:6px;border-radius:3px;background:#16a34a;width:0"></div></div>
+        </div>
         <table class="w-full border-collapse min-w-[1180px]">
           <thead><tr class="bg-slate-200 text-left">
             <th class="p-1.5 border border-slate-400 w-8">Nr.</th><th class="p-1.5 border border-slate-400">Flachspiegelbrunnen / Ortsangabe</th><th class="p-1.5 border border-slate-400">Datum</th><th class="p-1.5 border border-slate-400">Pumpe</th><th class="p-1.5 border border-slate-400 min-w-[200px]">Aufbau (Strahlrohre)</th><th class="p-1.5 border border-slate-400 w-20">Prüfzeit (min)</th><th class="p-1.5 border border-slate-400 w-20">Leistung (l/min)</th><th class="p-1.5 border border-slate-400 w-20">Eingangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400 w-20">Ausgangs&shy;druck (bar)</th><th class="p-1.5 border border-slate-400">Prüfer</th><th class="p-1.5 border border-slate-400 min-w-[190px]">Anmerkung</th><th class="p-1.5 border border-slate-400 w-20">Foto</th><th class="no-print border border-slate-400 w-8"></th>
@@ -848,7 +869,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-08 aktiv';
+    const APP_VERSION = '2026-11-09 handy-protokoll';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1345,7 +1366,7 @@
         </tr>`;
       }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
-      refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
+      labelCells(); addSteppers(); setProtoIdx(); refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
     }
     // ==================== AUFBAU (Strahlrohre) und Leistung ====================
     // Nennwerte Mehrzweckstrahlrohre (DIN 14365) bei 5 bar Strahlrohrdruck; Durchfluss wächst mit der Wurzel des Drucks: Q = Qnenn * wurzel(p / 5)
@@ -1761,6 +1782,47 @@
         });
       });
     }
+    // ---- Protokoll am Handy: eine Karte pro Brunnen, Wischen, große Tasten ----
+    let protoIdx = 0;
+    const PROTO_LBL = ['Nr.', 'Brunnen / Ortsangabe', 'Datum', 'Pumpe', 'Aufbau (Strahlrohre)', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Prüfer', 'Anmerkung', 'Foto', ''];
+    function labelCells(){ document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => [...tr.children].forEach((td, i) => { td.dataset.label = PROTO_LBL[i] || ''; })); }
+    function addSteppers(){
+      const cfg = { zeit: 0.5, ausgang: 0.5, eingang: 0.05 };
+      document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => Object.keys(cfg).forEach(f => {
+        const inp = tr.querySelector(`[data-f="${f}"]`); if (!inp || inp.parentElement.querySelector('[data-step]')) return;
+        const d = document.createElement('div'); d.setAttribute('data-step', f); d.className = 'no-print flex gap-1 mt-1';
+        const b = sg => `<button type="button" onclick="stepVal(this,'${f}',${sg * cfg[f]})" class="flex-1 py-1.5 bg-slate-200 rounded font-extrabold text-base">${sg < 0 ? '−' : '+'}</button>`;
+        d.innerHTML = b(-1) + b(1); inp.after(d);
+      }));
+    }
+    function stepVal(btn, f, delta){
+      const inp = btn.closest('tr').querySelector(`[data-f="${f}"]`); let v = parseFloat(String(inp.value).replace(',', '.')); if (isNaN(v)) v = 0;
+      v = Math.round((v + delta) * 100) / 100; if (f !== 'eingang' && v < 0) v = 0;
+      inp.value = String(v); inp.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    function flashSaved(el){ el.classList.add('saved-flash'); setTimeout(() => el.classList.remove('saved-flash'), 700); try { if (navigator.vibrate) navigator.vibrate(15); } catch(e){} }
+    function paintIdx(){ document.querySelectorAll('#protoBody tr[data-uid]').forEach((r, i) => r.classList.toggle('pcur', i === protoIdx)); navUpdate(); }
+    function setProtoIdx(){
+      const rows = document.querySelectorAll('#protoBody tr[data-uid]');
+      let i = [...rows].findIndex(r => r.dataset.uid === protoFocus);
+      if (i < 0) { i = protoWells.findIndex(p => !isTestedNow(p.uid)); if (i < 0) i = 0; }
+      protoIdx = Math.min(Math.max(i, 0), Math.max(rows.length - 1, 0)); paintIdx();
+    }
+    function protoGo(dlt){
+      const n = protoWells.length, ni = Math.min(Math.max(protoIdx + dlt, 0), n - 1); if (ni === protoIdx) return;
+      protoIdx = ni; paintIdx(); const sc = document.querySelector('#protoSheet .overflow-auto'); if (sc) sc.scrollTop = 0;
+    }
+    function navUpdate(){
+      const el = document.getElementById('protoNavTxt'); if (!el) return;
+      const n = protoWells.length, d = protoWells.filter(p => isTestedNow(p.uid)).length;
+      el.textContent = n ? `Brunnen ${protoIdx + 1} von ${n} · ${d} geprüft` : 'Keine Brunnen';
+      const bar = document.getElementById('protoNavBar'); if (bar) bar.style.width = n ? Math.round(100 * d / n) + '%' : '0%';
+    }
+    (function(){
+      const el = document.getElementById('protoBody'); let sx = 0, sy = 0, ok = false;
+      el.addEventListener('touchstart', e => { ok = !e.target.closest('input,textarea,select,button,label'); const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+      el.addEventListener('touchend', e => { if (!ok || window.innerWidth > 720) return; const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) protoGo(dx < 0 ? 1 : -1); }, { passive: true });
+    })();
     // ---- Wird gerade geprüft ----
     let syncUnsubA = null, activeMap = {}, syncLast = 0;
     const devId = () => { try { return (window.FB && FB.devId && FB.devId()) || ''; } catch(e) { return ''; } };
@@ -1857,6 +1919,7 @@
         (tr.dataset.auto || '').split(',').filter(Boolean).forEach(f => { if (d[f]) ch[f] = d[f]; });
         tr.dataset.auto = '';
         syncPush(uid, ch);
+        flashSaved(el);
         if (d.leistung) claimRelease(uid); else claimSet(uid);
         const pw = plausiCheck(d), pk = [el.dataset.f, 'leistung', 'ausgang', 'aufbau'].find(k => pw[k]);
         if (pk) showToast('⚠ ' + pw[pk], 'fa-triangle-exclamation');
@@ -2050,7 +2113,7 @@
       existingWaterPoints.forEach(pt => { const o = markerByUid.get(pt.uid); if (o) o.marker.setStyle(ringOpts(pt, getMarkerStyle(pt.tags || {}))); });
       if (showPerf) applyPerf();
     }
-    function protoHeader(){
+    function protoHeader(){ try { navUpdate(); } catch(e){}
       const gem = (protoWells[0] || {}).gemeinde, n = protoWells.filter(p => isTestedNow(p.uid)).length, t = document.getElementById('protoTitle');
       if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + thisYear() + ' geprüft';
     }
