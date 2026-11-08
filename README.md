@@ -11,6 +11,11 @@ Ohne Netz bleibt sie benutzbar. Die Oberfläche ist hell und kontrastreich, dami
 - Punkte außerhalb des Amts (ohne Ortsteil) erscheinen klein und blass. Flachspiegelbrunnen bleiben immer voll sichtbar.
 - Bei Flachspiegelbrunnen zeigt ein Ring den Prüfstand: **grün** = dieses Jahr geprüft, **orange** = noch offen.
 - Beim Antippen einer Stelle erscheinen ihre Daten und der Prüfstatus.
+- **Info-Blatt:** Ein Tipp auf eine Stelle öffnet die Angaben als Blatt von unten mit großen Knöpfen. Ein Tipp auf die Karte oder ✕ schließt es.
+- **Untere Leiste (Handy):** Bei schmalem Bildschirm liegen unten die vier wichtigsten Knöpfe: Protokoll (öffnet den ersten Ortsteil der eigenen Wehr), Einsatz (nur wo freigeschaltet), Erfassen und Menü. Auf Tablet und Laptop bleiben die Knöpfe oben.
+- **Symbole in den Markern:** Ab Zoom 16 steht ein Buchstabe im Marker, damit die Art auch ohne Farbe erkennbar ist: U Unterflurhydrant, Ü Überflurhydrant, F Flachspiegelbrunnen, T Tiefbrunnen, Z Zisterne/Tank, L Löschteich/Saugstelle. Die Legende zeigt dieselben Buchstaben.
+- **Beschriftung:** Ab Zoomstufe 18 steht neben den Punkten im Amt die Ortsangabe (oder Referenz/Name).
+- **Darstellung:** Menü → Werkzeuge → Darstellung schaltet zwischen Normal, Hochkontrast (schwarze Ränder und Schrift, für pralle Sonne) und Dunkel (für abends). Der Druck bleibt immer hell.
 - **Legende anklickbar:** Eine Art antippen blendet sie aus oder wieder ein. Die Auswahl bleibt auf dem Gerät gespeichert.
 - **Punkte außerhalb des Amts Burg** (Nachbargemeinden) erscheinen kleiner und blasser, Flachspiegelbrunnen bleiben immer voll sichtbar.
 - **Update-Hinweis:** Gibt es eine neue App-Version, erscheint oben ein gelber Balken „Neue Version verfügbar“. Die App prüft beim Öffnen und alle zehn Minuten.

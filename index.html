@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
-  <script>try { var _f = localStorage.getItem('ffw_fs'); if (_f) document.documentElement.classList.add('fs' + _f); } catch(e){} window.__csp = []; addEventListener('securitypolicyviolation', e => { if (window.__csp.length < 8) window.__csp.push((e.violatedDirective || '') + ' ' + String(e.blockedURI || '').slice(0, 70)); });</script>
+  <script>try { var _t = localStorage.getItem('ffw_theme'); if (_t) document.documentElement.classList.add(_t); var _f = localStorage.getItem('ffw_fs'); if (_f) document.documentElement.classList.add('fs' + _f); } catch(e){} window.__csp = []; addEventListener('securitypolicyviolation', e => { if (window.__csp.length < 8) window.__csp.push((e.violatedDirective || '') + ' ' + String(e.blockedURI || '').slice(0, 70)); });</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
   <link rel="manifest" href="manifest.webmanifest">
@@ -206,6 +206,42 @@
       #protoBody :is(input,select,textarea) { font-size:17px !important; min-height:48px; }
       #protoBody button { min-height:44px; }
     }
+      .pt-lbl { white-space:nowrap; font:700 12px/1 sans-serif; color:#0f172a; text-shadow:0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; pointer-events:none; }
+    #sheet .text-slate-300, #sheet .text-slate-400, #sheet .text-slate-500 { color:#334155 !important; }
+    #sheet .text-red-400 { color:#b91c1c !important; }
+    #sheet .bg-slate-800 { background:#e2e8f0 !important; color:#334155 !important; }
+    #sheet .border-slate-700 { border-color:#cbd5e1 !important; }
+    #sheet button:not([title="Schließen"]) { min-height:48px; font-size:14px; }
+    html.fs1 #sheet { font-size:15px; } html.fs2 #sheet { font-size:17px; }
+    html.hc header { border-bottom:4px solid #000 !important; }
+    html.hc header h1, html.hc footer, html.hc footer * { color:#000 !important; }
+    html.hc #legend > div, html.hc .right-3.top-16 > button, html.hc .leaflet-popup-content-wrapper, html.hc #sheet, html.hc .mi { border:3px solid #000 !important; }
+    html.hc #legend .text-slate-200, html.hc #legend .text-slate-300, html.hc #legend .text-slate-400, html.hc #sheet .text-slate-300, html.hc #sheet .text-slate-400, html.hc #sheet .text-slate-500, html.hc .msec, html.hc #sideMenu .text-slate-400, html.hc .pt-lbl { color:#000 !important; }
+    html.hc .pt-lbl { font-size:13px; }
+    html.hc #protoSheet :is(input,select,textarea) { border:2px solid #000 !important; }
+    html.hc #legend .grid { font-weight:700; }
+    html.dark { filter:invert(1) hue-rotate(180deg); background:#000; }
+    html.dark img { filter:invert(1) hue-rotate(180deg); }
+    html.dark.sat .leaflet-tile { filter:invert(1) hue-rotate(180deg); }
+    @media print { html.dark, html.dark img { filter:none !important; } }
+      .pt-sym { pointer-events:none; }
+    .pt-sym span { display:flex; width:22px; height:22px; align-items:center; justify-content:center; font:800 12px/1 sans-serif; }
+    #legend .grid > div:not(.col-span-2) > span { width:18px !important; height:18px !important; display:inline-flex; align-items:center; justify-content:center; font:800 11px/1 sans-serif; border-radius:50%; }
+    #navBar { display:none; }
+    #navBar button.hidden { display:none !important; }
+    @media screen and (max-width:720px) {
+      #navBar { display:flex; position:fixed; left:0; right:0; bottom:24px; height:56px; z-index:440; background:#fff; border-top:2px solid #94a3b8; }
+      #navBar button { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:11px; font-weight:700; color:#0f172a; background:#fff; position:relative; }
+      #navBar button i { font-size:20px; color:#b91c1c; }
+      #navBar button:active { background:#fee2e2; }
+      #navBar b { position:absolute; top:4px; right:calc(50% - 26px); min-width:18px; height:18px; border-radius:9px; background:#dc2626; color:#fff; font-size:11px; line-height:18px; text-align:center; }
+      #map { bottom:80px !important; }
+      #toast, #swPill, #updBanner { bottom:92px !important; }
+      #sheet { bottom:80px !important; }
+      #btnNewPointToggle, #btnEinsatz { display:none !important; }
+    }
+    html.hc #navBar { border-top:3px solid #000; }
+    html.hc #navBar button { color:#000; }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -318,6 +354,20 @@
     <button onclick="cancelNewPointMode()" class="bg-red-950 hover:bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">✕</button>
   </div>
 
+  <!-- UNTERE LEISTE (Handy) -->
+  <nav id="navBar" class="no-print">
+    <button onclick="navProtokoll()"><i class="fa-solid fa-clipboard-list"></i><span>Protokoll</span></button>
+    <button id="navEinsatz" class="hidden" onclick="openEinsatz()"><i class="fa-solid fa-fire"></i><span>Einsatz</span></button>
+    <button onclick="startNewPointMode()"><i class="fa-solid fa-plus-circle"></i><span>Erfassen</span></button>
+    <button onclick="openMenu()"><i class="fa-solid fa-bars"></i><span>Menü</span><b id="navBadge" class="hidden"></b></button>
+  </nav>
+
+  <!-- INFO-BLATT VON UNTEN (statt Popup) -->
+  <div id="sheet" class="hidden fixed left-0 right-0 bottom-6 z-[450] max-h-[58vh] overflow-y-auto bg-white text-slate-900 rounded-t-3xl border-t-2 border-slate-300 shadow-2xl px-4 pb-4 pt-2">
+    <div class="flex items-center justify-between sticky top-0 bg-white pb-1"><div class="w-10 h-1.5 rounded-full bg-slate-300 mx-auto"></div><button onclick="closeSheet()" title="Schließen" class="absolute right-0 top-0 w-10 h-10 rounded-full bg-slate-200 text-slate-700 font-bold" style="min-height:40px">✕</button></div>
+    <div id="sheetBody" class="pt-2"></div>
+  </div>
+
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[700] bg-slate-900 border border-slate-700 text-slate-100 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2">
     <i id="toastIcon" class="fa-solid fa-info-circle text-cyan-400"></i>
@@ -411,6 +461,7 @@
       <div><div class="msec">Werkzeuge</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
         <button class="mi" onclick="cycleFont()"><i class="fa-solid fa-text-height"></i><span class="flex-1">Schriftgröße</span><span id="fsLabel" class="text-xs font-mono text-slate-500"></span></button>
+        <button class="mi" onclick="cycleTheme()"><i class="fa-solid fa-circle-half-stroke"></i><span class="flex-1">Darstellung</span><span id="themeLabel" class="text-xs font-mono text-slate-500"></span></button>
         <button class="mi" onclick="closeMenu();saveStart()"><i class="fa-solid fa-location-dot"></i>Startpunkt = aktuelle Kartenmitte</button>
         <button class="mi" onclick="closeMenu();openAudit()"><i class="fa-solid fa-clock-rotate-left"></i>Änderungsprotokoll</button>
       </div></div>
@@ -869,7 +920,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-09 handy-protokoll';
+    const APP_VERSION = '2026-11-10 leiste-symbole';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -997,8 +1048,11 @@
       }).addTo(map);
 
       mapMarkersGroup = L.layerGroup().addTo(map);
+      labelLayer = L.layerGroup().addTo(map); symLayer = L.layerGroup().addTo(map);
+      map.on('moveend zoomend', drawLabels);
 
       map.on('click', function(e) {
+        closeSheet();
         if (isNewPointMode) {
           handleMapClickForNewPoint(e.latlng);
         } else if (einsatzPick) {
@@ -1021,13 +1075,13 @@
         map.removeLayer(satTileLayer);
         map.addLayer(osmTileLayer);
         activeLayerType = 'osm';
-        layerIcon.className = "fa-solid fa-map text-xl text-amber-400";
+        layerIcon.className = "fa-solid fa-map text-xl text-amber-400"; document.documentElement.classList.remove('sat');
         showToast("OpenStreetMap Strassenkarte aktiviert", "fa-map");
       } else {
         map.removeLayer(osmTileLayer);
         map.addLayer(satTileLayer);
         activeLayerType = 'sat';
-        layerIcon.className = "fa-solid fa-earth-europe text-xl text-blue-400";
+        layerIcon.className = "fa-solid fa-earth-europe text-xl text-blue-400"; document.documentElement.classList.add('sat');
         showToast("Luftbild Brandenburg (LGB) aktiviert", "fa-earth-europe");
       }
     }
@@ -1201,7 +1255,7 @@
         markerByUid.delete(p.uid); return false;
       });
       document.getElementById('pointCount').textContent = `${existingWaterPoints.length} Punkte`;
-      if (showPerf) applyPerf(); if (showCover) drawCover();
+      if (showPerf) applyPerf(); if (showCover) drawCover(); drawLabels();
       scheduleSave();
       if (!window._centered && existingWaterPoints.length && currentWehr()) { window._centered = true; centerOnWehr(false); }
       return added;
@@ -1243,7 +1297,8 @@
             <i class="fa-solid fa-clipboard-check"></i> Gegebenheiten prüfen
           </button>
         </div>`;
-      marker.bindPopup(popupHtml);
+      sheetByUid.set(pt.uid, popupHtml);
+      marker.on('click', ev => { if (isNewPointMode || einsatzPick) return; L.DomEvent.stopPropagation(ev); openSheet(pt.uid); });
       if (!hiddenTypes.has(style.title)) mapMarkersGroup.addLayer(marker);
       markerByUid.set(pt.uid, { marker, sig: sig(pt) });
     }
@@ -1318,7 +1373,7 @@
     }
     async function openProtocol(uid){
       const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
-      protoFocus = uid; map.closePopup();
+      protoFocus = uid; map.closePopup(); closeSheet();
       toggleModal('protoModal', true); await loadProtocol(ortsteilOf(pt));
       const row = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (row) row.scrollIntoView({ block: 'center' });
     }
@@ -1627,7 +1682,7 @@
     const latestPerf = (m, uid) => { const o = m[uid]; if (!o) return null; const y = Object.keys(o).sort().pop(); return { y, v: o[y] }; };
     const perfColor = v => v >= PERF_SOLL ? '#22C55E' : v >= PERF_SOLL / 2 ? '#EAB308' : '#EF4444';
     function applyPerf(){
-      const m = perfAll();
+      const m = (perfMapCache = perfAll());
       existingWaterPoints.forEach(pt => {
         const o = markerByUid.get(pt.uid); if (!o) return;
         const st = getMarkerStyle(pt.tags || {}), well = st.title === 'Flachspiegelbrunnen' || st.title === 'Tiefbrunnen', p = latestPerf(m, pt.uid);
@@ -1640,7 +1695,7 @@
     }
     function togglePerf(){
       showPerf = !showPerf; document.getElementById('btnPerf').classList.toggle('on', showPerf); document.getElementById('perfLegend').classList.toggle('hidden', !showPerf);
-      applyPerf(); showToast(showPerf ? 'Leistung: Brunnen nach l/min eingefärbt, Richtwert ' + PERF_SOLL : 'Leistungsansicht aus', 'fa-gauge-high');
+      applyPerf(); drawLabels(); showToast(showPerf ? 'Leistung: Brunnen nach l/min eingefärbt, Richtwert ' + PERF_SOLL : 'Leistungsansicht aus', 'fa-gauge-high');
     }
     function drawCover(){
       if (coverLayer) { map.removeLayer(coverLayer); coverLayer = null; }
@@ -1727,7 +1782,7 @@
       toggleModal('einsatzModal', false);
       const tt = getMarkerStyle(pt.tags || {}).title; if (hiddenTypes.has(tt)) { hiddenTypes.delete(tt); try { localStorage.setItem('ffw_hidden_types', JSON.stringify([...hiddenTypes])); } catch(e){} applyTypeFilter(); document.querySelectorAll('#legend .grid > div:not(.col-span-2)').forEach((r, i) => { if (LEG_TYPES[i] === tt) r.classList.remove('opacity-40'); }); }
       map.setView([pt.lat, pt.lon], 18);
-      setTimeout(() => { const o = markerByUid.get(uid); if (o) o.marker.openPopup(); }, 300);
+      setTimeout(() => { openSheet(uid); }, 300);
     }
     // Trockenjahr-Übersicht: Durchschnittsleistung aller Brunnen je Jahr
     function openTrocken(){
@@ -1782,6 +1837,59 @@
         });
       });
     }
+    // ---- Info-Blatt, Kartenbeschriftung, Darstellung ----
+    const sheetByUid = new Map(); let labelLayer = null, symLayer = null, perfMapCache = {};
+    function openSheet(uid){
+      const html = sheetByUid.get(uid); if (!html) return;
+      document.getElementById('sheetBody').innerHTML = html;
+      const sh = document.getElementById('sheet'); sh.classList.remove('hidden'); sh.scrollTop = 0;
+      const pt = existingWaterPoints.find(p => p.uid === uid);
+      if (pt && map) { const sz = map.getSize(), pp = map.latLngToContainerPoint([pt.lat, pt.lon]), lim = sz.y * 0.3; if (pp.y > lim) map.panBy([0, pp.y - lim]); }
+    }
+    function closeSheet(){ const sh = document.getElementById('sheet'); if (sh) sh.classList.add('hidden'); }
+    const SYM = { 'Unterflurhydrant': ['U', '#fff'], 'Überflurhydrant': ['Ü', '#0f172a'], 'Flachspiegelbrunnen': ['F', '#0f172a'], 'Tiefbrunnen': ['T', '#0f172a'], 'Löschwasserbehälter / Zisterne': ['Z', '#fff'], 'Saugstelle / Löschteich': ['L', '#fff'], 'Löschwasserstelle': ['?', '#0f172a'] };
+    // Buchstaben im Marker (ab Zoom 16) und Ortsangaben daneben (ab Zoom 18)
+    function drawLabels(){
+      if (!map) return;
+      if (labelLayer) labelLayer.clearLayers(); if (symLayer) symLayer.clearLayers();
+      const z = map.getZoom(); if (!(z >= 16)) return;
+      const b = map.getBounds().pad(0.2);
+      existingWaterPoints.forEach(pt => {
+        if (!b.contains([pt.lat, pt.lon]) || isOutside(pt)) return;
+        const t = pt.tags || {}, st = getMarkerStyle(t); if (hiddenTypes.has(st.title)) return;
+        const well = st.title === 'Flachspiegelbrunnen' || st.title === 'Tiefbrunnen';
+        if (!(showPerf && well && latestPerf(perfMapCache, pt.uid))) {
+          const sy = SYM[st.title] || SYM['Löschwasserstelle'];
+          L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'pt-sym', html: '<span style="color:' + sy[1] + '">' + sy[0] + '</span>', iconSize: [22, 22], iconAnchor: [11, 11] }), interactive: false, keyboard: false }).addTo(symLayer);
+        }
+        if (z >= 18) {
+          const txt = getLoc(pt) || t.ref || t.name || '';
+          if (txt) L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'pt-lbl', html: esc(txt), iconSize: null, iconAnchor: [-14, 9] }), interactive: false, keyboard: false }).addTo(labelLayer);
+        }
+      });
+    }
+    function legendLetters(){
+      document.querySelectorAll('#legend .grid > div:not(.col-span-2)').forEach((r, i) => { const sp = r.querySelector('span'), sy = SYM[LEG_TYPES[i]]; if (sp && sy) { sp.textContent = sy[0]; sp.style.color = sy[1]; } });
+    }
+    legendLetters();
+    function navProtokoll(){
+      const w = currentWehr(); if (!w) { openWehrDialog(); return; }
+      const first = (w.ortsteile || [])[0], ot = canonOt(first) || first || '';
+      if (!ot) { openMenu(); return; }
+      openProtocolOt(ot);
+    }
+    function applyTheme(){
+      let t = ''; try { t = localStorage.getItem('ffw_theme') || ''; } catch(e){}
+      const c = document.documentElement.classList; c.toggle('hc', t === 'hc'); c.toggle('dark', t === 'dark');
+      const l = document.getElementById('themeLabel'); if (l) l.textContent = t === 'hc' ? 'Hochkontrast' : t === 'dark' ? 'Dunkel' : 'Normal';
+    }
+    function cycleTheme(){
+      let cur = ''; try { cur = localStorage.getItem('ffw_theme') || ''; } catch(e){}
+      const nx = cur === '' ? 'hc' : cur === 'hc' ? 'dark' : '';
+      try { if (nx) localStorage.setItem('ffw_theme', nx); else localStorage.removeItem('ffw_theme'); } catch(e){}
+      applyTheme();
+    }
+    applyTheme();
     // ---- Protokoll am Handy: eine Karte pro Brunnen, Wischen, große Tasten ----
     let protoIdx = 0;
     const PROTO_LBL = ['Nr.', 'Brunnen / Ortsangabe', 'Datum', 'Pumpe', 'Aufbau (Strahlrohre)', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingangsdruck (bar)', 'Ausgangsdruck (bar)', 'Prüfer', 'Anmerkung', 'Foto', ''];
@@ -2261,6 +2369,7 @@
       const fo = document.getElementById('footerOwner'); if (fo) fo.textContent = w.zentral ? 'Freiwillige Feuerwehr Schmogrow' : w.name + ' | Software: FFW Schmogrow';
       renderVerInfo();
       const eb = document.getElementById('btnEinsatz'); if (eb) eb.classList.toggle('hidden', !(w.zentral || w.einsatz));
+      const ne = document.getElementById('navEinsatz'); if (ne) ne.classList.toggle('hidden', !(w.zentral || w.einsatz));
       if (recenter) { window._centered = true; centerOnWehr(true); }
     }
     function centerOnWehr(force){
@@ -2299,7 +2408,7 @@
       if (!st.ok) showToast(st.why, 'fa-lock');
       return st.ok;
     }
-    async function openEditFormForExisting(uid){
+    async function openEditFormForExisting(uid){ closeSheet();
       const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
       if (await guardEdit(pt)) _openEditFormForExisting(uid);
     }
@@ -2888,6 +2997,7 @@
       
       const count = offlineQueue.length;
       badge.textContent = count;
+      const nb = document.getElementById('navBadge'); if (nb) { nb.textContent = count; nb.classList.toggle('hidden', !count); }
       syncBadge.textContent = count;
       queueListCount.textContent = count;
 
