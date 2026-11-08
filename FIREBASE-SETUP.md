@@ -35,6 +35,6 @@ beim nächsten Verbinden hochgeladen. Gedruckt wird der gemeinsame Stand („Dru
 Fotos bleiben auf dem jeweiligen Gerät.
 
 ## Nach Updates: Regeln neu veröffentlichen
-Wenn sich `database.rules.json` ändert (zuletzt für das Feld „Anmerkung“ im Protokoll und in der Historie), den Inhalt in Realtime Database → Regeln
+Wenn sich `database.rules.json` ändert (zuletzt für Anmerkung, Anwesenheit und „Wird gerade geprüft“), den Inhalt in Realtime Database → Regeln
 einfügen und **Veröffentlichen**. Ohne die neuen Regeln läuft der Sync weiter, nur die Historie wird nicht zwischen den
 Geräten abgeglichen.

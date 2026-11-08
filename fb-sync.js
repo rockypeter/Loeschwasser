@@ -2,13 +2,18 @@
 // Hier stehen KEINE Zugangsdaten: die Konfiguration kommt aus firebase-config.js, das erst beim
 // Veröffentlichen aus dem GitHub-Secret FIREBASE_CONFIG erzeugt wird (siehe FIREBASE-SETUP.md).
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { enableLogging, getDatabase, ref, update, set, remove, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+import { enableLogging, getDatabase, ref, update, set, remove, onValue, onDisconnect, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 import * as DBNS from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 import { initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
 const MAILDOMAIN = '@ffw-loeschwasser.de'; // Pro Feuerwehr ein Konto: <wehr-id>@ffw-loeschwasser.de, Passwort = PIN
 const FB = { ok: false };
 window.FB = FB;
+
+const devId = () => {
+  try { let id = localStorage.getItem('ffw_dev') || ''; if (!/^[a-z0-9]{6,32}$/.test(id)) { id = Array.from(crypto.getRandomValues(new Uint8Array(6))).map(b => b.toString(16).padStart(2, '0')).join(''); localStorage.setItem('ffw_dev', id); } return id; }
+  catch (e) { return 'tmp' + Math.random().toString(16).slice(2, 12); }
+};
 
 (async () => {
   try {
@@ -38,6 +43,22 @@ window.FB = FB;
     // Historie früherer Jahre je Brunnen (wird einmal geschrieben und danach nicht mehr überschrieben)
     FB.listenHist = (ot, cb, err) => onValue(ref(db, 'historie/' + ot), s => cb(s.val() || {}), err);
     FB.setHist = (ot, key, year, rec) => set(ref(db, 'historie/' + ot + '/' + key + '/' + year), rec).catch(() => {});
+    // Anwesenheit: zeigt, wie viele Geräte gerade die App geöffnet haben (nur zufällige Gerätekennung, keine Namen)
+    FB.presenceStart = (wehr, cb) => {
+      let id = ''; try { id = localStorage.getItem('ffw_dev') || ''; if (!/^[a-z0-9]{6,32}$/.test(id)) { id = Array.from(crypto.getRandomValues(new Uint8Array(6))).map(b => b.toString(16).padStart(2, '0')).join(''); localStorage.setItem('ffw_dev', id); } } catch (e) { id = Math.random().toString(16).slice(2, 14).padEnd(12, '0'); }
+      const mine = ref(db, 'praesenz/' + wehr + '/' + id);
+      const mark = () => { if (!document.hidden) onDisconnect(mine).remove().then(() => set(mine, serverTimestamp())).catch(() => {}); };
+      const stopConn = onValue(ref(db, '.info/connected'), s => { if (s.val() === true) mark(); });
+      const stopCnt = onValue(ref(db, 'praesenz'), s => { const v = s.val() || {}; let all = 0; Object.keys(v).forEach(k => { all += Object.keys(v[k] || {}).length; }); cb(Object.keys(v[wehr] || {}).length, all); }, () => {});
+      const vis = () => { if (document.hidden) remove(mine).catch(() => {}); else mark(); };
+      document.addEventListener('visibilitychange', vis);
+      return () => { try { stopConn(); stopCnt(); } catch (e) {} document.removeEventListener('visibilitychange', vis); remove(mine).catch(() => {}); };
+    };
+    // "Wird gerade geprüft": ein Gerät meldet einen Brunnen an, die anderen sehen es (verschwindet beim Trennen von selbst)
+    FB.devId = devId;
+    FB.listenActive = (ot, cb, err) => onValue(ref(db, 'aktiv/' + ot), s => cb(s.val() || {}), err);
+    FB.claim = (ot, key) => { const r = ref(db, 'aktiv/' + ot + '/' + key); onDisconnect(r).remove().catch(() => {}); return set(r, { d: devId(), t: serverTimestamp() }).catch(() => {}); };
+    FB.release = (ot, key) => remove(ref(db, 'aktiv/' + ot + '/' + key)).catch(() => {});
     FB.info = { dbUrl: firebaseConfig.databaseURL || '' }; // nur für die Diagnose im Menü
     try { FB.host = new URL(firebaseConfig.databaseURL).host; } catch (x) { FB.err = 'databaseURL fehlt in der Konfiguration'; }
     FB.ok = true;

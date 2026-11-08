@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
-  <script>window.__csp = []; addEventListener('securitypolicyviolation', e => { if (window.__csp.length < 8) window.__csp.push((e.violatedDirective || '') + ' ' + String(e.blockedURI || '').slice(0, 70)); });</script>
+  <script>try { var _f = localStorage.getItem('ffw_fs'); if (_f) document.documentElement.classList.add('fs' + _f); } catch(e){} window.__csp = []; addEventListener('securitypolicyviolation', e => { if (window.__csp.length < 8) window.__csp.push((e.violatedDirective || '') + ' ' + String(e.blockedURI || '').slice(0, 70)); });</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#d32f2f">
   <link rel="manifest" href="manifest.webmanifest">
@@ -184,6 +184,11 @@
       :is(#formModal,#fbModal) button.mic-on { background:#dc2626 !important; color:#fff !important; border-color:#dc2626 !important; }
       #protoSheet textarea { border:1px solid #94a3b8; font-size:14px; min-height:64px; resize:vertical; }
     @media print { [data-anmprint] { display:block !important; white-space:pre-wrap; font-size:11px; } }
+      html.fs1 { font-size:112.5%; } html.fs2 { font-size:125%; }
+    html.fs1 [class*="text-[9px]"] { font-size:11px !important; } html.fs1 [class*="text-[10px]"] { font-size:12px !important; } html.fs1 [class*="text-[11px]"] { font-size:13px !important; }
+    html.fs2 [class*="text-[9px]"] { font-size:13px !important; } html.fs2 [class*="text-[10px]"] { font-size:14px !important; } html.fs2 [class*="text-[11px]"] { font-size:15px !important; }
+    html.fs1 .leaflet-popup-content { font-size:15px !important; } html.fs2 .leaflet-popup-content { font-size:17px !important; }
+    html.fs1 #legend .grid, html.fs1 #legend .col-span-2 { font-size:13px !important; } html.fs2 #legend .grid, html.fs2 #legend .col-span-2 { font-size:15px !important; }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -304,9 +309,7 @@
 
   <!-- FOOTER -->
   <footer class="h-6 bg-slate-950 border-t border-slate-800 px-3 flex items-center justify-between text-[10px] text-slate-400 z-30 shrink-0">
-    <div class="truncate font-medium">
-      
-    </div>
+    <div class="truncate font-medium"><span id="presInfo"></span></div>
     <div class="font-mono text-slate-500">
       © <span id="footerOwner">Freiwillige Feuerwehr Schmogrow</span>
     </div>
@@ -328,6 +331,7 @@
         <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert. Graue Zahlen = Vorjahreswerte.</span>
         <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
+      <div id="syncBand" class="no-print hidden px-3 py-1.5 bg-amber-100 text-amber-900 text-xs font-bold border-b border-amber-300"></div>
       <div class="overflow-auto p-3 text-xs">
         <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
@@ -385,6 +389,7 @@
       </div></div>
       <div><div class="msec">Werkzeuge</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
+        <button class="mi" onclick="cycleFont()"><i class="fa-solid fa-text-height"></i><span class="flex-1">Schriftgröße</span><span id="fsLabel" class="text-xs font-mono text-slate-500"></span></button>
         <button class="mi" onclick="closeMenu();saveStart()"><i class="fa-solid fa-location-dot"></i>Startpunkt = aktuelle Kartenmitte</button>
         <button class="mi" onclick="closeMenu();openAudit()"><i class="fa-solid fa-clock-rotate-left"></i>Änderungsprotokoll</button>
       </div></div>
@@ -843,7 +848,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-07 ws-fix';
+    const APP_VERSION = '2026-11-08 aktiv';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1322,7 +1327,8 @@
           <td class="${cell} text-center cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})">${i + 1}</td>
           <td class="${cell}"><div class="font-bold cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})" title="Verlauf der Leistung anzeigen">${esc(wellLabel(pt))} <i class="fa-solid fa-chart-line no-print text-cyan-600 text-[11px]"></i></div>
             <input type="text" data-f="loc" placeholder="Ortsangabe (z. B. Wendeplatz)" value="${esc(getLoc(pt))}" class="${inp} mt-1">
-            <div class="text-[10px] text-slate-500 mt-0.5">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}</div></td>
+            <div class="text-[10px] text-slate-500 mt-0.5">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}</div>
+            <div class="no-print mt-1 flex flex-wrap items-center gap-1"><button type="button" data-claimbtn onclick="claimToggle(${jq(pt.uid)})" class="hidden px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"></button><span data-claim class="hidden text-[11px] font-bold px-1.5 py-0.5 rounded"></span></div></td>
           <td class="${cell}"><input type="date" data-f="date" value="${esc(d.date || '')}" class="${inp}"></td>
           <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe eintragen" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Andere' ? '' : 'hidden'}"></td>
           <td class="${cell}"><input type="hidden" data-f="aufbau" value="${esc(d.aufbau || '')}"><div data-legacy class="hidden text-[10px] text-amber-700 mb-1"></div>${[0, 1, 2].map(i => `<div data-slotwrap="${i}" class="flex gap-1 ${i ? 'mt-1 hidden' : ''}"><select data-slot="${i}" class="${inp}">${ROHR_OPTS}</select><input type="number" data-slotv="${i}" min="0" step="1" inputmode="numeric" placeholder="l/min" title="Eigene Leistung in l/min" class="${inp} w-24 hidden"></div>`).join('')}<button type="button" data-same onclick="swSame(this)" class="no-print hidden mt-1 w-full px-1 py-1 bg-slate-200 text-slate-800 rounded text-[11px] font-bold"></button></td>
@@ -1339,7 +1345,7 @@
         </tr>`;
       }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
-      refreshVols(); refreshPlausi(); loadPhotos(); lockRows();
+      refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
     }
     // ==================== AUFBAU (Strahlrohre) und Leistung ====================
     // Nennwerte Mehrzweckstrahlrohre (DIN 14365) bei 5 bar Strahlrohrdruck; Durchfluss wächst mit der Wurzel des Drucks: Q = Qnenn * wurzel(p / 5)
@@ -1755,6 +1761,63 @@
         });
       });
     }
+    // ---- Wird gerade geprüft ----
+    let syncUnsubA = null, activeMap = {}, syncLast = 0;
+    const devId = () => { try { return (window.FB && FB.devId && FB.devId()) || ''; } catch(e) { return ''; } };
+    function syncRemoteActive(val){ if (!syncOt || syncOt !== protoOt) return; activeMap = val || {}; paintActive(); }
+    function claimSet(uid){
+      if (!syncActive() || syncOt !== protoOt || !FB.claim) return;
+      const k = uKey(uid), cur = activeMap[k];
+      if (cur && cur.d === devId() && Date.now() - cur.t < 300000) return;
+      activeMap[k] = { d: devId(), t: Date.now() }; FB.claim(otKey(protoOt), k); paintActive();
+    }
+    function claimRelease(uid){
+      if (!syncActive() || syncOt !== protoOt || !FB.release) return;
+      const k = uKey(uid); if (!activeMap[k] || activeMap[k].d !== devId()) return;
+      delete activeMap[k]; FB.release(otKey(protoOt), k); paintActive();
+    }
+    function claimToggle(uid){ const c = activeMap[uKey(uid)]; if (c && c.d === devId()) claimRelease(uid); else claimSet(uid); }
+    function clearDash(){ existingWaterPoints.forEach(pt => { const o = markerByUid.get(pt.uid); if (o) o.marker.setStyle({ dashArray: null }); }); }
+    function paintActive(){
+      const me = devId(), live = syncActive(), now = Date.now(), fresh = r => r && now - r.t < 1200000;
+      document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => {
+        const rec = live ? activeMap[uKey(tr.dataset.uid)] : null, mine = fresh(rec) && rec.d === me, other = fresh(rec) && !mine;
+        const bd = tr.querySelector('[data-claim]'), bt = tr.querySelector('[data-claimbtn]');
+        if (bt) { bt.classList.toggle('hidden', !live); bt.innerHTML = '<i class="fa-solid fa-hand"></i> ' + (mine ? 'Fertig, freigeben' : 'Ich prüfe diesen'); }
+        if (bd) { bd.classList.toggle('hidden', !(mine || other)); bd.textContent = mine ? 'Du prüfst gerade' : 'Anderes Gerät prüft gerade'; bd.style.background = mine ? '#bbf7d0' : '#fde68a'; bd.style.color = '#0f172a'; }
+      });
+      protoWells.forEach(pt => { const o = markerByUid.get(pt.uid); if (!o) return; const rec = live ? activeMap[uKey(pt.uid)] : null; o.marker.setStyle({ dashArray: fresh(rec) && rec.d !== me ? '3 4' : null }); });
+    }
+    setInterval(() => { try { paintActive(); } catch(e){} }, 60000);
+    // Hinweis, wenn Eingaben nur auf dem Gerät liegen
+    function syncBandUpdate(){
+      const b = document.getElementById('syncBand'); if (!b) return; let msg = '';
+      if (!fbOk()) msg = 'Sync nicht eingerichtet: Eingaben nur auf diesem Gerät.';
+      else if (!currentWehr() || FB.wehrId() !== currentWehr().id) msg = 'Nicht angemeldet: Eingaben nur auf diesem Gerät (Menü → Protokoll-Sync).';
+      else if (protoOt && ownsName(protoOt) && !syncConn) msg = 'Keine Verbindung: Eingaben nur auf diesem Gerät, sie werden später hochgeladen.';
+      b.textContent = msg; b.classList.toggle('hidden', !msg);
+    }
+    // Schriftgröße
+    function fsLabel(){ const el = document.getElementById('fsLabel'); if (el) el.textContent = ['normal', 'groß', 'sehr groß'][+(localStorage.getItem('ffw_fs') || 0)]; }
+    function cycleFont(){
+      const cur = localStorage.getItem('ffw_fs') || '', nx = cur === '' ? '1' : cur === '1' ? '2' : '';
+      try { if (nx) localStorage.setItem('ffw_fs', nx); else localStorage.removeItem('ffw_fs'); } catch(e){}
+      document.documentElement.classList.remove('fs1', 'fs2'); if (nx) document.documentElement.classList.add('fs' + nx); fsLabel();
+    }
+    fsLabel();
+    // Anwesenheit (wie viele Geräte gerade online sind)
+    let presStop = null, presWehr = '';
+    function setPres(own, all){
+      const el = document.getElementById('presInfo'); if (!el) return;
+      el.textContent = own == null ? '' : '● ' + own + (own === 1 ? ' Gerät' : ' Geräte') + ' online' + (all > own ? ' · ' + all + ' im Amt' : '');
+    }
+    function presRefresh(){
+      const w = currentWehr(), on = fbOk() && FB.presenceStart && w && FB.wehrId() === w.id;
+      if (!on) { if (presStop) { presStop(); presStop = null; presWehr = ''; } setPres(null); return; }
+      if (presStop && presWehr === w.id) return;
+      if (presStop) presStop();
+      presWehr = w.id; presStop = FB.presenceStart(w.id, setPres);
+    }
     function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); refreshPlausi(); }
     function protoEdit(e){
       let el = e.target; const tr = el.closest('tr');
@@ -1794,6 +1857,7 @@
         (tr.dataset.auto || '').split(',').filter(Boolean).forEach(f => { if (d[f]) ch[f] = d[f]; });
         tr.dataset.auto = '';
         syncPush(uid, ch);
+        if (d.leistung) claimRelease(uid); else claimSet(uid);
         const pw = plausiCheck(d), pk = [el.dataset.f, 'leistung', 'ausgang', 'aufbau'].find(k => pw[k]);
         if (pk) showToast('⚠ ' + pw[pk], 'fa-triangle-exclamation');
       }
@@ -1828,19 +1892,22 @@
       else if (!syncActive()) { t = 'Sync: nur eigene Ortsteile'; c = 'bg-slate-200 text-slate-800'; }
       else if (syncConn) { t = 'Sync live'; c = 'bg-emerald-600 text-white'; }
       else { t = 'Sync wartet (offline)'; c = 'bg-amber-500 text-white'; }
+      if (syncActive() && syncLast) t += (syncConn ? ' · ' : ' · zuletzt ') + new Date(syncLast).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      try { syncBandUpdate(); } catch(e){}
       const b = document.getElementById('fbBtn'), x = document.getElementById('fbBtnTxt'), m = document.getElementById('menuSync');
       if (b) b.className = 'px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 ' + c;
       if (x) x.textContent = t;
       if (m) m.textContent = fbOk() && currentWehr() && FB.wehrId() === currentWehr().id ? (syncConn ? 'live' : 'offline') : '';
       try { renderVerInfo(); } catch(e){}
     }
-    function syncStop(){ if (syncUnsub) { try { syncUnsub(); } catch(e){} } if (syncUnsubH) { try { syncUnsubH(); } catch(e){} } syncUnsub = null; syncUnsubH = null; syncOt = null; syncSeen = new Set(); syncFirst = true; syncHistFirst = true; }
+    function syncStop(){ if (syncUnsub) { try { syncUnsub(); } catch(e){} } if (syncUnsubH) { try { syncUnsubH(); } catch(e){} } if (syncUnsubA) { try { syncUnsubA(); } catch(e){} } syncUnsubA = null; activeMap = {}; clearDash(); syncUnsub = null; syncUnsubH = null; syncOt = null; syncSeen = new Set(); syncFirst = true; syncHistFirst = true; }
     function syncStart(){
       syncStop(); syncUi();
       if (!syncActive()) return;
       syncOt = protoOt;
       syncUnsub = FB.listen(otKey(protoOt), syncRemote, () => { showToast('Sync: kein Zugriff (Anmeldung oder Freigabe prüfen)', 'fa-triangle-exclamation'); syncStop(); syncUi(); });
       if (FB.listenHist) syncUnsubH = FB.listenHist(otKey(protoOt), syncRemoteHist, () => {});
+      if (FB.listenActive) syncUnsubA = FB.listenActive(otKey(protoOt), syncRemoteActive, () => {});
     }
     function touchCell(uid, f, v){
       const tr = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (!tr) return;
@@ -1849,7 +1916,7 @@
       if (f === 'aufbau') aufbauToSlots(tr, v);
       if (f === 'pump') { const o = tr.querySelector('[data-f=pumpOther]'); if (o) o.classList.toggle('hidden', v !== 'Andere'); }
     }
-    function syncRemote(val){
+    function syncRemote(val){ syncLast = Date.now();
       if (!syncOt || syncOt !== protoOt) return;
       val = val || {};
       const byKey = {}; protoWells.forEach(p => { byKey[uKey(p.uid)] = p; });
@@ -1946,8 +2013,8 @@
     async function syncLogout(){ try { await FB.logout(); } catch(e){} syncStop(); syncUi(); pinRender(); toggleModal('pinModal', false); }
     window.addEventListener('fbsync-ready', () => {
       if (!fbOk()) { syncUi(); return; }
-      FB.connected(c => { syncConn = c; syncUi(); });
-      FB.onAuth(() => { syncUi(); const m = document.getElementById('protoModal'); if (m && !m.classList.contains('hidden')) syncStart(); });
+      FB.connected(c => { syncConn = c; if (c) syncLast = Date.now(); syncUi(); });
+      FB.onAuth(() => { syncUi(); presRefresh(); const m = document.getElementById('protoModal'); if (m && !m.classList.contains('hidden')) syncStart(); });
     });
 
     // ==================== DRUCKEN, PRÜFSTATUS, FOTOS, LISTE, VERSION ====================

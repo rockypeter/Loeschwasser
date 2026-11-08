@@ -85,6 +85,10 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
   mit der PIN der Feuerwehr (Menü → Protokoll-Sync).
 - Jede Zelle wird einzeln gespeichert, Änderungen erscheinen bei den anderen Trupps sofort. Am Ende druckt oder speichert
   ein Gerät das vollständige Protokoll.
+- **Wird gerade geprüft:** Im Protokoll zeigt „Ich prüfe diesen“ den anderen Trupps, dass der Brunnen belegt ist („Anderes Gerät prüft gerade“, gelb) und der Brunnen bekommt einen gestrichelten Ring auf der Karte. Das setzt sich auch automatisch, sobald jemand in der Zeile etwas einträgt, und löst sich, wenn die Leistung steht, mit „Fertig, freigeben“ oder wenn das Gerät die Verbindung verliert (oder nach 20 Minuten).
+- **Hinweisband „nur auf diesem Gerät“:** Wenn der Sync nicht live ist, zeigt das Protokoll oben ein gelbes Band. Der Sync-Knopf zeigt die Uhrzeit des letzten Abgleichs.
+- **Schriftgröße:** Menü → Werkzeuge → Schriftgröße schaltet zwischen normal, groß und sehr groß.
+- **Anwesenheit:** Unten links steht, wie viele Geräte gerade die App geöffnet haben (eigene Wehr und im ganzen Amt). Es wird nur eine zufällige Gerätekennung gespeichert, keine Namen, und sie verschwindet beim Schließen der App.
 - Der Knopf oben im Protokoll zeigt den Zustand: live, wartet (offline) oder nicht angemeldet.
 - Wenn der Sync nicht läuft: Menü → Technik zeigt eine Zeile „Sync“ mit Konfiguration, Konto, Verbindung und blockierten Adressen.
 - Offline Erfasstes wird beim nächsten Verbinden hochgeladen. Wird dieselbe Zelle von zwei Trupps geändert, gilt die
