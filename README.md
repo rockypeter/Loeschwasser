@@ -12,7 +12,9 @@ Ohne Netz bleibt sie benutzbar. Die Oberfläche ist hell und kontrastreich, dami
 - Bei Flachspiegelbrunnen zeigt ein Ring den Prüfstand: **grün** = dieses Jahr geprüft, **orange** = noch offen.
 - Beim Antippen einer Stelle erscheinen ihre Daten und der Prüfstatus.
 - **Info-Blatt:** Ein Tipp auf eine Stelle öffnet die Angaben als Blatt von unten mit großen Knöpfen. Ein Tipp auf die Karte oder ✕ schließt es.
+- **Zurück-Taste (Android):** Sie schließt zuerst das offene Fenster, Menü oder Info-Blatt. Ist nichts offen, erscheint „Zum Beenden nochmal zurück“, und erst ein zweites Zurück beendet die App. Beim Erfassungsformular fragt die App vorher nach.
 - **Untere Leiste (Handy):** Bei schmalem Bildschirm liegen unten die vier wichtigsten Knöpfe: Protokoll (öffnet den ersten Ortsteil der eigenen Wehr), Einsatz (nur wo freigeschaltet), Erfassen und Menü. Auf Tablet und Laptop bleiben die Knöpfe oben.
+- **Zurück-Taste (Android):** Die Taste schließt zuerst das oberste offene Fenster (Menü, Protokoll, Info-Blatt, Dialoge) oder bricht „Neu erfassen“ ab. Ist nichts offen, erscheint „Nochmal zurück zum Beenden“, und erst ein zweites Zurück innerhalb von 2,5 Sekunden schließt die App.
 - **Marker beim Zoomen:** Je weiter man hineinzoomt, desto kleiner werden Marker und Ringe (22 px bei weiter Sicht, 12 px ab Zoom 20), damit sie Gebäude und Wege nicht verdecken. Ab Zoom 20 stehen keine Buchstaben mehr in den Markern, nur Punkte.
 - **Symbole in den Markern:** Ab Zoom 16 steht ein Buchstabe im Marker, damit die Art auch ohne Farbe erkennbar ist: U Unterflurhydrant, Ü Überflurhydrant, F Flachspiegelbrunnen, T Tiefbrunnen, Z Zisterne/Tank, L Löschteich/Saugstelle. Die Legende zeigt dieselben Buchstaben.
 - **Beschriftung:** Ab Zoomstufe 18 steht neben den Punkten im Amt die Ortsangabe (oder Referenz/Name).
@@ -93,6 +95,7 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
   mit der PIN der Feuerwehr (Menü → Protokoll-Sync).
 - Jede Zelle wird einzeln gespeichert, Änderungen erscheinen bei den anderen Trupps sofort. Am Ende druckt oder speichert
   ein Gerät das vollständige Protokoll.
+- **Zurück-Taste (Android):** Zurück schließt zuerst das Menü, offene Fenster, das Info-Blatt oder den Modus „Neu erfassen“. Ist nichts offen, erscheint „Nochmal zurück zum Beenden“, und erst das zweite Zurück innerhalb von etwa zwei Sekunden schließt die App.
 - **Wird gerade geprüft:** Im Protokoll zeigt „Ich prüfe diesen“ den anderen Trupps, dass der Brunnen belegt ist („Anderes Gerät prüft gerade“, gelb) und der Brunnen bekommt einen gestrichelten Ring auf der Karte. Das setzt sich auch automatisch, sobald jemand in der Zeile etwas einträgt, und löst sich, wenn die Leistung steht, mit „Fertig, freigeben“ oder wenn das Gerät die Verbindung verliert (oder nach 20 Minuten).
 - **Hinweisband „nur auf diesem Gerät“:** Wenn der Sync nicht live ist, zeigt das Protokoll oben ein gelbes Band. Der Sync-Knopf zeigt die Uhrzeit des letzten Abgleichs.
 - **Schriftgröße:** Menü → Werkzeuge → Schriftgröße schaltet zwischen normal, groß und sehr groß.

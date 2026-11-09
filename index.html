@@ -986,7 +986,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-12 marker-zoom';
+    const APP_VERSION = '2026-11-13 zurueck';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -2002,6 +2002,37 @@
       box.innerHTML = `<div class="p-3 rounded-2xl font-extrabold ${bad ? 'bg-red-100 text-red-800' : warn ? 'bg-amber-100 text-amber-900' : 'bg-green-100 text-green-800'}">${bad ? bad + ' Problem(e)' : warn ? warn + ' Hinweis(e)' : 'Alles in Ordnung'}</div>`
         + rows.map(r => `<div class="flex items-start gap-3 p-2.5 rounded-xl border border-slate-200"><i class="fa-solid ${ic[r.st][0]} text-xl mt-0.5" style="color:${ic[r.st][1]}"></i><div class="min-w-0"><div class="font-bold text-sm">${esc(r.label)}</div><div class="text-xs text-slate-600 break-words">${esc(r.detail)}</div></div></div>`).join('');
     }
+    // ---- Android-Zurück-Taste: erst Fenster schließen, dann Hinweis, erst beim zweiten Mal beenden ----
+    (function(){
+      let atGuard = false, last = 0;
+      const guard = () => { if (atGuard) return; try { history.pushState({ ffw: 1 }, ''); atGuard = true; } catch(e){} };
+      try { history.replaceState({ ffw: 0 }, ''); } catch(e){}
+      document.addEventListener('pointerdown', guard, true);
+      function topOverlay(){
+        const c = [];
+        document.querySelectorAll('[id$="Modal"]').forEach(el => { const cs = getComputedStyle(el); if (!el.classList.contains('hidden') && cs.display !== 'none') c.push({ id: el.id, z: parseInt(cs.zIndex) || 0 }); });
+        const mo = document.getElementById('menuOverlay'); if (mo && !mo.classList.contains('hidden')) c.push({ id: '_menu', z: 556 });
+        const sh = document.getElementById('sheet'); if (sh && !sh.classList.contains('hidden')) c.push({ id: '_sheet', z: 450 });
+        if (isNewPointMode) c.push({ id: '_new', z: 449 });
+        if (einsatzPick) c.push({ id: '_pick', z: 448 });
+        c.sort((a, b) => b.z - a.z); return c[0] || null;
+      }
+      window.addEventListener('popstate', () => {
+        atGuard = false;
+        const t = topOverlay();
+        if (t) {
+          if (t.id === 'wehrModal') { guard(); return; }
+          if (t.id === 'formModal' && !confirm('Erfassung verwerfen?')) { guard(); return; }
+          if (t.id === '_menu') closeMenu();
+          else if (t.id === '_sheet') closeSheet();
+          else if (t.id === '_new') cancelNewPointMode();
+          else if (t.id === '_pick') { einsatzPick = false; showToast('Abgebrochen', 'fa-info-circle'); }
+          else { toggleModal(t.id, false); if (t.id === 'einsatzModal') compassStop(); }
+          guard(); return;
+        }
+        last = Date.now(); showToast('Zum Beenden nochmal zurück', 'fa-arrow-left');
+      });
+    })();
     // ---- Info-Blatt, Kartenbeschriftung, Darstellung ----
     const sheetByUid = new Map(); let labelLayer = null, symLayer = null, perfMapCache = {};
     function openSheet(uid){
