@@ -238,7 +238,7 @@
       #map { bottom:80px !important; }
       #toast, #swPill, #updBanner { bottom:92px !important; }
       #sheet { bottom:80px !important; }
-      #btnNewPointToggle, #btnEinsatz { display:none !important; }
+      #btnNewPointToggle, #btnEinsatz, header button[onclick="openMenu()"] { display:none !important; }
     }
     html.hc #navBar { border-top:3px solid #000; }
     html.hc #navBar button { color:#000; }
@@ -354,6 +354,43 @@
     <button onclick="cancelNewPointMode()" class="bg-red-950 hover:bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">✕</button>
   </div>
 
+  <!-- PUMPENLISTE -->
+  <div id="pumpModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 flex items-center justify-center p-3">
+    <div class="bg-white text-slate-900 rounded-2xl w-full max-w-sm p-4 space-y-2 shadow-2xl">
+      <div class="flex items-center"><h2 class="font-extrabold flex-1">Pumpenliste</h2><button onclick="toggleModal('pumpModal')" class="w-9 h-9 rounded-full bg-slate-200 font-bold">✕</button></div>
+      <p class="text-xs text-slate-600">Eine Pumpe pro Zeile (z. B. „LF 10/6“). „Andere“ kommt immer dazu. Gilt nur für dieses Gerät.</p>
+      <textarea id="pumpText" rows="6" class="w-full border border-slate-400 rounded-xl px-3 py-2 text-base"></textarea>
+      <div class="flex gap-2"><button onclick="pumpReset()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">Standard</button><button onclick="pumpSave()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-extrabold">Speichern</button></div>
+    </div>
+  </div>
+
+  <!-- UNTERSCHRIFT -->
+  <div id="sigModal" class="hidden fixed inset-0 z-[600] bg-slate-950/80 flex items-center justify-center p-3">
+    <div class="bg-white text-slate-900 rounded-2xl w-full max-w-lg p-3 space-y-2 shadow-2xl">
+      <div class="flex items-center"><h2 class="font-extrabold flex-1">Unterschrift</h2><button onclick="toggleModal('sigModal')" class="w-9 h-9 rounded-full bg-slate-200 font-bold">✕</button></div>
+      <input id="sigName" type="text" maxlength="60" placeholder="Name" class="w-full border border-slate-400 rounded-xl px-3 py-2.5 text-base">
+      <canvas id="sigCanvas" width="600" height="220" style="width:100%;border:2px solid #475569;border-radius:12px;background:#fff;touch-action:none"></canvas>
+      <div class="flex gap-2"><button onclick="sigClear()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">Löschen</button><button onclick="sigSave()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-extrabold">Speichern</button></div>
+    </div>
+  </div>
+
+  <!-- SYSTEMCHECK -->
+  <div id="checkModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 shrink-0"><h2 class="font-extrabold flex-1"><i class="fa-solid fa-stethoscope text-red-700 mr-1.5"></i>Systemcheck</h2><button onclick="runSystemCheck()" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-sm">Neu prüfen</button><button onclick="toggleModal('checkModal')" class="w-9 h-9 rounded-full bg-slate-200 font-bold">✕</button></div>
+      <div id="checkList" class="overflow-y-auto p-3 space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- AUTOMATISCHE SICHERUNGEN -->
+  <div id="autoBackupModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 shrink-0"><h2 class="font-extrabold flex-1"><i class="fa-solid fa-clock-rotate-left text-red-700 mr-1.5"></i>Automatische Sicherungen</h2><button onclick="abNow()" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-sm">Jetzt sichern</button><button onclick="toggleModal('autoBackupModal')" class="w-9 h-9 rounded-full bg-slate-200 font-bold">✕</button></div>
+      <p class="px-4 pt-2 text-xs text-slate-600">Die App legt auf diesem Gerät selbst die letzten fünf Stände der Protokolle ab. „Einspielen“ ergänzt fehlende und neuere Werte, es löscht nichts.</p>
+      <div id="abList" class="overflow-y-auto p-3 space-y-2"></div>
+    </div>
+  </div>
+
   <!-- UNTERE LEISTE (Handy) -->
   <nav id="navBar" class="no-print">
     <button onclick="navProtokoll()"><i class="fa-solid fa-clipboard-list"></i><span>Protokoll</span></button>
@@ -376,7 +413,7 @@
 
   <!-- FOOTER -->
   <footer class="h-6 bg-slate-950 border-t border-slate-800 px-3 flex items-center justify-between text-[10px] text-slate-400 z-30 shrink-0">
-    <div class="truncate font-medium"><span id="presInfo"></span></div>
+    <div class="truncate font-medium"><span id="presInfo"></span><span id="pendInfo"></span></div>
     <div class="font-mono text-slate-500">
       © <span id="footerOwner">Freiwillige Feuerwehr Schmogrow</span>
     </div>
@@ -412,6 +449,11 @@
           </tr></thead>
           <tbody id="protoBody" oninput="protoEdit(event)" onchange="protoEdit(event)"></tbody>
         </table>
+        <div id="sigArea" class="mt-4 text-xs">
+          <div class="flex items-end gap-3"><div style="min-width:220px;min-height:70px;border-bottom:1px solid #475569"><img id="sigImg" class="hidden" style="max-height:70px"></div><div id="sigMeta" class="text-[11px]"></div></div>
+          <div class="text-[11px] text-slate-600 mt-0.5">F.d.R.d.A. Unterschrift (Maschinist / Gruppenführer)</div>
+          <button type="button" onclick="sigOpen()" class="no-print mt-1 px-3 py-2 bg-slate-200 rounded-lg font-bold"><i class="fa-solid fa-signature"></i> Unterschreiben</button>
+        </div>
       </div>
     </div>
   </div>
@@ -462,20 +504,24 @@
         <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
         <button class="mi" onclick="cycleFont()"><i class="fa-solid fa-text-height"></i><span class="flex-1">Schriftgröße</span><span id="fsLabel" class="text-xs font-mono text-slate-500"></span></button>
         <button class="mi" onclick="cycleTheme()"><i class="fa-solid fa-circle-half-stroke"></i><span class="flex-1">Darstellung</span><span id="themeLabel" class="text-xs font-mono text-slate-500"></span></button>
+        <button class="mi" onclick="closeMenu();pumpOpen()"><i class="fa-solid fa-gears"></i>Pumpenliste</button>
         <button class="mi" onclick="closeMenu();saveStart()"><i class="fa-solid fa-location-dot"></i>Startpunkt = aktuelle Kartenmitte</button>
         <button class="mi" onclick="closeMenu();openAudit()"><i class="fa-solid fa-clock-rotate-left"></i>Änderungsprotokoll</button>
       </div></div>
       <div><div class="msec">Sicherung</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();backupSave()"><i class="fa-solid fa-floppy-disk"></i>Sicherung speichern</button>
         <label class="mi cursor-pointer"><i class="fa-solid fa-upload"></i>Sicherung einspielen<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();backupRestore(event)"></label>
+        <button class="mi" onclick="closeMenu();openAutoBackups()"><i class="fa-solid fa-clock-rotate-left"></i>Automatische Sicherungen</button>
       </div></div>
       <div><div class="msec">Hilfe</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openHelp()"><i class="fa-solid fa-circle-question"></i>So geht’s</button>
         <button class="mi" onclick="closeMenu();openFeedback()"><i class="fa-solid fa-envelope"></i>Fehler oder Idee melden</button>
         <button class="mi" onclick="closeMenu();openQr()"><i class="fa-solid fa-qrcode"></i>App aufs Handy (QR-Code)</button>
+        <button class="mi" onclick="closeMenu();toggleModal('privModal', true)"><i class="fa-solid fa-shield-halved"></i>Datenschutz</button>
       </div></div>
       <div><div class="msec">Technik</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openWehrDialog()"><i class="fa-solid fa-fire-extinguisher"></i>Feuerwehr wechseln</button>
+        <button class="mi" onclick="closeMenu();runSystemCheck()"><i class="fa-solid fa-heart-pulse"></i>Systemcheck</button>
         <button class="mi" onclick="runDiagnose()"><i class="fa-solid fa-stethoscope"></i>Server testen</button>
         <button class="mi" onclick="clearPointCache()"><i class="fa-solid fa-trash"></i>Cache leeren</button>
         <button class="mi" onclick="forceUpdate()"><i class="fa-solid fa-rotate"></i>App neu laden (Update erzwingen)</button>
@@ -567,6 +613,26 @@
       <div class="flex items-center gap-2 px-4 py-3 bg-red-700 text-white shrink-0"><i class="fa-solid fa-fire"></i><h2 class="font-extrabold flex-1">Wasser in der Nähe</h2><button onclick="toggleModal('einsatzModal'); compassStop()" class="w-9 h-9 rounded-full bg-black/25 font-bold">✕</button></div>
       <div class="px-4 py-2 text-xs text-slate-600 border-b border-slate-200 shrink-0 flex items-center gap-2"><span id="einsatzWhere" class="flex-1"></span><button onclick="einsatzPickStart()" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800">Ort wählen</button><button onclick="openEinsatz()" title="Eigener Standort" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800"><i class="fa-solid fa-location-crosshairs"></i></button></div>
       <div id="einsatzList" class="overflow-y-auto p-3 space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- DATENSCHUTZ-HINWEIS -->
+  <div id="privModal" class="hidden fixed inset-0 z-[570] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 shrink-0"><h2 class="font-extrabold flex-1"><i class="fa-solid fa-shield-halved text-red-700 mr-1.5"></i>Datenschutz</h2><button onclick="toggleModal('privModal')" class="w-9 h-9 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button></div>
+      <div class="p-4 overflow-y-auto space-y-3 text-sm text-slate-800 leading-relaxed">
+        <p><b>Was die App speichert</b></p>
+        <ul class="list-disc pl-5 space-y-1.5">
+          <li><b>Auf diesem Gerät:</b> Protokolle, Ortsangaben, Prüfernamen, Unterschriften, Fotos, Änderungsprotokoll und Sicherungen. Fotos und Unterschriften verlassen das Gerät nicht.</li>
+          <li><b>Im Sync (Firebase, Region Europa):</b> Protokollwerte, Anmerkungen und Prüfernamen deiner Wehr sowie eine zufällige Gerätekennung für „online“ und „wird gerade geprüft“. Der Zugriff ist durch die PIN der Wehr geschützt. Die Gerätekennung verschwindet beim Schließen der App.</li>
+          <li><b>Standort:</b> wird nur auf dem Gerät benutzt (Abstand zur Stelle, Einsatzmodus). Er wird nicht gespeichert. Bei neuen Erfassungen von anderen Wehren steht der Abstand in der Meldung an die Zentrale.</li>
+          <li><b>OpenStreetMap-Notizen:</b> Neue oder geprüfte Stellen gehen anonym und öffentlich als OSM-Notiz hinaus, mit Koordinaten und den eingetragenen Angaben, aber ohne Namen.</li>
+          <li><b>E-Mail-Berichte:</b> laufen über den Dienst Web3Forms und enthalten Prüfername und Angaben der Erfassung.</li>
+          <li><b>Diktieren:</b> Die Spracherkennung übernimmt der Browser, bei Chrome über Google.</li>
+        </ul>
+        <p><b>Löschen:</b> Lokale Daten löschst du in den Browser-Einstellungen („Websitedaten“). Daten im Sync entfernt die Wehrführung in der Firebase-Konsole unter „Realtime Database“. Eine Zeile im Protokoll leerst du mit ✕, das löscht sie auch im Sync.</p>
+        <p class="text-xs text-slate-500">Dies ist eine technische Beschreibung. Verantwortlich ist die Wehrführung bzw. das Amt. Bitte dort Ansprechperson und Rechtsgrundlage ergänzen und prüfen lassen.</p>
+      </div>
     </div>
   </div>
 
@@ -920,7 +986,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-10 leiste-symbole';
+    const APP_VERSION = '2026-11-12 marker-zoom';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1049,7 +1115,7 @@
 
       mapMarkersGroup = L.layerGroup().addTo(map);
       labelLayer = L.layerGroup().addTo(map); symLayer = L.layerGroup().addTo(map);
-      map.on('moveend zoomend', drawLabels);
+      map.on('moveend zoomend', drawLabels); map.on('zoomend', scaleMarkers);
 
       map.on('click', function(e) {
         closeSheet();
@@ -1255,7 +1321,7 @@
         markerByUid.delete(p.uid); return false;
       });
       document.getElementById('pointCount').textContent = `${existingWaterPoints.length} Punkte`;
-      if (showPerf) applyPerf(); if (showCover) drawCover(); drawLabels();
+      if (showPerf) applyPerf(); if (showCover) drawCover(); drawLabels(); scaleMarkers();
       scheduleSave();
       if (!window._centered && existingWaterPoints.length && currentWehr()) { window._centered = true; centerOnWehr(false); }
       return added;
@@ -1331,7 +1397,9 @@
 
     // ==================== PRÜFPROTOKOLL FLACHSPIEGELBRUNNEN (je Ortsteil) ====================
     function prefillInspector(){ try { document.getElementById('formInspector').value = localStorage.getItem('ffw_inspector') || ''; } catch(e){} }
-    const PUMPS = ['Magirus TS', 'Ziegler TS', 'Fahrzeugpumpe', 'Andere'];
+    const PUMPS_DEF = ['Magirus TS', 'Ziegler TS', 'Fahrzeugpumpe'];
+    const pumpList = () => { let l = null; try { l = JSON.parse(localStorage.getItem('ffw_pumps') || 'null'); } catch(e){} if (!Array.isArray(l) || !l.length) l = PUMPS_DEF; return l.slice(); };
+    const pumpOpts = cur => { const l = pumpList(); if (cur && cur !== 'Andere' && !l.includes(cur)) l.push(cur); l.push('Andere'); return l.map(x => `<option${cur === x ? ' selected' : ''}>${esc(x)}</option>`).join(''); };
     let protoOt = '', protoData = {}, protoWells = [], protoFocus = '', protoPos = null;
     const protoKey = o => 'ffw_proto_' + (o || 'ohne_zuordnung');
     const todayISO = () => new Date().toLocaleDateString('sv-SE');
@@ -1398,7 +1466,7 @@
       const cell = 'p-1 border border-slate-400', inp = 'w-full bg-white border border-slate-300 rounded px-1 py-1';
       document.getElementById('protoBody').innerHTML = protoWells.map((pt, i) => {
         const d = protoData[pt.uid] || {};
-        const opts = '<option value=""></option>' + PUMPS.map(x => `<option${d.pump === x ? ' selected' : ''}>${x}</option>`).join('');
+        const opts = '<option value=""></option>' + pumpOpts(d.pump);
         return `<tr data-uid="${esc(pt.uid)}" class="${pt.uid === protoFocus ? 'bg-yellow-100' : ''}">
           <td class="${cell} text-center cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})">${i + 1}</td>
           <td class="${cell}"><div class="font-bold cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})" title="Verlauf der Leistung anzeigen">${esc(wellLabel(pt))} <i class="fa-solid fa-chart-line no-print text-cyan-600 text-[11px]"></i></div>
@@ -1421,7 +1489,7 @@
         </tr>`;
       }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
-      labelCells(); addSteppers(); setProtoIdx(); refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
+      labelCells(); addSteppers(); setProtoIdx(); sigLoad(); refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
     }
     // ==================== AUFBAU (Strahlrohre) und Leistung ====================
     // Nennwerte Mehrzweckstrahlrohre (DIN 14365) bei 5 bar Strahlrohrdruck; Durchfluss wächst mit der Wurzel des Drucks: Q = Qnenn * wurzel(p / 5)
@@ -1837,6 +1905,103 @@
         });
       });
     }
+    // ---- Pumpenliste ----
+    function pumpOpen(){ document.getElementById('pumpText').value = pumpList().join('\n'); toggleModal('pumpModal', true); }
+    function pumpSave(){
+      const l = [...new Set(document.getElementById('pumpText').value.split('\n').map(x => x.trim().slice(0, 40)).filter(x => x && x !== 'Andere'))].slice(0, 12);
+      try { if (l.length) localStorage.setItem('ffw_pumps', JSON.stringify(l)); else localStorage.removeItem('ffw_pumps'); } catch(e){}
+      toggleModal('pumpModal', false); showToast('Pumpenliste gespeichert', 'fa-gears');
+      if (!document.getElementById('protoModal').classList.contains('hidden')) loadProtocol(protoOt);
+    }
+    function pumpReset(){ document.getElementById('pumpText').value = PUMPS_DEF.join('\n'); }
+    // ---- Unterschrift (nur auf diesem Gerät, wie die Fotos) ----
+    let sigDirty = false;
+    function sigBlank(){ const c = document.getElementById('sigCanvas'), g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); sigDirty = false; }
+    async function sigLoad(){
+      const d = await cacheGet('sig:' + protoOt), im = document.getElementById('sigImg'), me = document.getElementById('sigMeta'); if (!im) return;
+      if (d && d.img) { im.src = d.img; im.classList.remove('hidden'); me.textContent = (d.name || '') + (d.date ? ', ' + d.date.split('-').reverse().join('.') : ''); }
+      else { im.removeAttribute('src'); im.classList.add('hidden'); me.textContent = ''; }
+    }
+    async function sigOpen(){
+      const d = await cacheGet('sig:' + protoOt); let nm = ''; try { nm = localStorage.getItem('ffw_inspector') || ''; } catch(e){}
+      document.getElementById('sigName').value = (d && d.name) || nm; sigBlank(); toggleModal('sigModal', true);
+    }
+    function sigClear(){ sigBlank(); }
+    async function sigSave(){
+      if (!sigDirty) { showToast('Bitte zuerst unterschreiben', 'fa-signature'); return; }
+      const c = document.getElementById('sigCanvas');
+      await cacheSet('sig:' + protoOt, { img: c.toDataURL('image/png'), name: document.getElementById('sigName').value.trim(), date: todayISO() });
+      audit('Unterschrift', protoOt); toggleModal('sigModal', false); sigLoad(); showToast('Unterschrift gespeichert', 'fa-signature');
+    }
+    (function(){
+      const c = document.getElementById('sigCanvas'); let down = false, last = null;
+      const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height]; };
+      c.addEventListener('pointerdown', e => { down = true; last = pos(e); c.setPointerCapture(e.pointerId); const g = c.getContext('2d'); g.fillStyle = '#0f172a'; g.beginPath(); g.arc(last[0], last[1], 1.6, 0, 7); g.fill(); sigDirty = true; });
+      c.addEventListener('pointermove', e => { if (!down) return; const p = pos(e), g = c.getContext('2d'); g.lineWidth = 3; g.lineCap = 'round'; g.strokeStyle = '#0f172a'; g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke(); last = p; });
+      c.addEventListener('pointerup', () => { down = false; }); c.addEventListener('pointercancel', () => { down = false; });
+      sigBlank();
+    })();
+    // ---- Wartende Änderungen (Sync) ----
+    function pendUpdate(){
+      const el = document.getElementById('pendInfo'); if (!el) return;
+      const n = (window.FB && FB.pending) || 0, age = n && FB.pendingSince ? Date.now() - FB.pendingSince : 0;
+      if (n && age > 4000) { el.textContent = ' · ⏳ ' + n + (n === 1 ? ' Änderung wartet' : ' Änderungen warten') + (age > 3600000 ? ' (seit über 1 h!)' : ''); el.style.setProperty('color', age > 3600000 ? '#b91c1c' : '#b45309', 'important'); }
+      else el.textContent = '';
+    }
+    window.addEventListener('fbpending', () => { pendUpdate(); setTimeout(pendUpdate, 4500); }); setInterval(pendUpdate, 30000);
+    // ---- Automatische Sicherungen auf dem Gerät ----
+    let autoDirty = false;
+    function buildBackup(){
+      const proto = {};
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && (k.startsWith('ffw_proto_') || k.startsWith('ffw_hist_'))) proto[k] = localStorage.getItem(k); }
+      return { v: 1, t: new Date().toISOString(), wehr: (currentWehr() || {}).id || '', proto, loc: locMap(), audit: auditList(), inspector: localStorage.getItem('ffw_inspector') || '', queue: offlineQueue.map(q => ({ ...q, image: undefined })), digest: digestLog };
+    }
+    const djb = t => { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return h; };
+    async function autoSnapshot(force){
+      try {
+        const b = buildBackup(); let n = 0;
+        Object.keys(b.proto).forEach(k => { if (k.startsWith('ffw_proto_')) { try { n += Object.keys(JSON.parse(b.proto[k] || '{}')).length; } catch(e){} } });
+        if (!n && !force) return;
+        const list = (await cacheGet('autobackups')) || [], hash = djb(JSON.stringify([b.proto, b.loc])), last = list[0];
+        if (!force && last && (last.hash === hash || Date.now() - last.ts < (autoDirty ? 2 : 24) * 3600000)) return;
+        list.unshift({ ts: Date.now(), n, hash, json: JSON.stringify(b) });
+        await cacheSet('autobackups', list.slice(0, 5)); autoDirty = false; return true;
+      } catch(e) { return false; }
+    }
+    setTimeout(() => autoSnapshot(false), 5000);
+    document.addEventListener('visibilitychange', () => { if (document.hidden && autoDirty) autoSnapshot(false); });
+    async function openAutoBackups(){
+      toggleModal('autoBackupModal', true);
+      const l = (await cacheGet('autobackups')) || [], box = document.getElementById('abList');
+      box.innerHTML = l.length ? l.map((x, i) => `<div class="flex items-center gap-2 p-3 rounded-2xl border border-slate-300 bg-slate-50"><div class="flex-1"><div class="font-bold text-sm">${esc(new Date(x.ts).toLocaleString('de-DE'))}</div><div class="text-xs text-slate-600">${x.n} Protokollzeilen</div></div><button onclick="abRestore(${i})" class="px-3 py-2 bg-red-600 text-white rounded-lg font-bold text-sm">Einspielen</button><button onclick="abSave(${i})" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-sm">Datei</button></div>`).join('') : '<p class="text-sm text-slate-500">Noch keine Sicherung. „Jetzt sichern“ legt die erste an.</p>';
+    }
+    async function abNow(){ await autoSnapshot(true); showToast('Sicherung angelegt', 'fa-floppy-disk'); openAutoBackups(); }
+    async function abRestore(i){ const l = (await cacheGet('autobackups')) || []; if (!l[i]) return; toggleModal('autoBackupModal', false); backupRestore({ target: { files: [new File([l[i].json], 'auto.json')], value: '' } }); }
+    async function abSave(i){ const l = (await cacheGet('autobackups')) || []; if (!l[i]) return; downloadText('Sicherung_auto_' + new Date(l[i].ts).toISOString().slice(0, 16).replace(/[:T]/g, '-') + '.json', l[i].json, 'application/json'); }
+    // ---- Systemcheck ----
+    async function runSystemCheck(){
+      toggleModal('checkModal', true); const box = document.getElementById('checkList'); box.innerHTML = '<p class="text-sm text-slate-500">Prüfe…</p>';
+      const rows = [], add = (st, label, detail) => rows.push({ st, label, detail }), w = currentWehr(), f = t => t ? new Date(t).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
+      add(w ? 'ok' : 'bad', 'Feuerwehr', w ? w.name : 'nicht gewählt (Menü → Feuerwehr wechseln)');
+      add(navigator.onLine ? 'ok' : 'warn', 'Internet', navigator.onLine ? 'online' : 'offline, die App läuft lokal weiter');
+      let st = 'warn', v = 'nicht prüfbar';
+      try { const r = await withTimeout(fetch('index.html', { cache: 'no-cache' }), 6000); if (r && r.ok) { const m = /APP_VERSION = '([^']+)'/.exec(await r.text()); if (m) { st = m[1] === APP_VERSION ? 'ok' : 'warn'; v = m[1] === APP_VERSION ? APP_VERSION + ' (aktuell)' : 'neuere Version ' + m[1] + ' bereit, Menü → Technik → App neu laden'; } } } catch(e){}
+      add(st, 'App-Version', v);
+      const live = fbOk() && w && FB.wehrId() === w.id;
+      add(live && syncConn ? 'ok' : 'warn', 'Sync', fbOk() ? (live ? (syncConn ? 'live' : 'angemeldet, aber keine Verbindung') : 'nicht angemeldet (Menü → Protokoll-Sync)') : 'nicht eingerichtet');
+      const pn = (window.FB && FB.pending) || 0; add(pn ? 'warn' : 'ok', 'Wartende Änderungen', pn ? pn + ' warten auf den Sync' : 'keine');
+      add(offlineQueue.length ? 'warn' : 'ok', 'Ungesendete Erfassungen', offlineQueue.length ? offlineQueue.length + ' (Menü → Erfassungen senden)' : 'keine');
+      const pos = await getPosition(0); add(pos ? (pos.acc <= 50 ? 'ok' : 'warn') : 'warn', 'Standort', pos ? 'genau auf ' + Math.round(pos.acc) + ' m' : 'nicht verfügbar (Erlaubnis oder GPS prüfen)');
+      add(existingWaterPoints.length ? ((Date.now() - dataTs) > 14 * 86400000 ? 'warn' : 'ok') : 'bad', 'Punkte', existingWaterPoints.length + ' geladen, Stand ' + f(dataTs));
+      try { const c = await caches.open('ffw-tiles-v1'), n = (await c.keys()).length; add(n >= 50 ? 'ok' : 'warn', 'Karte offline', n >= 50 ? n + ' Kacheln gespeichert' : 'kaum gespeichert (Menü → Karte offline laden)'); } catch(e) { add('warn', 'Karte offline', 'nicht prüfbar'); }
+      add(navigator.serviceWorker && navigator.serviceWorker.controller ? 'ok' : 'warn', 'Offline-Modus', navigator.serviceWorker && navigator.serviceWorker.controller ? 'aktiv' : 'noch nicht aktiv (App einmal neu laden)');
+      try { if (navigator.storage && navigator.storage.estimate) { const e = await navigator.storage.estimate(); add(e.usage / e.quota > 0.8 ? 'warn' : 'ok', 'Speicher', Math.round(e.usage / 1048576) + ' MB von ' + Math.round(e.quota / 1048576) + ' MB belegt'); } } catch(e){}
+      const ab = (await cacheGet('autobackups')) || []; add(ab.length ? 'ok' : 'warn', 'Automatische Sicherung', ab.length ? 'letzte: ' + f(ab[0].ts) : 'noch keine (Menü → Automatische Sicherungen)');
+      const bad = rows.filter(r => r.st === 'bad').length, warn = rows.filter(r => r.st === 'warn').length;
+      const ic = { ok: ['fa-circle-check', '#16a34a'], warn: ['fa-triangle-exclamation', '#d97706'], bad: ['fa-circle-xmark', '#dc2626'] };
+      box.innerHTML = `<div class="p-3 rounded-2xl font-extrabold ${bad ? 'bg-red-100 text-red-800' : warn ? 'bg-amber-100 text-amber-900' : 'bg-green-100 text-green-800'}">${bad ? bad + ' Problem(e)' : warn ? warn + ' Hinweis(e)' : 'Alles in Ordnung'}</div>`
+        + rows.map(r => `<div class="flex items-start gap-3 p-2.5 rounded-xl border border-slate-200"><i class="fa-solid ${ic[r.st][0]} text-xl mt-0.5" style="color:${ic[r.st][1]}"></i><div class="min-w-0"><div class="font-bold text-sm">${esc(r.label)}</div><div class="text-xs text-slate-600 break-words">${esc(r.detail)}</div></div></div>`).join('');
+    }
     // ---- Info-Blatt, Kartenbeschriftung, Darstellung ----
     const sheetByUid = new Map(); let labelLayer = null, symLayer = null, perfMapCache = {};
     function openSheet(uid){
@@ -1848,6 +2013,18 @@
     }
     function closeSheet(){ const sh = document.getElementById('sheet'); if (sh) sh.classList.add('hidden'); }
     const SYM = { 'Unterflurhydrant': ['U', '#fff'], 'Überflurhydrant': ['Ü', '#0f172a'], 'Flachspiegelbrunnen': ['F', '#0f172a'], 'Tiefbrunnen': ['T', '#0f172a'], 'Löschwasserbehälter / Zisterne': ['Z', '#fff'], 'Saugstelle / Löschteich': ['L', '#fff'], 'Löschwasserstelle': ['?', '#0f172a'] };
+    // Marker werden beim Hineinzoomen kleiner, damit sie die Karte nicht verdecken (Durchmesser in Pixel)
+    const isOutside = pt => isOut(pt, getMarkerStyle(pt.tags || {}));
+    const markerSize = z => z >= 20 ? 12 : z >= 19 ? 14 : z >= 18 ? 17 : z >= 17 ? 20 : 22;
+    function scaleMarkers(){
+      if (!map) return; const d = markerSize(map.getZoom()), f = d / 22;
+      existingWaterPoints.forEach(pt => {
+        const o = markerByUid.get(pt.uid); if (!o) return;
+        const out = isOutside(pt), ro = ringOpts(pt, getMarkerStyle(pt.tags || {}));
+        o.marker.setRadius(out ? Math.max(3, d * 0.27) : d / 2);
+        o.marker.setStyle({ weight: Math.max(1.5, ro.weight * (0.5 + 0.5 * f)), fillOpacity: out ? 0.5 : (map.getZoom() >= 19 ? 0.8 : 0.95) });
+      });
+    }
     // Buchstaben im Marker (ab Zoom 16) und Ortsangaben daneben (ab Zoom 18)
     function drawLabels(){
       if (!map) return;
@@ -1859,12 +2036,12 @@
         const t = pt.tags || {}, st = getMarkerStyle(t); if (hiddenTypes.has(st.title)) return;
         const well = st.title === 'Flachspiegelbrunnen' || st.title === 'Tiefbrunnen';
         if (!(showPerf && well && latestPerf(perfMapCache, pt.uid))) {
-          const sy = SYM[st.title] || SYM['Löschwasserstelle'];
-          L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'pt-sym', html: '<span style="color:' + sy[1] + '">' + sy[0] + '</span>', iconSize: [22, 22], iconAnchor: [11, 11] }), interactive: false, keyboard: false }).addTo(symLayer);
+          const sy = SYM[st.title] || SYM['Löschwasserstelle'], d = markerSize(z);
+          if (d >= 14) L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'pt-sym', html: '<span style="width:' + d + 'px;height:' + d + 'px;font-size:' + Math.round(d * 0.55) + 'px;color:' + sy[1] + '">' + sy[0] + '</span>', iconSize: [d, d], iconAnchor: [d / 2, d / 2] }), interactive: false, keyboard: false }).addTo(symLayer);
         }
         if (z >= 18) {
           const txt = getLoc(pt) || t.ref || t.name || '';
-          if (txt) L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'pt-lbl', html: esc(txt), iconSize: null, iconAnchor: [-14, 9] }), interactive: false, keyboard: false }).addTo(labelLayer);
+          if (txt) L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'pt-lbl', html: esc(txt), iconSize: null, iconAnchor: [-(markerSize(z) / 2 + 3), 9] }), interactive: false, keyboard: false }).addTo(labelLayer);
         }
       });
     }
@@ -1988,7 +2165,7 @@
       if (presStop) presStop();
       presWehr = w.id; presStop = FB.presenceStart(w.id, setPres);
     }
-    function protoSave(){ try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); refreshPlausi(); }
+    function protoSave(){ autoDirty = true; try { localStorage.setItem(protoKey(protoOt), JSON.stringify(protoData)); } catch(e){} refreshRings(); protoHeader(); refreshVols(); refreshPlausi(); }
     function protoEdit(e){
       let el = e.target; const tr = el.closest('tr');
       if (tr && tr.dataset.uid && (el.dataset.f || el.dataset.slot !== undefined || el.dataset.slotv !== undefined)) histRollover(tr, el);
@@ -2219,6 +2396,7 @@
     function refreshRings(){
       testedMap = buildTested();
       existingWaterPoints.forEach(pt => { const o = markerByUid.get(pt.uid); if (o) o.marker.setStyle(ringOpts(pt, getMarkerStyle(pt.tags || {}))); });
+      scaleMarkers();
       if (showPerf) applyPerf();
     }
     function protoHeader(){ try { navUpdate(); } catch(e){}
@@ -2786,7 +2964,7 @@
           radius: accuracy,
           color: '#10B981',
           weight: 1,
-          fillOpacity: 0.15
+          fillOpacity: 0.06
         }).addTo(map);
       } else {
         userMarker.setLatLng([lat, lng]);

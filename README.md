@@ -13,6 +13,7 @@ Ohne Netz bleibt sie benutzbar. Die Oberfläche ist hell und kontrastreich, dami
 - Beim Antippen einer Stelle erscheinen ihre Daten und der Prüfstatus.
 - **Info-Blatt:** Ein Tipp auf eine Stelle öffnet die Angaben als Blatt von unten mit großen Knöpfen. Ein Tipp auf die Karte oder ✕ schließt es.
 - **Untere Leiste (Handy):** Bei schmalem Bildschirm liegen unten die vier wichtigsten Knöpfe: Protokoll (öffnet den ersten Ortsteil der eigenen Wehr), Einsatz (nur wo freigeschaltet), Erfassen und Menü. Auf Tablet und Laptop bleiben die Knöpfe oben.
+- **Marker beim Zoomen:** Je weiter man hineinzoomt, desto kleiner werden Marker und Ringe (22 px bei weiter Sicht, 12 px ab Zoom 20), damit sie Gebäude und Wege nicht verdecken. Ab Zoom 20 stehen keine Buchstaben mehr in den Markern, nur Punkte.
 - **Symbole in den Markern:** Ab Zoom 16 steht ein Buchstabe im Marker, damit die Art auch ohne Farbe erkennbar ist: U Unterflurhydrant, Ü Überflurhydrant, F Flachspiegelbrunnen, T Tiefbrunnen, Z Zisterne/Tank, L Löschteich/Saugstelle. Die Legende zeigt dieselben Buchstaben.
 - **Beschriftung:** Ab Zoomstufe 18 steht neben den Punkten im Amt die Ortsangabe (oder Referenz/Name).
 - **Darstellung:** Menü → Werkzeuge → Darstellung schaltet zwischen Normal, Hochkontrast (schwarze Ränder und Schrift, für pralle Sonne) und Dunkel (für abends). Der Druck bleibt immer hell.
@@ -105,6 +106,14 @@ die Entfernung zu den Brunnen, die Stoppuhr hilft bei der Prüfzeit.
 - Die App sendet höchstens einmal pro Tag automatisch einen Bericht per E-Mail, und nur wenn Stellen neu erfasst oder
   geändert wurden. Prüfprotokoll-Einträge, Fotos und Sicherungen lösen keinen Bericht aus.
 - Im Sende-Fenster lässt sich der Bericht jederzeit von Hand senden.
+
+## Sicherheit und Kontrolle
+- **Systemcheck:** Menü → Technik → Systemcheck prüft mit einem Tipp Feuerwehr, Internet, App-Version, Sync, wartende Änderungen, ungesendete Erfassungen, Standort, Punkte, Offline-Karte, Offline-Modus, Speicher und die letzte Sicherung. Grün = in Ordnung, gelb = Hinweis, rot = Problem.
+- **Automatische Sicherungen:** Die App legt auf dem Gerät selbst die letzten fünf Stände der Protokolle ab (beim Start, nach Änderungen frühestens alle zwei Stunden, sonst einmal täglich). Menü → Sicherung → Automatische Sicherungen zeigt sie. „Einspielen“ ergänzt fehlende und neuere Werte, „Datei“ speichert den Stand, „Jetzt sichern“ legt von Hand einen an.
+- **Wartende Änderungen:** Unten in der Fußzeile steht „⏳ n Änderungen warten“, wenn Eingaben länger als wenige Sekunden nicht beim Server angekommen sind. Nach einer Stunde wird der Hinweis rot.
+- **Unterschrift:** Unter dem Protokoll öffnet „Unterschreiben“ ein Feld zum Unterschreiben mit dem Finger. Name und Datum stehen daneben und die Unterschrift kommt in den Ausdruck (Zeile „F.d.R.d.A.“). Sie bleibt wie die Fotos auf diesem Gerät und ist nicht in der Sicherung.
+- **Datenschutz:** Menü → Hilfe → Datenschutz beschreibt, was auf dem Gerät, im Sync, bei OSM und per E-Mail gespeichert wird und wie man es löscht. Der Text ist eine technische Beschreibung, Ansprechperson und Rechtsgrundlage muss die Wehrführung bzw. das Amt ergänzen.
+- **Pumpenliste:** Menü → Werkzeuge → Pumpenliste: eigene Pumpen (eine pro Zeile) für die Auswahl im Protokoll, nur für dieses Gerät. „Andere“ gibt es immer.
 
 ## Weitere Funktionen
 - **Sicherung:** Protokolle, Ortsangaben und Änderungsprotokoll lassen sich als Datei speichern und wieder einspielen.
