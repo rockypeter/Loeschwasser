@@ -405,6 +405,13 @@
     <div id="sheetBody" class="pt-2"></div>
   </div>
 
+  <!-- AKKU / SPEICHER -->
+  <div id="lowBanner" class="hidden fixed top-24 inset-x-0 z-[480] bg-red-600 text-white px-3 py-2 flex items-center gap-2 text-sm font-bold shadow">
+    <i class="fa-solid fa-battery-quarter"></i><span id="lowTxt" class="flex-1"></span>
+    <button onclick="lowSave()" class="px-3 py-1.5 bg-white text-red-700 rounded-lg text-xs font-extrabold">Jetzt sichern</button>
+    <button onclick="document.getElementById('lowBanner').classList.add('hidden')" class="w-8 h-8 rounded-full bg-black/20 font-bold">✕</button>
+  </div>
+
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[700] bg-slate-900 border border-slate-700 text-slate-100 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2">
     <i id="toastIcon" class="fa-solid fa-info-circle text-cyan-400"></i>
@@ -428,6 +435,8 @@
         <button onclick="printSheet('protoModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
         <button onclick="protoCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
         <button onclick="protoRelocate()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-location-crosshairs"></i>Standort prüfen</button>
+        <button id="protoSortBtn" onclick="protoToggleSort()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-arrow-down-1-9"></i>Nach Entfernung</button>
+        <button onclick="openSummary()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-flag-checkered"></i>Zusammenfassung</button>
         <button onclick="swShow()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
         <button onclick="protoMail()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-envelope"></i>Per E-Mail sichern</button>
         <button id="fbBtn" onclick="openSync()" class="px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 bg-slate-200 text-slate-800"><i class="fa-solid fa-cloud"></i><span id="fbBtnTxt">Sync</span></button>
@@ -515,6 +524,7 @@
       </div></div>
       <div><div class="msec">Hilfe</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openHelp()"><i class="fa-solid fa-circle-question"></i>So geht’s</button>
+        <button class="mi" onclick="closeMenu();introShow(INTRO, 'Kurzeinführung')"><i class="fa-solid fa-route"></i>Kurzeinführung</button>
         <button class="mi" onclick="closeMenu();openFeedback()"><i class="fa-solid fa-envelope"></i>Fehler oder Idee melden</button>
         <button class="mi" onclick="closeMenu();openQr()"><i class="fa-solid fa-qrcode"></i>App aufs Handy (QR-Code)</button>
         <button class="mi" onclick="closeMenu();toggleModal('privModal', true)"><i class="fa-solid fa-shield-halved"></i>Datenschutz</button>
@@ -613,6 +623,36 @@
       <div class="flex items-center gap-2 px-4 py-3 bg-red-700 text-white shrink-0"><i class="fa-solid fa-fire"></i><h2 class="font-extrabold flex-1">Wasser in der Nähe</h2><button onclick="toggleModal('einsatzModal'); compassStop()" class="w-9 h-9 rounded-full bg-black/25 font-bold">✕</button></div>
       <div class="px-4 py-2 text-xs text-slate-600 border-b border-slate-200 shrink-0 flex items-center gap-2"><span id="einsatzWhere" class="flex-1"></span><button onclick="einsatzPickStart()" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800">Ort wählen</button><button onclick="openEinsatz()" title="Eigener Standort" class="px-3 py-2 bg-slate-200 rounded-lg font-bold text-slate-800"><i class="fa-solid fa-location-crosshairs"></i></button></div>
       <div id="einsatzList" class="overflow-y-auto p-3 space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- PRÜFTAG-ZUSAMMENFASSUNG -->
+  <div id="sumModal" class="hidden fixed inset-0 z-[572] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 bg-emerald-700 text-white shrink-0"><i class="fa-solid fa-flag-checkered"></i><h2 class="font-extrabold flex-1">Zusammenfassung</h2><button onclick="toggleModal('sumModal')" class="w-9 h-9 rounded-full bg-black/25 font-bold">✕</button></div>
+      <div id="sumBody" class="p-4 overflow-y-auto text-sm space-y-3"></div>
+      <div class="grid grid-cols-3 gap-2 p-3 border-t border-slate-200 shrink-0">
+        <button onclick="printSheet('protoModal')" class="py-3 rounded-xl bg-red-600 text-white font-bold text-xs"><i class="fa-solid fa-print"></i> Drucken</button>
+        <button onclick="protoCsv()" class="py-3 rounded-xl bg-slate-200 font-bold text-xs"><i class="fa-solid fa-file-csv"></i> CSV</button>
+        <button onclick="protoMail()" class="py-3 rounded-xl bg-slate-200 font-bold text-xs"><i class="fa-solid fa-envelope"></i> E-Mail</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EINFÜHRUNG / NEU IN DIESER VERSION -->
+  <div id="introModal" class="hidden fixed inset-0 z-[575] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 bg-red-700 text-white"><i id="introIcon" class="fa-solid fa-droplet"></i><h2 id="introTitle" class="font-extrabold flex-1"></h2><button onclick="introClose()" class="w-9 h-9 rounded-full bg-black/25 font-bold">✕</button></div>
+      <div id="introBody" class="p-4 text-sm leading-relaxed min-h-[170px]"></div>
+      <div class="flex items-center gap-2 px-4 pb-4"><button id="introPrev" onclick="introGo(-1)" class="px-4 py-3 bg-slate-200 rounded-xl font-bold">Zurück</button><div id="introDots" class="flex-1 text-center text-slate-400 tracking-widest"></div><button id="introNext" onclick="introGo(1)" class="px-5 py-3 bg-red-600 text-white rounded-xl font-extrabold">Weiter</button></div>
+    </div>
+  </div>
+
+  <!-- STECKBRIEF JE BRUNNEN -->
+  <div id="steckModal" class="hidden fixed inset-0 z-[570] bg-slate-950/80 flex items-end sm:items-center justify-center p-0 sm:p-3">
+    <div class="bg-white text-slate-900 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 shrink-0"><h2 class="font-extrabold flex-1"><i class="fa-solid fa-id-card text-red-700 mr-1.5"></i>Steckbrief</h2><button onclick="toggleModal('steckModal')" class="w-9 h-9 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button></div>
+      <div id="steckBody" class="p-4 overflow-y-auto text-sm space-y-3"></div>
     </div>
   </div>
 
@@ -844,6 +884,7 @@
 
         <div>
           <label class="block text-slate-300 font-bold mb-1">Geprüft von (Name) <span class="text-red-500">*</span></label>
+          <div id="nameChipsForm" class="flex flex-wrap gap-1.5 mb-1.5"></div>
           <input type="text" id="formInspector" required autocomplete="name" placeholder="Vor- und Nachname" class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-red-500">
         </div>
 
@@ -986,7 +1027,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-13 zurueck';
+    const APP_VERSION = '2026-11-15 prueftag';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1070,7 +1111,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       initMap(); initLegendDrag(); initWehr(); swRender(); loadAmtBurgData(false); updateQueueBadge();
-      setTimeout(checkDigest, 3000); setTimeout(checkUpdate, 8000); setInterval(checkUpdate, 600000); initLegendFilter();
+      setTimeout(checkDigest, 3000); setTimeout(maybeIntro, 2200); setTimeout(lowCheck, 4000); setTimeout(checkUpdate, 8000); setInterval(checkUpdate, 600000); initLegendFilter();
       document.addEventListener('visibilitychange', () => { if (document.hidden) leaveSync(); else checkUpdate(); });
       window.addEventListener('pagehide', leaveSync);
       if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -1357,7 +1398,7 @@
             <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">OSM ${esc(pt.uid)}</span>
           </div>
           <div class="space-y-1 text-slate-300">${popupRows(tags)}</div>
-          ${style.title === 'Flachspiegelbrunnen' ? `<p class="text-[11px] text-slate-400 mt-1">Prüfung: ${statusText(pt)}</p><button onclick="openProtocol(${jq(pt.uid)})" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Ortsteil</button><button onclick="swShow()" class="w-full mt-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-stopwatch"></i> Stoppuhr</button>` : ''}
+          ${style.title === 'Flachspiegelbrunnen' ? `<p class="text-[11px] text-slate-400 mt-1">Prüfung: ${statusText(pt)}</p><button onclick="openProtocol(${jq(pt.uid)})" class="w-full mt-2 py-2 bg-cyan-700 hover:bg-cyan-600 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition"><i class="fa-solid fa-clipboard-list"></i> Prüfprotokoll Ortsteil</button><button onclick="openSteck(${jq(pt.uid)})" class="w-full mt-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-id-card"></i> Steckbrief</button><button onclick="quickPhotoPick(${jq(pt.uid)})" class="w-full mt-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-camera"></i> Foto aufnehmen</button><button onclick="swShow()" class="w-full mt-1 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-stopwatch"></i> Stoppuhr</button>` : ''}
           <details class="mt-1"><summary class="cursor-pointer text-[10px] text-slate-500">OSM-Tags anzeigen</summary><pre class="text-[10px] text-slate-400 whitespace-pre-wrap break-all mt-1">${esc(Object.entries(tags).map(([k, v]) => k + '=' + v).join('\n'))}</pre></details>
           <button onclick="openEditFormForExisting(${jq(pt.uid)})" class="w-full mt-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl font-extrabold flex items-center justify-center gap-1.5 shadow transition">
             <i class="fa-solid fa-clipboard-check"></i> Gegebenheiten prüfen
@@ -1396,7 +1437,7 @@
     }
 
     // ==================== PRÜFPROTOKOLL FLACHSPIEGELBRUNNEN (je Ortsteil) ====================
-    function prefillInspector(){ try { document.getElementById('formInspector').value = localStorage.getItem('ffw_inspector') || ''; } catch(e){} }
+    function prefillInspector(){ try { document.getElementById('formInspector').value = localStorage.getItem('ffw_inspector') || ''; } catch(e){} renderFormChips(); }
     const PUMPS_DEF = ['Magirus TS', 'Ziegler TS', 'Fahrzeugpumpe'];
     const pumpList = () => { let l = null; try { l = JSON.parse(localStorage.getItem('ffw_pumps') || 'null'); } catch(e){} if (!Array.isArray(l) || !l.length) l = PUMPS_DEF; return l.slice(); };
     const pumpOpts = cur => { const l = pumpList(); if (cur && cur !== 'Andere' && !l.includes(cur)) l.push(cur); l.push('Andere'); return l.map(x => `<option${cur === x ? ' selected' : ''}>${esc(x)}</option>`).join(''); };
@@ -1452,6 +1493,7 @@
       protoPos = (currentWehr() || {}).gps !== false ? await getPosition() : null;
       protoWells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot)
         .sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
+      if (sortDist && protoPos) protoWells.sort((a, b) => haversineDistance(protoPos.lat, protoPos.lng, a.lat, a.lon) - haversineDistance(protoPos.lat, protoPos.lng, b.lat, b.lon));
       try { protoData = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e) { protoData = {}; }
       try { protoHist = JSON.parse(localStorage.getItem(histKey(ot)) || '{}'); } catch(e) { protoHist = {}; }
       renderProtocol(); syncStart();
@@ -1471,8 +1513,8 @@
           <td class="${cell} text-center cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})">${i + 1}</td>
           <td class="${cell}"><div class="font-bold cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})" title="Verlauf der Leistung anzeigen">${esc(wellLabel(pt))} <i class="fa-solid fa-chart-line no-print text-cyan-600 text-[11px]"></i></div>
             <input type="text" data-f="loc" placeholder="Ortsangabe (z. B. Wendeplatz)" value="${esc(getLoc(pt))}" class="${inp} mt-1">
-            <div class="text-[10px] text-slate-500 mt-0.5">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}</div>
-            <div class="no-print mt-1 flex flex-wrap items-center gap-1"><button type="button" data-claimbtn onclick="claimToggle(${jq(pt.uid)})" class="hidden px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"></button><span data-claim class="hidden text-[11px] font-bold px-1.5 py-0.5 rounded"></span></div></td>
+            <div class="text-[10px] text-slate-500 mt-0.5">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}${protoPos ? ' | ' + Math.round(haversineDistance(protoPos.lat, protoPos.lng, pt.lat, pt.lon)) + ' m entfernt' : ''}</div>
+            <div class="no-print mt-1 flex flex-wrap items-center gap-1"><button type="button" onclick="openSteck(${jq(pt.uid)})" class="px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"><i class="fa-solid fa-id-card"></i> Steckbrief</button><button type="button" data-claimbtn onclick="claimToggle(${jq(pt.uid)})" class="hidden px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"></button><span data-claim class="hidden text-[11px] font-bold px-1.5 py-0.5 rounded"></span></div></td>
           <td class="${cell}"><input type="date" data-f="date" value="${esc(d.date || '')}" class="${inp}"></td>
           <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe eintragen" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Andere' ? '' : 'hidden'}"></td>
           <td class="${cell}"><input type="hidden" data-f="aufbau" value="${esc(d.aufbau || '')}"><div data-legacy class="hidden text-[10px] text-amber-700 mb-1"></div>${[0, 1, 2].map(i => `<div data-slotwrap="${i}" class="flex gap-1 ${i ? 'mt-1 hidden' : ''}"><select data-slot="${i}" class="${inp}">${ROHR_OPTS}</select><input type="number" data-slotv="${i}" min="0" step="1" inputmode="numeric" placeholder="l/min" title="Eigene Leistung in l/min" class="${inp} w-24 hidden"></div>`).join('')}<button type="button" data-same onclick="swSame(this)" class="no-print hidden mt-1 w-full px-1 py-1 bg-slate-200 text-slate-800 rounded text-[11px] font-bold"></button></td>
@@ -1480,7 +1522,7 @@
           <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" title="Wird aus Strahlrohren und Ausgangsdruck berechnet, kann von Hand korrigiert werden" value="${esc(d.leistung || '')}" class="${inp}"><div data-vol class="text-[10px] text-slate-500 mt-0.5"></div><div data-trend class="text-[10px] font-bold"></div></td>
           <td class="${cell}"><input type="number" data-f="eingang" step="0.01" max="0" title="Eingangsdruck in bar. Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ." placeholder="-0,40" value="${esc(d.eingang || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="ausgang" min="0" step="0.1" inputmode="decimal" title="Ausgangsdruck in bar" placeholder="0,0" value="${esc(d.ausgang || '')}" class="${inp}"></td>
-          <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"></td>
+          <td class="${cell}"><input type="text" data-f="pruefer" value="${esc(d.pruefer || '')}" class="${inp}"><div data-names class="no-print flex flex-wrap gap-1 mt-1"></div></td>
           <td class="${cell}"><textarea data-f="anm" rows="3" maxlength="300" placeholder="z. B. Deckeldichtung fehlt" class="${inp} no-print">${esc(d.anm || '')}</textarea><div data-anmprint class="hidden"></div></td>
           <td class="${cell} text-center"><img data-photo="${esc(pt.uid)}" class="hidden mx-auto w-16 h-16 object-cover rounded border border-slate-300 mb-1">
             <label class="no-print inline-block px-2 py-1 bg-slate-200 rounded cursor-pointer"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="protoPhoto(${jq(pt.uid)}, this)"></label>
@@ -1489,7 +1531,7 @@
         </tr>`;
       }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
-      labelCells(); addSteppers(); setProtoIdx(); sigLoad(); refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
+      renderNameChipsRows(); labelCells(); addSteppers(); addRowSw(); sortBtnPaint(); setProtoIdx(); sigLoad(); refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
     }
     // ==================== AUFBAU (Strahlrohre) und Leistung ====================
     // Nennwerte Mehrzweckstrahlrohre (DIN 14365) bei 5 bar Strahlrohrdruck; Durchfluss wächst mit der Wurzel des Drucks: Q = Qnenn * wurzel(p / 5)
@@ -1731,7 +1773,7 @@
     }
     // ==================== LEISTUNG AUF DER KARTE, VERSORGUNG, EINSATZ, TROCKENJAHR ====================
     const PERF_SOLL = 800, COVER_M = 300;
-    let showPerf = false, showCover = false, coverLayer = null, einsatzPick = false;
+    let showPerf = false, perfMode = 0, showCover = false, coverLayer = null, einsatzPick = false;
     // Alle gemessenen Leistungen auf diesem Gerät: uid -> { Jahr: l/min }
     function perfAll(){
       const m = {}, put = (u, y, v) => { v = parseFloat(v); if (!(v > 0) || !/^\d{4}$/.test(y)) return; (m[u] = m[u] || {})[y] = v; };
@@ -1756,14 +1798,31 @@
         const st = getMarkerStyle(pt.tags || {}), well = st.title === 'Flachspiegelbrunnen' || st.title === 'Tiefbrunnen', p = latestPerf(m, pt.uid);
         o.marker.unbindTooltip();
         if (showPerf && well) {
-          o.marker.setStyle({ fillColor: p ? perfColor(p.v) : '#94A3B8' });
-          if (p) o.marker.bindTooltip(String(Math.round(p.v)), { permanent: true, direction: 'center', className: 'perf-tip' });
+          if (perfMode === 2) {
+            const c = yoy(m, pt.uid);
+            o.marker.setStyle({ fillColor: c == null ? '#94A3B8' : c >= 10 ? '#22C55E' : c <= -10 ? '#EF4444' : '#EAB308' });
+            if (c != null) o.marker.bindTooltip((c > 0 ? '+' : '') + c, { permanent: true, direction: 'center', className: 'perf-tip' });
+          } else {
+            o.marker.setStyle({ fillColor: p ? perfColor(p.v) : '#94A3B8' });
+            if (p) o.marker.bindTooltip(String(Math.round(p.v)), { permanent: true, direction: 'center', className: 'perf-tip' });
+          }
         } else o.marker.setStyle({ fillColor: st.color });
       });
     }
+    // Änderung der Leistung zum Vorjahr in Prozent (letzte zwei Messjahre), sonst null
+    function yoy(m, uid){
+      const o = m[uid]; if (!o) return null; const ys = Object.keys(o).sort(); if (ys.length < 2) return null;
+      const a = o[ys[ys.length - 2]], b = o[ys[ys.length - 1]]; return a > 0 ? Math.round((b - a) / a * 100) : null;
+    }
+    let perfLegendHtml = '';
     function togglePerf(){
-      showPerf = !showPerf; document.getElementById('btnPerf').classList.toggle('on', showPerf); document.getElementById('perfLegend').classList.toggle('hidden', !showPerf);
-      applyPerf(); drawLabels(); showToast(showPerf ? 'Leistung: Brunnen nach l/min eingefärbt, Richtwert ' + PERF_SOLL : 'Leistungsansicht aus', 'fa-gauge-high');
+      const lg = document.getElementById('perfLegend'); if (!perfLegendHtml) perfLegendHtml = lg.innerHTML;
+      perfMode = (perfMode + 1) % 3; showPerf = perfMode > 0;
+      const dot = (c, t) => '<div class="flex items-center gap-1"><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + c + '"></i>' + t + '</div>';
+      lg.innerHTML = perfMode === 2 ? dot('#22C55E', 'ab +10 %') + dot('#EAB308', 'stabil') + dot('#EF4444', 'ab -10 %') + dot('#94A3B8', 'kein Vergleich') : perfLegendHtml;
+      document.getElementById('btnPerf').classList.toggle('on', showPerf); lg.classList.toggle('hidden', !showPerf);
+      applyPerf(); drawLabels();
+      showToast(perfMode === 1 ? 'Leistung: nach l/min eingefärbt, Richtwert ' + PERF_SOLL : perfMode === 2 ? 'Änderung zum Vorjahr in Prozent' : 'Leistungsansicht aus', 'fa-gauge-high');
     }
     function drawCover(){
       if (coverLayer) { map.removeLayer(coverLayer); coverLayer = null; }
@@ -1842,10 +1901,10 @@
           <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="px-3 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold">Route</a></div>`;
       }).join('') || '<p class="text-sm text-slate-500">Keine Stellen geladen.</p>';
       html += '<p id="compassNote" class="text-[11px] text-slate-500"></p>';
-      document.getElementById('einsatzList').innerHTML = html;
+      html = recentHtml() + html; document.getElementById('einsatzList').innerHTML = html;
       compassStart(); updateArrows();
     }
-    function einsatzGo(uid){ compassStop();
+    function einsatzGo(uid){ compassStop(); recentAdd(uid);
       const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return;
       toggleModal('einsatzModal', false);
       const tt = getMarkerStyle(pt.tags || {}).title; if (hiddenTypes.has(tt)) { hiddenTypes.delete(tt); try { localStorage.setItem('ffw_hidden_types', JSON.stringify([...hiddenTypes])); } catch(e){} applyTypeFilter(); document.querySelectorAll('#legend .grid > div:not(.col-span-2)').forEach((r, i) => { if (LEG_TYPES[i] === tt) r.classList.remove('opacity-40'); }); }
@@ -2033,9 +2092,203 @@
         last = Date.now(); showToast('Zum Beenden nochmal zurück', 'fa-arrow-left');
       });
     })();
+    // ---- Prüftag: Sortierung, Zusammenfassung, Zeit je Brunnen, Foto, Zuletzt, Akku, Tastenkürzel ----
+    let sortDist = false, syncUnsubC = null; try { sortDist = localStorage.getItem('ffw_sortdist') === '1'; } catch(e){}
+    function sortBtnPaint(){ const b = document.getElementById('protoSortBtn'); if (b) { b.classList.toggle('bg-emerald-300', sortDist); b.classList.toggle('bg-slate-200', !sortDist); } }
+    function protoToggleSort(){
+      sortDist = !sortDist; try { localStorage.setItem('ffw_sortdist', sortDist ? '1' : '0'); } catch(e){}
+      showToast(sortDist ? 'Sortiert nach Entfernung' : 'Sortiert nach Name', 'fa-location-arrow'); protoRelocate();
+    }
+    function openSummary(){
+      const n = protoWells.length, done = protoWells.filter(p => isTestedNow(p.uid)), open = protoWells.filter(p => !isTestedNow(p.uid));
+      const vals = done.map(p => parseFloat((protoData[p.uid] || {}).leistung)).filter(v => v > 0);
+      const avg = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null, low = protoWells.filter(p => { const v = parseFloat((protoData[p.uid] || {}).leistung); return v > 0 && v < PERF_SOLL; });
+      const tile = (t, v) => `<div class="p-2 rounded-xl bg-slate-100 text-center"><div class="text-[11px] text-slate-600">${t}</div><div class="font-extrabold">${v}</div></div>`;
+      let h = `<div class="text-2xl font-extrabold">${done.length} von ${n} geprüft</div><div class="text-xs text-slate-600">Ortsteil ${esc(protoOt || '-')} · ${thisYear()}</div>`;
+      h += `<div class="grid grid-cols-3 gap-2">${tile('Durchschnitt', avg == null ? '-' : avg + ' l/min')}${tile('Niedrigster', vals.length ? Math.round(Math.min(...vals)) : '-')}${tile('Höchster', vals.length ? Math.round(Math.max(...vals)) : '-')}</div>`;
+      const li = (t, arr, f) => arr.length ? `<div><div class="font-bold">${t}</div><ul class="list-disc pl-5 text-xs space-y-0.5">${arr.map(f).join('')}</ul></div>` : '';
+      h += li('Noch offen', open, p => '<li>' + esc(wellLabel(p) + (getLoc(p) ? ' (' + getLoc(p) + ')' : '')) + '</li>');
+      h += li('Unter ' + PERF_SOLL + ' l/min', low, p => '<li>' + esc(wellLabel(p) + (getLoc(p) ? ' (' + getLoc(p) + ')' : '')) + ': ' + Math.round(parseFloat(protoData[p.uid].leistung)) + ' l/min</li>');
+      const an = protoWells.filter(p => (protoData[p.uid] || {}).anm);
+      h += li('Anmerkungen', an, p => '<li>' + esc(wellLabel(p) + ': ' + protoData[p.uid].anm) + '</li>');
+      document.getElementById('sumBody').innerHTML = h; toggleModal('sumModal', true);
+    }
+    function checkAllDone(){
+      if (!protoWells.length || !protoWells.every(p => isTestedNow(p.uid))) return;
+      const k = 'ffw_sum_' + protoOt + '_' + thisYear();
+      try { if (localStorage.getItem(k)) return; localStorage.setItem(k, '1'); } catch(e){}
+      showToast('Alle Brunnen geprüft', 'fa-flag-checkered'); setTimeout(openSummary, 900);
+    }
+    // Stoppuhr je Brunnen
+    let rowSw = {}; try { rowSw = JSON.parse(localStorage.getItem('ffw_rowsw') || '{}'); } catch(e){}
+    const rowSwSave = () => { try { localStorage.setItem('ffw_rowsw', JSON.stringify(rowSw)); } catch(e){} };
+    const rowSwMs = x => (x.acc || 0) + (x.run ? Date.now() - x.start : 0);
+    function rowSwPaint(){
+      document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => {
+        const x = rowSw[tr.dataset.uid], b = tr.querySelector('[data-rowswbtn]'), t = tr.querySelector('[data-rowswt]'); if (!b || !t) return;
+        b.textContent = x && x.run ? '⏸ Stopp' : x && x.acc ? '▶ Weiter' : '▶ Start';
+        b.classList.toggle('bg-emerald-600', !(x && x.run)); b.classList.toggle('bg-amber-600', !!(x && x.run));
+        t.textContent = x ? swFmt(rowSwMs(x)) : '00:00';
+      });
+    }
+    function addRowSw(){
+      document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => {
+        const inp = tr.querySelector('[data-f="zeit"]'); if (!inp || tr.querySelector('[data-rowsw]')) return;
+        const d = document.createElement('div'); d.setAttribute('data-rowsw', ''); d.className = 'no-print flex items-center gap-1 mt-1';
+        d.innerHTML = '<button type="button" data-rowswbtn onclick="rowSwToggle(this)" class="flex-1 py-1.5 rounded font-bold text-xs text-white bg-emerald-600"></button><button type="button" onclick="rowSwReset(this)" title="Zurücksetzen" class="px-2.5 py-1.5 bg-slate-200 rounded text-xs">↺</button><span data-rowswt class="font-mono text-xs w-12 text-right"></span>';
+        (tr.querySelector('[data-step="zeit"]') || inp).after(d);
+      });
+      rowSwPaint();
+    }
+    function rowSwToggle(btn){
+      const tr = btn.closest('tr'), uid = tr.dataset.uid, x = rowSw[uid] || (rowSw[uid] = { acc: 0, run: false, start: 0 });
+      if (x.run) {
+        x.acc = rowSwMs(x); x.run = false;
+        const min = Math.round(x.acc / 60000 * 2) / 2, inp = tr.querySelector('[data-f="zeit"]');
+        if (min > 0 && inp) { inp.value = String(min); inp.dispatchEvent(new Event('change', { bubbles: true })); }
+      } else { x.start = Date.now(); x.run = true; claimSet(uid); }
+      rowSwSave(); rowSwPaint();
+    }
+    function rowSwReset(btn){ delete rowSw[btn.closest('tr').dataset.uid]; rowSwSave(); rowSwPaint(); }
+    setInterval(() => { if (Object.values(rowSw).some(x => x && x.run)) rowSwPaint(); }, 1000);
+    // Foto direkt am Brunnen
+    function quickPhotoPick(uid){
+      const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.setAttribute('capture', 'environment');
+      i.onchange = async () => {
+        const f = i.files[0]; if (!f) return; const pt = existingWaterPoints.find(p => p.uid === uid);
+        try { const d = await shrinkImage(f, 900, 0.65, (pt ? wellLabel(pt) + (getLoc(pt) ? ' | ' + getLoc(pt) : '') + ' | ' : '') + nowStamp()); await cacheSet('photo:' + uid, d); audit('Foto gespeichert', '', { uid }); showToast('Foto gespeichert', 'fa-camera'); const el = document.getElementById('stPhoto'); if (el && !document.getElementById('steckModal').classList.contains('hidden')) el.innerHTML = '<div class="text-xs font-bold text-slate-700 mb-1">Letztes Foto</div><img src="' + d + '" class="w-full max-h-56 object-contain rounded-xl border border-slate-200">'; }
+        catch(e) { showToast('Foto fehlgeschlagen', 'fa-triangle-exclamation'); }
+      };
+      i.click();
+    }
+    // Zuletzt angesehen
+    function recentGet(){ try { const a = JSON.parse(localStorage.getItem('ffw_recent') || '[]'); return Array.isArray(a) ? a : []; } catch(e) { return []; } }
+    function recentAdd(uid){ const l = recentGet().filter(x => x !== uid); l.unshift(uid); try { localStorage.setItem('ffw_recent', JSON.stringify(l.slice(0, 5))); } catch(e){} }
+    function recentHtml(){
+      const pts = recentGet().map(u => existingWaterPoints.find(p => p.uid === u)).filter(Boolean); if (!pts.length) return '';
+      return '<div class="text-[11px] font-bold text-slate-600">Zuletzt angesehen</div><div class="flex flex-wrap gap-1.5 mb-1">' + pts.map(p => { const t = p.tags || {}; return `<button onclick="einsatzGo(${jq(p.uid)})" class="px-2.5 py-1.5 bg-slate-200 rounded-full text-xs font-bold">${esc(getLoc(p) || t.ref || t.name || getMarkerStyle(t).title)}</button>`; }).join('') + '</div>';
+    }
+    // Zufahrt im Sync
+    const accShared = ot => !!(fbOk() && currentWehr() && FB.wehrId() === currentWehr().id && ownsName(ot) && FB.pushAcc);
+    function accPush(ot, uid, text){ if (accShared(ot)) FB.pushAcc(otKey(ot), uKey(uid), text); }
+    function accRemote(val){
+      if (!syncOt || syncOt !== protoOt) return; val = val || {};
+      const byKey = {}; protoWells.forEach(p => { byKey[uKey(p.uid)] = p; });
+      const m = locMap(); let ch = false;
+      Object.keys(val).forEach(k => { const pt = byKey[k], rec = val[k]; if (!pt || !rec || typeof rec.acc !== 'string') return; const key = 'acc:' + pt.uid; if (rec.acc) { if (m[key] !== rec.acc) { m[key] = rec.acc; ch = true; } } else if (key in m) { delete m[key]; ch = true; } });
+      if (ch) { try { localStorage.setItem(LOC_KEY, JSON.stringify(m)); } catch(e){} }
+    }
+    // Akku und Speicher
+    let lowShown = 0;
+    function lowShow(txt){ if (Date.now() - lowShown < 1800000) return; lowShown = Date.now(); document.getElementById('lowTxt').textContent = txt; document.getElementById('lowBanner').classList.remove('hidden'); }
+    function lowSave(){ try { autoSnapshot(true); } catch(e){} document.getElementById('lowBanner').classList.add('hidden'); showToast('Auf dem Gerät gesichert', 'fa-floppy-disk'); }
+    async function lowCheck(){
+      try { if (navigator.getBattery) { const b = await navigator.getBattery(), chk = () => { if (!b.charging && b.level <= 0.15) lowShow('Akku ' + Math.round(b.level * 100) + ' %: jetzt sichern'); }; chk(); b.addEventListener('levelchange', chk); b.addEventListener('chargingchange', chk); } } catch(e){}
+      try { if (navigator.storage && navigator.storage.estimate) { const e = await navigator.storage.estimate(); if (e.quota && e.usage / e.quota > 0.85) lowShow('Speicher fast voll: jetzt sichern'); } } catch(e){}
+    }
+    // Tastenkürzel (Laptop/Tablet mit Tastatur): Alt+Pfeil blättert, Alt+S Stoppuhr, Alt+P drucken, Esc schließt
+    document.addEventListener('keydown', e => {
+      const pm = document.getElementById('protoModal'), open = pm && !pm.classList.contains('hidden');
+      if (e.key === 'Escape') { if (document.querySelector('[id$="Modal"]:not(.hidden), #sheet:not(.hidden)') || !document.getElementById('menuOverlay').classList.contains('hidden')) history.back(); return; }
+      if (!e.altKey || !open) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); protoGo(1); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); protoGo(-1); }
+      else if (e.key.toLowerCase() === 's') { e.preventDefault(); swShow(); swToggle(); }
+      else if (e.key.toLowerCase() === 'p') { e.preventDefault(); printSheet('protoModal'); }
+    });
+    // ---- Prüfernamen als Schnelltasten ----
+    function namesGet(){
+      let a = []; try { a = JSON.parse(localStorage.getItem('ffw_names') || '[]'); } catch(e){}
+      a = Array.isArray(a) ? a.filter(x => typeof x === 'string' && x) : [];
+      if (!a.length) { try { const i = localStorage.getItem('ffw_inspector'); if (i) a = [i]; } catch(e){} }
+      return a;
+    }
+    function namesAdd(n){
+      n = String(n || '').trim().slice(0, 60); if (!n) return;
+      const l = namesGet().filter(x => x.toLowerCase() !== n.toLowerCase()); l.unshift(n);
+      try { localStorage.setItem('ffw_names', JSON.stringify(l.slice(0, 8))); } catch(e){}
+    }
+    function delName(n){ try { localStorage.setItem('ffw_names', JSON.stringify(namesGet().filter(x => x !== n))); } catch(e){} renderNameChipsRows(); renderFormChips(); }
+    const nameChipsHtml = () => namesGet().slice(0, 6).map(n => `<span class="inline-flex items-center rounded-full bg-slate-200 text-slate-800 text-xs font-bold"><button type="button" onclick="pickName(${jq(n)}, this)" class="px-2.5 py-1.5">${esc(n)}</button><button type="button" onclick="delName(${jq(n)})" title="Entfernen" class="pr-2 text-slate-500">×</button></span>`).join('');
+    function renderNameChipsRows(){ const h = nameChipsHtml(); document.querySelectorAll('#protoBody [data-names]').forEach(el => { el.innerHTML = h; }); }
+    function renderFormChips(){ const el = document.getElementById('nameChipsForm'); if (el) el.innerHTML = nameChipsHtml(); }
+    function pickName(n, btn){
+      const tr = btn.closest('tr'), el = tr ? tr.querySelector('[data-f=pruefer]') : document.getElementById('formInspector'); if (!el) return;
+      el.value = n; el.dispatchEvent(new Event(tr ? 'change' : 'input', { bubbles: true }));
+    }
+    // ---- Steckbrief je Brunnen ----
+    function stSeries(uid, ot){
+      let dd = null, h = {};
+      try { dd = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}')[uid]; } catch(e){}
+      try { h = JSON.parse(localStorage.getItem(histKey(ot)) || '{}')[uid] || {}; } catch(e){}
+      const rows = Object.keys(h).map(y => Object.assign({ y }, h[y]));
+      if (dd && /^\d{4}/.test(dd.date || '') && (dd.leistung || dd.eingang || dd.ausgang)) { const y = dd.date.slice(0, 4), cur = Object.assign({ y }, dd), i = rows.findIndex(r => r.y === y); if (i >= 0) rows[i] = cur; else rows.push(cur); }
+      return rows.sort((a, b) => a.y.localeCompare(b.y));
+    }
+    function stSaveAcc(uid, el){
+      const m = locMap(), v = el.value.trim().slice(0, 200);
+      if (v) m['acc:' + uid] = v; else delete m['acc:' + uid];
+      try { localStorage.setItem(LOC_KEY, JSON.stringify(m)); } catch(e){} showToast('Zufahrt gespeichert', 'fa-check'); accPush(ortsteilOf(existingWaterPoints.find(p => p.uid === uid) || {}), uid, v);
+    }
+    async function openSteck(uid){
+      const pt = existingWaterPoints.find(p => p.uid === uid); if (!pt) return; closeSheet();
+      recentAdd(uid); const ot = ortsteilOf(pt), rows = stSeries(uid, ot), t = pt.tags || {}, st = getMarkerStyle(t), pr = rows.filter(r => parseFloat(r.leistung) > 0);
+      const fd = s => s ? new Date(s + 'T00:00:00').toLocaleDateString('de-DE') : '-', nm = v => v ? String(v).replace('.', ',') : '-';
+      const last = pr[pr.length - 1]; let tr = '';
+      if (pr.length > 1) { const a = parseFloat(pr[pr.length - 2].leistung), b = parseFloat(last.leistung), pct = Math.round((b - a) / a * 100); tr = ` <span style="color:${trendColor(pct)};font-weight:800">${pct >= 10 ? '↑' : pct <= -10 ? '↓' : '→'} ${pct > 0 ? '+' : ''}${pct} %</span>`; }
+      let raw = {}; try { raw = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}')[uid] || {}; } catch(e){}
+      let h = `<div><div class="text-lg font-extrabold">${esc(wellLabel(pt))}</div><div class="text-xs text-slate-600">${esc(st.title)}${getLoc(pt) ? ' · ' + esc(getLoc(pt)) : ''} · Ortsteil ${esc(ot || '-')}</div></div>`;
+      h += `<div class="grid grid-cols-2 gap-2"><div class="p-2 rounded-xl bg-slate-100"><div class="text-[11px] text-slate-600">Letzte Leistung</div><div class="font-extrabold">${last ? Math.round(last.leistung) + ' l/min' : 'noch keine'}${tr}</div>${last ? '<div class="text-[11px] text-slate-600">' + esc(fd(last.date)) + '</div>' : ''}</div><div class="p-2 rounded-xl bg-slate-100"><div class="text-[11px] text-slate-600">Lage</div><div class="font-bold text-xs">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}</div><a href="https://www.openstreetmap.org/${esc(uid)}" target="_blank" rel="noopener" class="text-[11px] text-cyan-700 underline">${esc(uid)}</a></div></div>`;
+      h += pr.length ? verlaufSvg(rows) : '<p class="text-slate-500">Noch keine Messung eingetragen.</p>';
+      if (rows.length) h += '<div class="overflow-x-auto"><table class="w-full text-xs border-collapse"><tr class="text-slate-500 text-left"><th class="py-1 pr-2">Jahr</th><th class="pr-2">Datum</th><th class="pr-2">l/min</th><th class="pr-2">Eingang</th><th class="pr-2">Ausgang</th><th>Zeit</th></tr>' + rows.slice().reverse().map(r => `<tr class="border-t border-slate-200"><td class="py-1 pr-2 font-bold">${esc(r.y)}</td><td class="pr-2">${esc(fd(r.date))}</td><td class="pr-2">${esc(nm(r.leistung))}</td><td class="pr-2">${esc(nm(r.eingang))}</td><td class="pr-2">${esc(nm(r.ausgang))}</td><td>${esc(nm(r.zeit))}</td></tr>`).join('') + '</table></div>';
+      if (raw.anm) h += `<div class="p-2 rounded-xl bg-amber-50 border border-amber-200 text-xs"><b>Anmerkung:</b> ${esc(raw.anm)}</div>`;
+      h += `<div><label class="text-xs font-bold text-slate-700">Zufahrt / Hinweise ${accShared(ot) ? '(wird mit den Trupps geteilt)' : '(nur auf diesem Gerät)'}</label><textarea rows="2" maxlength="200" placeholder="z. B. Zufahrt über Feldweg, Schild am Zaun" onchange="stSaveAcc(${jq(uid)}, this)" class="w-full mt-1 border border-slate-300 rounded-xl px-3 py-2 text-sm">${esc(locMap()['acc:' + uid] || '')}</textarea></div>`;
+      h += `<button onclick="quickPhotoPick(${jq(uid)})" class="w-full py-3 rounded-xl bg-slate-800 text-white font-bold text-sm"><i class="fa-solid fa-camera"></i> Foto aufnehmen</button>`; h += '<div id="stPhoto"></div>';
+      h += `<div class="grid grid-cols-3 gap-2"><a href="https://www.google.com/maps/dir/?api=1&destination=${pt.lat},${pt.lon}" target="_blank" rel="noopener" class="py-3 rounded-xl bg-slate-800 text-white font-bold text-center text-xs">Route</a><button onclick="toggleModal('steckModal', false); map.setView([${pt.lat}, ${pt.lon}], 19)" class="py-3 rounded-xl bg-slate-200 font-bold text-xs">Auf Karte</button><button onclick="toggleModal('steckModal', false); openProtocol(${jq(uid)})" class="py-3 rounded-xl bg-cyan-700 text-white font-bold text-xs">Protokoll</button></div>`;
+      document.getElementById('steckBody').innerHTML = h; toggleModal('steckModal', true);
+      const ph = await cacheGet('photo:' + uid); if (ph) document.getElementById('stPhoto').innerHTML = `<div class="text-xs font-bold text-slate-700 mb-1">Letztes Foto</div><img src="${ph}" class="w-full max-h-56 object-contain rounded-xl border border-slate-200">`;
+    }
+    // ---- Einführung und „Neu in dieser Version“ ----
+    const INTRO = [
+      { i: 'fa-map', t: 'Die Karte', b: 'Jeder Punkt ist eine Löschwasserstelle. <b>Antippen</b> öffnet unten ein Blatt mit den Angaben. Die Buchstaben zeigen die Art (U Unterflur, Ü Überflur, F Flachspiegelbrunnen). Mit der <b>Legende</b> blendest du Arten aus, rechts schaltest du Ortung, Karte/Luftbild, Leistung und Versorgung.' },
+      { i: 'fa-clipboard-list', t: 'Das Protokoll', b: 'Unten auf <b>Protokoll</b> tippen. Pro Brunnen eine Karte: <b>Wischen</b> oder Pfeile zum nächsten. Datum und Prüfer füllen sich selbst, graue Zahlen sind die Vorjahreswerte. Mit „übernehmen“ kommt die Zeit der <b>Stoppuhr</b> ins Feld, die Leistung rechnet die App aus.' },
+      { i: 'fa-users', t: 'Zusammen arbeiten', b: 'Im Menü die <b>PIN</b> eurer Wehr eingeben. Danach sehen alle Trupps die Eingaben sofort, und „Anderes Gerät prüft gerade“ verhindert doppelte Arbeit. Ohne Netz bleibt alles auf dem Gerät und wird später hochgeladen.' },
+      { i: 'fa-shield-halved', t: 'Gut zu wissen', b: 'Die App sichert sich selbst (Menü → Automatische Sicherungen). Die <b>Karte</b> kannst du vorher offline laden. Unter dem Protokoll unterschreibst du mit dem Finger. Hilfe, Datenschutz und diese Einführung stehen im Menü.' }
+    ];
+    const CHANGES = [
+      { v: '2026-11-15 prueftag', items: ['Brunnen nach Entfernung sortieren und Zusammenfassung zum Prüftag-Ende', 'Stoppuhr je Brunnen, Foto direkt am Brunnen, „Zuletzt angesehen“ im Einsatzmodus', 'Karte: Änderung zum Vorjahr in Prozent, Akku- und Speicherwarnung, Zufahrtshinweise im Sync'] },
+      { v: '2026-11-14 steckbrief', items: ['Kurzeinführung und dieser Hinweis „Neu in der App“', 'Steckbrief je Brunnen mit Leistungsverlauf, Foto und Zufahrtshinweis', 'Prüfernamen als Schnelltasten'] },
+      { v: '2026-11-13 zurueck', items: ['Zurück-Taste schließt zuerst Fenster, dann „nochmal zurück zum Beenden“', 'Marker werden beim Hineinzoomen kleiner', 'Menü am Handy nur noch unten'] },
+      { v: '2026-11-12 datenschutz', items: ['Datenschutz-Hinweis im Menü', 'Automatische Sicherungen, Systemcheck, Unterschrift und Pumpenliste'] },
+      { v: '2026-11-10 leiste-symbole', items: ['Untere Leiste am Handy', 'Buchstaben in den Markern'] }
+    ];
+    let introSlides = [], introIdx = 0, introHead = '';
+    function introRender(){
+      const sl = introSlides[introIdx]; if (!sl) return;
+      document.getElementById('introTitle').textContent = sl.t + (introSlides.length > 1 && introHead === 'Willkommen' ? '' : '');
+      document.getElementById('introIcon').className = 'fa-solid ' + sl.i;
+      document.getElementById('introBody').innerHTML = sl.b;
+      document.getElementById('introDots').textContent = introSlides.length > 1 ? introSlides.map((_, i) => i === introIdx ? '●' : '○').join(' ') : '';
+      document.getElementById('introPrev').classList.toggle('invisible', introIdx === 0);
+      document.getElementById('introNext').textContent = introIdx === introSlides.length - 1 ? 'Fertig' : 'Weiter';
+    }
+    function introShow(slides, head){ introSlides = slides; introIdx = 0; introHead = head; introRender(); toggleModal('introModal', true); }
+    function introGo(d){ if (introIdx + d >= introSlides.length) { introClose(); return; } introIdx = Math.max(0, introIdx + d); introRender(); }
+    function introClose(){ toggleModal('introModal', false); }
+    function maybeIntro(){
+      if (!currentWehr()) return;
+      const wm = document.getElementById('wehrModal'); if (wm && !wm.classList.contains('hidden')) return;
+      let seen = '', done = ''; try { seen = localStorage.getItem('ffw_ver_seen') || ''; done = localStorage.getItem('ffw_intro_done') || ''; } catch(e){}
+      if (seen === APP_VERSION) return;
+      try { localStorage.setItem('ffw_ver_seen', APP_VERSION); } catch(e){}
+      if (!done) { try { localStorage.setItem('ffw_intro_done', '1'); } catch(e){} introShow(INTRO, 'Willkommen'); return; }
+      const i = CHANGES.findIndex(c => c.v === seen), news = i < 0 ? CHANGES.slice(0, 1) : CHANGES.slice(0, i);
+      if (!news.length) return;
+      introShow([{ i: 'fa-gift', t: 'Neu in der App', b: news.map(c => '<ul class="list-disc pl-5 space-y-1.5">' + c.items.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>').join('') }], 'Neu');
+    }
     // ---- Info-Blatt, Kartenbeschriftung, Darstellung ----
     const sheetByUid = new Map(); let labelLayer = null, symLayer = null, perfMapCache = {};
-    function openSheet(uid){
+    function openSheet(uid){ recentAdd(uid);
       const html = sheetByUid.get(uid); if (!html) return;
       document.getElementById('sheetBody').innerHTML = html;
       const sh = document.getElementById('sheet'); sh.classList.remove('hidden'); sh.scrollTop = 0;
@@ -2066,7 +2319,7 @@
         if (!b.contains([pt.lat, pt.lon]) || isOutside(pt)) return;
         const t = pt.tags || {}, st = getMarkerStyle(t); if (hiddenTypes.has(st.title)) return;
         const well = st.title === 'Flachspiegelbrunnen' || st.title === 'Tiefbrunnen';
-        if (!(showPerf && well && latestPerf(perfMapCache, pt.uid))) {
+        if (!(showPerf && well && (perfMode === 2 ? yoy(perfMapCache, pt.uid) != null : latestPerf(perfMapCache, pt.uid)))) {
           const sy = SYM[st.title] || SYM['Löschwasserstelle'], d = markerSize(z);
           if (d >= 14) L.marker([pt.lat, pt.lon], { icon: L.divIcon({ className: 'pt-sym', html: '<span style="width:' + d + 'px;height:' + d + 'px;font-size:' + Math.round(d * 0.55) + 'px;color:' + sy[1] + '">' + sy[0] + '</span>', iconSize: [d, d], iconAnchor: [d / 2, d / 2] }), interactive: false, keyboard: false }).addTo(symLayer);
         }
@@ -2127,6 +2380,7 @@
     function protoGo(dlt){
       const n = protoWells.length, ni = Math.min(Math.max(protoIdx + dlt, 0), n - 1); if (ni === protoIdx) return;
       protoIdx = ni; paintIdx(); const sc = document.querySelector('#protoSheet .overflow-auto'); if (sc) sc.scrollTop = 0;
+      if (window.innerWidth > 720) { const row = document.querySelectorAll('#protoBody tr[data-uid]')[protoIdx]; if (row) { row.scrollIntoView({ block: 'center' }); row.classList.add('saved-flash'); setTimeout(() => row.classList.remove('saved-flash'), 700); } }
     }
     function navUpdate(){
       const el = document.getElementById('protoNavTxt'); if (!el) return;
@@ -2236,6 +2490,8 @@
         tr.dataset.auto = '';
         syncPush(uid, ch);
         flashSaved(el);
+        if (el.dataset.f === 'pruefer') { namesAdd(el.value); renderNameChipsRows(); }
+        checkAllDone();
         if (d.leistung) claimRelease(uid); else claimSet(uid);
         const pw = plausiCheck(d), pk = [el.dataset.f, 'leistung', 'ausgang', 'aufbau'].find(k => pw[k]);
         if (pk) showToast('⚠ ' + pw[pk], 'fa-triangle-exclamation');
@@ -2279,7 +2535,7 @@
       if (m) m.textContent = fbOk() && currentWehr() && FB.wehrId() === currentWehr().id ? (syncConn ? 'live' : 'offline') : '';
       try { renderVerInfo(); } catch(e){}
     }
-    function syncStop(){ if (syncUnsub) { try { syncUnsub(); } catch(e){} } if (syncUnsubH) { try { syncUnsubH(); } catch(e){} } if (syncUnsubA) { try { syncUnsubA(); } catch(e){} } syncUnsubA = null; activeMap = {}; clearDash(); syncUnsub = null; syncUnsubH = null; syncOt = null; syncSeen = new Set(); syncFirst = true; syncHistFirst = true; }
+    function syncStop(){ if (syncUnsub) { try { syncUnsub(); } catch(e){} } if (syncUnsubH) { try { syncUnsubH(); } catch(e){} } if (syncUnsubA) { try { syncUnsubA(); } catch(e){} } syncUnsubA = null; if (syncUnsubC) { try { syncUnsubC(); } catch(e){} } syncUnsubC = null; activeMap = {}; clearDash(); syncUnsub = null; syncUnsubH = null; syncOt = null; syncSeen = new Set(); syncFirst = true; syncHistFirst = true; }
     function syncStart(){
       syncStop(); syncUi();
       if (!syncActive()) return;
@@ -2287,6 +2543,7 @@
       syncUnsub = FB.listen(otKey(protoOt), syncRemote, () => { showToast('Sync: kein Zugriff (Anmeldung oder Freigabe prüfen)', 'fa-triangle-exclamation'); syncStop(); syncUi(); });
       if (FB.listenHist) syncUnsubH = FB.listenHist(otKey(protoOt), syncRemoteHist, () => {});
       if (FB.listenActive) syncUnsubA = FB.listenActive(otKey(protoOt), syncRemoteActive, () => {});
+      if (FB.listenAcc) syncUnsubC = FB.listenAcc(otKey(protoOt), accRemote, () => {});
     }
     function touchCell(uid, f, v){
       const tr = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (!tr) return;
@@ -2567,7 +2824,7 @@
       const id = document.getElementById('wehrSel').value; if (!id) return;
       try { localStorage.setItem('ffw_wehr', id); } catch(e){}
       document.getElementById('wehrModal').classList.add('hidden');
-      audit('Feuerwehr gewählt', (currentWehr() || {}).name);
+      audit('Feuerwehr gewählt', (currentWehr() || {}).name); setTimeout(maybeIntro, 700);
       applyWehrUI(true); syncUi();
     }
     let logoOrig = '';
@@ -3176,7 +3433,7 @@
         inspectedBy: document.getElementById('formInspector').value.trim()
       };
 
-      try { localStorage.setItem('ffw_inspector', record.inspectedBy); } catch(e){}
+      try { localStorage.setItem('ffw_inspector', record.inspectedBy); } catch(e){} namesAdd(record.inspectedBy);
       saveLoc(record, document.getElementById('formLoc').value.trim());
       offlineQueue.push(record);
       if (!saveQueue()) { offlineQueue.pop(); return; }
