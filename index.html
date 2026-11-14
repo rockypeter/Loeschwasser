@@ -242,6 +242,11 @@
     }
     html.hc #navBar { border-top:3px solid #000; }
     html.hc #navBar button { color:#000; }
+      #protoLetter { display:none; }
+    @media print { #protoLetter { display:flex !important; align-items:center; gap:12px; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid #000; color:#000; } }
+      @keyframes openPulse { 0%, 100% { stroke-opacity:1; } 50% { stroke-opacity:.2; } }
+    path.open-pulse { animation:openPulse 1.6s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { path.open-pulse { animation:none; } }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -446,6 +451,7 @@
       </div>
       <div id="syncBand" class="no-print hidden px-3 py-1.5 bg-amber-100 text-amber-900 text-xs font-bold border-b border-amber-300"></div>
       <div class="overflow-auto p-3 text-xs">
+        <div id="protoLetter"></div>
         <h2 class="text-base font-extrabold">Prüfprotokoll Flachspiegelbrunnen</h2>
         <p class="mb-2 text-sm"><span id="protoTitle" class="font-bold"></span> &middot; Stand: <span id="protoStand"></span></p>
         <div id="protoNav" class="no-print">
@@ -513,6 +519,7 @@
         <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
         <button class="mi" onclick="cycleFont()"><i class="fa-solid fa-text-height"></i><span class="flex-1">Schriftgröße</span><span id="fsLabel" class="text-xs font-mono text-slate-500"></span></button>
         <button class="mi" onclick="cycleTheme()"><i class="fa-solid fa-circle-half-stroke"></i><span class="flex-1">Darstellung</span><span id="themeLabel" class="text-xs font-mono text-slate-500"></span></button>
+        <button class="mi" onclick="togglePulse()"><i class="fa-solid fa-circle-notch"></i><span class="flex-1">Offene Brunnen hervorheben</span><span id="pulseLabel" class="text-xs font-mono text-slate-500"></span></button>
         <button class="mi" onclick="closeMenu();pumpOpen()"><i class="fa-solid fa-gears"></i>Pumpenliste</button>
         <button class="mi" onclick="closeMenu();saveStart()"><i class="fa-solid fa-location-dot"></i>Startpunkt = aktuelle Kartenmitte</button>
         <button class="mi" onclick="closeMenu();openAudit()"><i class="fa-solid fa-clock-rotate-left"></i>Änderungsprotokoll</button>
@@ -1027,7 +1034,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-15 prueftag';
+    const APP_VERSION = '2026-11-18 offene-pulsieren';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1531,7 +1538,7 @@
         </tr>`;
       }).join('') || '<tr><td colspan="13" class="p-4 text-center text-slate-500">Keine Flachspiegelbrunnen in diesem Ortsteil gefunden.</td></tr>';
       document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => aufbauToSlots(tr, (protoData[tr.dataset.uid] || {}).aufbau || ''));
-      renderNameChipsRows(); labelCells(); addSteppers(); addRowSw(); sortBtnPaint(); setProtoIdx(); sigLoad(); refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
+      renderNameChipsRows(); labelCells(); addSteppers(); addRowSw(); addNumMics(); sortBtnPaint(); setProtoIdx(); sigLoad(); refreshVols(); refreshPlausi(); loadPhotos(); lockRows(); paintActive(); syncBandUpdate();
     }
     // ==================== AUFBAU (Strahlrohre) und Leistung ====================
     // Nennwerte Mehrzweckstrahlrohre (DIN 14365) bei 5 bar Strahlrohrdruck; Durchfluss wächst mit der Wurzel des Drucks: Q = Qnenn * wurzel(p / 5)
@@ -1890,6 +1897,7 @@
       const brg = (a, b, c, d) => { const f = x => x * Math.PI / 180, y = Math.sin(f(d - b)) * Math.cos(f(c)), x = Math.cos(f(a)) * Math.sin(f(c)) - Math.sin(f(a)) * Math.cos(f(c)) * Math.cos(f(d - b)); return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; };
       const rows = existingWaterPoints.filter(p => (p.tags || {}).operational_status !== 'no').map(p => ({ p, d: haversineDistance(la, lo, p.lat, p.lon) })).sort((a, b) => a.d - b.d).slice(0, 6);
       let html = rows.length && rows[0].d > COVER_M ? `<div class="p-2 rounded-xl bg-amber-100 text-amber-900 text-xs font-bold">Achtung: Die nächste Stelle ist mehr als ${COVER_M} m entfernt.</div>` : '';
+      html = einsatzSum(la, lo, perf) + html;
       html += rows.map(({ p, d }) => {
         const t = p.tags || {}, st = getMarkerStyle(t), pf = latestPerf(perf, p.uid), b = brg(la, lo, p.lat, p.lon);
         const q = pf ? Math.round(pf.v) + ' l/min (' + pf.y + ')' : (pickTag(t, ['flow_rate', 'fire_hydrant:flow_rate', 'fire_hydrant:flow_capacity', 'flow_capacity'], /flow/) || pickTag(t, ['capacity', 'water_volume', 'water_tank:volume', 'volume'], /(volume|capacity)/) || 'Leistung unbekannt');
@@ -2196,6 +2204,76 @@
       else if (e.key.toLowerCase() === 's') { e.preventDefault(); swShow(); swToggle(); }
       else if (e.key.toLowerCase() === 'p') { e.preventDefault(); printSheet('protoModal'); }
     });
+    // ---- Zahlen per Sprache ----
+    const DE_W = { null: 0, eins: 1, ein: 1, zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6, sieben: 7, acht: 8, neun: 9, zehn: 10, elf: 11, zwölf: 12, dreizehn: 13, vierzehn: 14, fünfzehn: 15, sechzehn: 16, siebzehn: 17, achtzehn: 18, neunzehn: 19, zwanzig: 20, dreissig: 30, vierzig: 40, fünfzig: 50, sechzig: 60, siebzig: 70, achtzig: 80, neunzig: 90 };
+    const DE_RE = /(tausend|hundert|dreizehn|vierzehn|fünfzehn|sechzehn|siebzehn|achtzehn|neunzehn|zwanzig|dreissig|vierzig|fünfzig|sechzig|siebzig|achtzig|neunzig|zwölf|zehn|elf|null|eins|ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun|und)/g;
+    function deWords(str){
+      const t = str.replace(/ß/g, 'ss').replace(/[^a-zäöü]/g, ''); if (!t) return NaN;
+      const tok = t.match(DE_RE) || []; if (tok.join('') !== t) return NaN;
+      let total = 0, cur = 0;
+      for (const w of tok) { if (w === 'und') continue; if (w === 'hundert') cur = (cur || 1) * 100; else if (w === 'tausend') { total += (cur || 1) * 1000; cur = 0; } else cur += DE_W[w]; }
+      return total + cur;
+    }
+    function deNum(txt){
+      let t = String(txt || '').toLowerCase().replace(/(\d)\s*[,.]\s*(\d)/g, '$1.$2').trim();
+      const neg = /(^|\s)(minus|negativ)(\s|$)/.test(t) || /^-/.test(t);
+      t = t.replace(/(^|\s)(minus|negativ)(?=\s|$)/g, ' ').replace(/^-/, '').replace(/\b(bar|liter|l\/min|litern|minuten|minute|min|meter|m)\b/g, ' ').trim();
+      const dm = t.match(/\d+(\.\d+)?/); if (dm && !/[a-zäöüß]{3,}/.test(t.replace(/komma|punkt/g, ''))) return (neg ? -1 : 1) * parseFloat(dm[0]);
+      const parts = t.split(/\s*\b(?:komma|punkt)\b\s*/); if (parts.length > 2) return NaN;
+      const left = /^\d+$/.test(parts[0].trim()) ? parseInt(parts[0], 10) : deWords(parts[0]); if (isNaN(left)) return NaN;
+      let v = left;
+      if (parts.length === 2) { let ds = ''; const r = parts[1].trim(); if (/^\d+$/.test(r)) ds = r; else for (const w of (r.replace(/ß/g, 'ss').replace(/[^a-zäöü ]/g, ' ').match(/[a-zäöü]+/g) || [])) { const sub = (w.match(DE_RE) || []).filter(x => x !== 'und'); for (const x of sub) { const n = DE_W[x]; if (n === undefined || n > 9) return NaN; ds += n; } } if (!ds) return NaN; v = parseFloat(left + '.' + ds); }
+      return (neg ? -1 : 1) * v;
+    }
+    let numRec = null;
+    function dictNum(btn, f){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { showToast('Diktieren wird hier nicht unterstützt', 'fa-microphone-slash'); return; }
+      if (numRec) { try { numRec.stop(); } catch(e){} return; }
+      const inp = btn.closest('tr').querySelector(`[data-f="${f}"]`); if (!inp) return;
+      numRec = new SR(); numRec.lang = 'de-DE'; numRec.interimResults = false; numRec.continuous = false;
+      numRec.onresult = e => {
+        const txt = Array.from(e.results).map(r => r[0].transcript).join(' ').trim(), n = deNum(txt);
+        if (isNaN(n)) { showToast('Nicht verstanden: „' + txt + '“', 'fa-microphone-slash'); return; }
+        inp.value = String(Math.round(n * 100) / 100); inp.dispatchEvent(new Event('change', { bubbles: true })); showToast('Eingetragen: ' + inp.value.replace('.', ','), 'fa-microphone');
+      };
+      numRec.onerror = e => showToast(e.error === 'not-allowed' ? 'Mikrofon nicht erlaubt' : 'Diktat fehlgeschlagen (Netz?)', 'fa-microphone-slash');
+      numRec.onend = () => { numRec = null; btn.style.background = ''; btn.style.color = ''; };
+      btn.style.background = '#dc2626'; btn.style.color = '#fff'; showToast('Zahl sagen…', 'fa-microphone');
+      try { numRec.start(); } catch(e) { numRec = null; btn.style.background = ''; btn.style.color = ''; }
+    }
+    function addNumMics(){
+      if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) return;
+      document.querySelectorAll('#protoBody tr[data-uid]').forEach(tr => ['zeit', 'ausgang', 'eingang', 'leistung'].forEach(f => {
+        const inp = tr.querySelector(`[data-f="${f}"]`); if (!inp || inp.parentElement.querySelector('[data-nummic="' + f + '"]')) return;
+        const b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-nummic', f); b.title = 'Zahl sagen'; b.className = 'no-print mt-1 w-full py-1.5 bg-slate-200 rounded text-sm'; b.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+        b.onclick = () => dictNum(b, f);
+        const anchor = inp.parentElement.querySelector('[data-step="' + f + '"]'); (anchor || inp).after(b);
+      }));
+    }
+    // ---- Umkreis-Summe im Einsatzmodus und Briefkopf im Ausdruck ----
+    function einsatzSum(la, lo, perf){
+      const rad = existingWaterPoints.filter(p => (p.tags || {}).operational_status !== 'no' && haversineDistance(la, lo, p.lat, p.lon) <= COVER_M);
+      const fm = n => Math.round(n).toLocaleString('de-DE');
+      if (!rad.length) return `<div class="p-2 rounded-xl text-xs font-bold" style="background:#fee2e2;color:#7f1d1d">Keine Löschwasserstelle im Umkreis von ${COVER_M} m.</div>`;
+      let sum = 0, unk = 0, vol = 0;
+      rad.forEach(p => {
+        const t = p.tags || {}, pf = latestPerf(perf, p.uid);
+        const q = pf ? pf.v : parseFloat(String(pickTag(t, ['flow_rate', 'fire_hydrant:flow_rate', 'fire_hydrant:flow_capacity', 'flow_capacity'], /flow/)).replace(',', '.'));
+        if (q > 0) sum += q; else unk++;
+        const v = parseFloat(String(pickTag(t, ['capacity', 'water_volume', 'water_tank:volume', 'volume'], /(volume|capacity)/)).replace(',', '.'));
+        if (v > 0 && (t.emergency === 'water_tank' || t.emergency === 'fire_water_pond')) vol += v;
+      });
+      const ok = sum >= PERF_SOLL, mid = sum >= PERF_SOLL / 2, bg = ok ? '#dcfce7' : mid ? '#fef9c3' : '#fee2e2', fg = ok ? '#14532d' : mid ? '#713f12' : '#7f1d1d';
+      return `<div class="p-2 rounded-xl text-xs" style="background:${bg};color:${fg}"><b>Im Umkreis von ${COVER_M} m:</b> ${rad.length} Stellen, <b>${fm(sum)} l/min</b>${vol ? ', Vorrat ' + fm(vol) + ' m³' : ''}. Richtwert ${fm(PERF_SOLL)} l/min.</div>`;
+    }
+    function renderLetter(){
+      const el = document.getElementById('protoLetter'); if (!el) return;
+      const w = currentWehr() || {}, nm = String(w.name || 'FFW').replace(/^FFW\s*/i, 'Freiwillige Feuerwehr ').trim();
+      const cnt = {}; Object.values(protoData || {}).forEach(d => { if (d && d.date) cnt[d.date] = (cnt[d.date] || 0) + 1; });
+      const top = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || todayISO(), lg = document.getElementById('headerLogo');
+      el.innerHTML = `<div style="width:64px;height:64px;flex:none">${lg ? lg.innerHTML : ''}</div><div style="flex:1;text-align:center"><div style="font-size:15px">${esc(nm)} im Amt Burg (Spreewald)</div><div style="font-size:20px;font-weight:800;letter-spacing:.03em">BRUNNENPRÜFPROTOKOLL vom ${esc(top.split('-').reverse().join('.'))}</div><div style="font-size:12px">Ortsteil ${esc(protoOt || '')}</div></div><div style="width:64px;flex:none"></div>`;
+    }
     // ---- Prüfernamen als Schnelltasten ----
     function namesGet(){
       let a = []; try { a = JSON.parse(localStorage.getItem('ffw_names') || '[]'); } catch(e){}
@@ -2256,6 +2334,8 @@
       { i: 'fa-shield-halved', t: 'Gut zu wissen', b: 'Die App sichert sich selbst (Menü → Automatische Sicherungen). Die <b>Karte</b> kannst du vorher offline laden. Unter dem Protokoll unterschreibst du mit dem Finger. Hilfe, Datenschutz und diese Einführung stehen im Menü.' }
     ];
     const CHANGES = [
+      { v: '2026-11-18 offene-pulsieren', items: ['Noch nicht geprüfte Brunnen pulsieren auf der Karte (abschaltbar im Menü)', 'Umkreis-Kasten im Einsatzmodus schlichter'] },
+      { v: '2026-11-16 sprache-briefkopf', items: ['Zahlen im Protokoll per Sprache eintragen (Mikrofon-Knopf)', 'Einsatzmodus zeigt die Löschwassermenge im Umkreis von 300 m', 'Ausdruck mit Briefkopf (Wehr, Logo, Titel mit Datum)'] },
       { v: '2026-11-15 prueftag', items: ['Brunnen nach Entfernung sortieren und Zusammenfassung zum Prüftag-Ende', 'Stoppuhr je Brunnen, Foto direkt am Brunnen, „Zuletzt angesehen“ im Einsatzmodus', 'Karte: Änderung zum Vorjahr in Prozent, Akku- und Speicherwarnung, Zufahrtshinweise im Sync'] },
       { v: '2026-11-14 steckbrief', items: ['Kurzeinführung und dieser Hinweis „Neu in der App“', 'Steckbrief je Brunnen mit Leistungsverlauf, Foto und Zufahrtshinweis', 'Prüfernamen als Schnelltasten'] },
       { v: '2026-11-13 zurueck', items: ['Zurück-Taste schließt zuerst Fenster, dann „nochmal zurück zum Beenden“', 'Marker werden beim Hineinzoomen kleiner', 'Menü am Handy nur noch unten'] },
@@ -2300,6 +2380,11 @@
     // Marker werden beim Hineinzoomen kleiner, damit sie die Karte nicht verdecken (Durchmesser in Pixel)
     const isOutside = pt => isOut(pt, getMarkerStyle(pt.tags || {}));
     const markerSize = z => z >= 20 ? 12 : z >= 19 ? 14 : z >= 18 ? 17 : z >= 17 ? 20 : 22;
+    // Offene Brunnen (dieses Jahr noch nicht geprüft, eigener Ortsteil) pulsieren auf der Karte
+    let pulseOn = true; try { pulseOn = localStorage.getItem('ffw_pulse') !== '0'; } catch(e){}
+    function pulseLabel(){ const l = document.getElementById('pulseLabel'); if (l) l.textContent = pulseOn ? 'ein' : 'aus'; }
+    function togglePulse(){ pulseOn = !pulseOn; try { localStorage.setItem('ffw_pulse', pulseOn ? '1' : '0'); } catch(e){} pulseLabel(); scaleMarkers(); showToast(pulseOn ? 'Offene Brunnen pulsieren' : 'Hervorhebung aus', 'fa-circle-notch'); }
+    pulseLabel();
     function scaleMarkers(){
       if (!map) return; const d = markerSize(map.getZoom()), f = d / 22;
       existingWaterPoints.forEach(pt => {
@@ -2307,6 +2392,8 @@
         const out = isOutside(pt), ro = ringOpts(pt, getMarkerStyle(pt.tags || {}));
         o.marker.setRadius(out ? Math.max(3, d * 0.27) : d / 2);
         o.marker.setStyle({ weight: Math.max(1.5, ro.weight * (0.5 + 0.5 * f)), fillOpacity: out ? 0.5 : (map.getZoom() >= 19 ? 0.8 : 0.95) });
+        const el = o.marker._path;
+        if (el && el.classList) el.classList.toggle('open-pulse', !!(pulseOn && !out && getMarkerStyle(pt.tags || {}).title === 'Flachspiegelbrunnen' && ortsteilOf(pt) && ownsPoint(pt) && !isTestedNow(pt.uid)));
       });
     }
     // Buchstaben im Marker (ab Zoom 16) und Ortsangaben daneben (ab Zoom 18)
@@ -2687,7 +2774,7 @@
       scaleMarkers();
       if (showPerf) applyPerf();
     }
-    function protoHeader(){ try { navUpdate(); } catch(e){}
+    function protoHeader(){ try { navUpdate(); renderLetter(); } catch(e){}
       const gem = (protoWells[0] || {}).gemeinde, n = protoWells.filter(p => isTestedNow(p.uid)).length, t = document.getElementById('protoTitle');
       if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + thisYear() + ' geprüft';
     }

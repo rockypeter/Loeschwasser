@@ -20,6 +20,9 @@ Ohne Netz bleibt sie benutzbar. Die Oberfläche ist hell und kontrastreich, dami
 - **Tastenkürzel (Laptop/Tablet):** Alt+Pfeil rechts/links blättert durch die Brunnen, Alt+S Stoppuhr, Alt+P drucken, Esc schließt das oberste Fenster.
 - **Zufahrtshinweis im Sync:** Der Hinweis im Steckbrief wird mit den Trupps der Wehr geteilt (nur eigene Ortsteile).
 - **Kurzeinführung:** Beim ersten Start gibt es einen Rundgang in vier Schritten (auch später über Menü → Hilfe → Kurzeinführung). Nach einem Update erscheint einmal „Neu in der App“ mit den Änderungen.
+- **Zahlen per Sprache:** Unter Prüfzeit, Leistung und den Drücken gibt es einen Mikrofon-Knopf. Tippen, Zahl sagen („fünf Komma fünf“, „minus null Komma sieben fünf“, „achthundert fünfundneunzig“), die App trägt sie ein. Braucht Netz und Mikrofon-Erlaubnis, die Erkennung übernimmt der Browser (bei Chrome Google).
+- **Wasser im Umkreis:** Der Einsatzmodus zeigt oben die Summe der bekannten Leistung aller einsatzbereiten Stellen im Umkreis von 300 m, eingefärbt gegen den Richtwert 800 l/min, plus Vorrat in Behältern und Teichen.
+- **Briefkopf im Ausdruck:** Das gedruckte Protokoll beginnt mit Logo, „Freiwillige Feuerwehr … im Amt Burg (Spreewald)“, „BRUNNENPRÜFPROTOKOLL vom (häufigstes Prüfdatum)“ und dem Ortsteil.
 - **Steckbrief je Brunnen:** Im Info-Blatt und im Protokoll („Steckbrief“) stehen Leistung, Trend, Verlauf über die Jahre, Anmerkung, letztes Foto, Route und ein eigener Zufahrtshinweis (bleibt auf dem Gerät und in der Sicherung).
 - **Prüfernamen als Schnelltasten:** Unter dem Namensfeld stehen die zuletzt benutzten Namen. Ein Tipp trägt den Namen ein, × entfernt ihn aus der Liste.
 - **Zurück-Taste (Android):** Sie schließt zuerst das offene Fenster, Menü oder Info-Blatt. Ist nichts offen, erscheint „Zum Beenden nochmal zurück“, und erst ein zweites Zurück beendet die App. Beim Erfassungsformular fragt die App vorher nach.
@@ -28,6 +31,7 @@ Ohne Netz bleibt sie benutzbar. Die Oberfläche ist hell und kontrastreich, dami
 - **Symbole in den Markern:** Ab Zoom 16 steht ein Buchstabe im Marker, damit die Art auch ohne Farbe erkennbar ist: U Unterflurhydrant, Ü Überflurhydrant, F Flachspiegelbrunnen, T Tiefbrunnen, Z Zisterne/Tank, L Löschteich/Saugstelle. Die Legende zeigt dieselben Buchstaben.
 - **Beschriftung:** Ab Zoomstufe 18 steht neben den Punkten im Amt die Ortsangabe (oder Referenz/Name).
 - **Darstellung:** Menü → Werkzeuge → Darstellung schaltet zwischen Normal, Hochkontrast (schwarze Ränder und Schrift, für pralle Sonne) und Dunkel (für abends). Der Druck bleibt immer hell.
+- **Offene Brunnen pulsieren:** Flachspiegelbrunnen deines Ortsteils, die dieses Jahr noch nicht geprüft sind, blinken am Ring langsam. Sobald ein Wert eingetragen ist, hört es auf. Abschaltbar unter Menü → Werkzeuge → Offene Brunnen hervorheben (auch aus bei „Bewegung reduzieren“ am Handy).
 - **Legende anklickbar:** Eine Art antippen blendet sie aus oder wieder ein. Die Auswahl bleibt auf dem Gerät gespeichert.
 - **Punkte außerhalb des Amts Burg** (Nachbargemeinden) erscheinen kleiner und blasser, Flachspiegelbrunnen bleiben immer voll sichtbar.
 - **Update-Hinweis:** Gibt es eine neue App-Version, erscheint oben ein gelber Balken „Neue Version verfügbar“. Die App prüft beim Öffnen und alle zehn Minuten.
