@@ -247,6 +247,18 @@
       @keyframes openPulse { 0%, 100% { stroke-opacity:1; } 50% { stroke-opacity:.2; } }
     path.open-pulse { animation:openPulse 1.6s ease-in-out infinite; }
     @media (prefers-reduced-motion: reduce) { path.open-pulse { animation:none; } }
+
+    /* Prüfprotokoll aufgeräumt: Nebenfunktionen erst nach "Mehr", ruhigere Tabelle */
+    #protoMoreMenu summary::-webkit-details-marker { display:none; }
+    #protoMoreMenu button { width:100%; justify-content:flex-start; }
+    @media screen {
+      #protoBody td { padding:8px !important; border-color:#e2e8f0 !important; }
+      #protoSheet thead th { border-color:#e2e8f0; }
+      .pcoord { display:none; }
+      #protoBody tr:not(.pmore) :is([data-nummic],[data-names],.ptool,.swtake) { display:none !important; }
+    }
+    @media screen and (min-width:721px) { #protoBody tr:not(.pmore) [data-step] { display:none !important; } }
+    @media print { .pdist::before { content:" | "; } }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -438,16 +450,16 @@
     <div id="protoSheet" class="sheet bg-white text-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
       <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
         <button onclick="printSheet('protoModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
-        <button onclick="protoCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
+        <details id="protoMoreMenu" class="relative"><summary class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs cursor-pointer list-none"><i class="fa-solid fa-ellipsis"></i> Mehr</summary><div onclick="this.closest('details').open=false" class="absolute left-0 z-20 mt-1 flex flex-col gap-1 p-2 bg-white border border-slate-300 rounded-xl shadow-lg w-56"><button onclick="protoCsv()" class="px-3 py-1.5 bg-slate-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-file-csv"></i>CSV speichern</button>
         <button onclick="protoRelocate()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-location-crosshairs"></i>Standort prüfen</button>
         <button id="protoSortBtn" onclick="protoToggleSort()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-arrow-down-1-9"></i>Nach Entfernung</button>
         <button onclick="openSummary()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-flag-checkered"></i>Zusammenfassung</button>
         <button onclick="swShow()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
         <button onclick="protoMail()" class="px-3 py-1.5 bg-slate-200 text-slate-800 rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-envelope"></i>Per E-Mail sichern</button>
-        <button id="fbBtn" onclick="openSync()" class="px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 bg-slate-200 text-slate-800"><i class="fa-solid fa-cloud"></i><span id="fbBtnTxt">Sync</span></button>
+        </div></details><button id="fbBtn" onclick="openSync()" class="px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 bg-slate-200 text-slate-800"><i class="fa-solid fa-cloud"></i><span id="fbBtnTxt">Sync</span></button>
         <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="protoOtSel" onchange="protoSwitch(this.value)" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
-        <span class="text-[11px] text-slate-500 flex-1 min-w-[120px]">Eingaben werden automatisch auf diesem Gerät gespeichert. Graue Zahlen = Vorjahreswerte.</span>
-        <button onclick="toggleModal('protoModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
+        <span class="hidden sm:block text-[11px] text-slate-500 flex-1 min-w-[120px]">Automatisch gespeichert. Graue Zahlen = Vorjahr.</span>
+        <button onclick="toggleModal('protoModal')" class="ml-auto w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
       <div id="syncBand" class="no-print hidden px-3 py-1.5 bg-amber-100 text-amber-900 text-xs font-bold border-b border-amber-300"></div>
       <div class="overflow-auto p-3 text-xs">
@@ -1034,7 +1046,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-22 sicherheit';
+    const APP_VERSION = '2026-11-22 protokoll-ruhiger';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1494,6 +1506,7 @@
       toggleModal('protoModal', true); await loadProtocol(ortsteilOf(pt));
       const row = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (row) row.scrollIntoView({ block: 'center' });
     }
+    function protoMore(btn){ const tr = btn.closest('tr'); btn.textContent = tr.classList.toggle('pmore') ? 'Weniger' : 'Mehr'; }
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
     async function loadProtocol(ot){
       protoOt = ot; testedMap = buildTested();
@@ -1521,12 +1534,12 @@
           <td class="${cell} text-center cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})">${i + 1}</td>
           <td class="${cell}"><div class="font-bold cursor-pointer" onclick="openVerlauf(${jq(pt.uid)})" title="Verlauf der Leistung anzeigen">${esc(wellLabel(pt))} <i class="fa-solid fa-chart-line no-print text-cyan-600 text-[11px]"></i></div>
             <input type="text" data-f="loc" placeholder="Ortsangabe (z. B. Wendeplatz)" value="${esc(getLoc(pt))}" class="${inp} mt-1">
-            <div class="text-[10px] text-slate-500 mt-0.5">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}${protoPos ? ' | ' + Math.round(haversineDistance(protoPos.lat, protoPos.lng, pt.lat, pt.lon)) + ' m entfernt' : ''}</div>
-            <div class="no-print mt-1 flex flex-wrap items-center gap-1"><button type="button" onclick="openSteck(${jq(pt.uid)})" class="px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"><i class="fa-solid fa-id-card"></i> Steckbrief</button><button type="button" data-claimbtn onclick="claimToggle(${jq(pt.uid)})" class="hidden px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"></button><span data-claim class="hidden text-[11px] font-bold px-1.5 py-0.5 rounded"></span></div></td>
+            <div class="text-[11px] text-slate-500 mt-0.5"><span class="pcoord">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)} | ${esc(pt.uid)}</span>${protoPos ? '<span class="pdist">' + Math.round(haversineDistance(protoPos.lat, protoPos.lng, pt.lat, pt.lon)) + ' m entfernt</span>' : ''}</div>
+            <div class="no-print mt-1 flex flex-wrap items-center gap-1"><button type="button" onclick="protoMore(this)" class="px-2 py-1 text-[11px] font-bold text-slate-600 underline">Mehr</button><button type="button" onclick="openSteck(${jq(pt.uid)})" class="ptool px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"><i class="fa-solid fa-id-card"></i> Steckbrief</button><button type="button" data-claimbtn onclick="claimToggle(${jq(pt.uid)})" class="ptool hidden px-2 py-1 bg-slate-200 rounded text-[11px] font-bold"></button><span data-claim class="hidden text-[11px] font-bold px-1.5 py-0.5 rounded"></span></div></td>
           <td class="${cell}"><input type="date" data-f="date" value="${esc(d.date || '')}" class="${inp}"></td>
           <td class="${cell}"><select data-f="pump" class="${inp}">${opts}</select><input type="text" data-f="pumpOther" placeholder="Pumpe eintragen" value="${esc(d.pumpOther || '')}" class="${inp} mt-1 ${d.pump === 'Andere' ? '' : 'hidden'}"></td>
           <td class="${cell}"><input type="hidden" data-f="aufbau" value="${esc(d.aufbau || '')}"><div data-legacy class="hidden text-[10px] text-amber-700 mb-1"></div>${[0, 1, 2].map(i => `<div data-slotwrap="${i}" class="flex gap-1 ${i ? 'mt-1 hidden' : ''}"><select data-slot="${i}" class="${inp}">${ROHR_OPTS}</select><input type="number" data-slotv="${i}" min="0" step="1" inputmode="numeric" placeholder="l/min" title="Eigene Leistung in l/min" class="${inp} w-24 hidden"></div>`).join('')}<button type="button" data-same onclick="swSame(this)" class="no-print hidden mt-1 w-full px-1 py-1 bg-slate-200 text-slate-800 rounded text-[11px] font-bold"></button></td>
-          <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"><button type="button" onclick="swTake(this)" title="Zeit der Stoppuhr übernehmen" class="no-print mt-1 w-full px-1 py-1 bg-cyan-700 text-white rounded text-[11px] font-bold"><i class="fa-solid fa-stopwatch"></i> übernehmen</button></td>
+          <td class="${cell}"><input type="number" data-f="zeit" min="0" step="0.5" inputmode="decimal" value="${esc(d.zeit || '')}" class="${inp}"><button type="button" onclick="swTake(this)" title="Zeit der Stoppuhr übernehmen" class="swtake no-print mt-1 w-full px-1 py-1 bg-cyan-700 text-white rounded text-[11px] font-bold"><i class="fa-solid fa-stopwatch"></i> übernehmen</button></td>
           <td class="${cell}"><input type="number" data-f="leistung" min="0" step="1" inputmode="numeric" title="Wird aus Strahlrohren und Ausgangsdruck berechnet, kann von Hand korrigiert werden" value="${esc(d.leistung || '')}" class="${inp}"><div data-vol class="text-[10px] text-slate-500 mt-0.5"></div><div data-trend class="text-[10px] font-bold"></div></td>
           <td class="${cell}"><input type="number" data-f="eingang" step="0.01" max="0" title="Eingangsdruck in bar. Bei Brunnen immer negativ (Unterdruck). Positive Eingaben werden automatisch negativ." placeholder="-0,40" value="${esc(d.eingang || '')}" class="${inp}"></td>
           <td class="${cell}"><input type="number" data-f="ausgang" min="0" step="0.1" inputmode="decimal" title="Ausgangsdruck in bar" placeholder="0,0" value="${esc(d.ausgang || '')}" class="${inp}"></td>
@@ -2335,6 +2348,7 @@
       { i: 'fa-shield-halved', t: 'Gut zu wissen', b: 'Die App sichert sich selbst (Menü → Automatische Sicherungen). Die <b>Karte</b> kannst du vorher offline laden. Unter dem Protokoll unterschreibst du mit dem Finger. Hilfe, Datenschutz und diese Einführung stehen im Menü.' }
     ];
     const CHANGES = [
+      { v: '2026-11-22 protokoll-ruhiger', items: ['Prüfprotokoll übersichtlicher: Nebenfunktionen stehen hinter „Mehr“ (je Brunnen und in der Werkzeugleiste)'] },
       { v: '2026-11-22 sicherheit', items: ['Anmeldung läuft nach 12 Stunden ab, bitte einmal neu anmelden', 'Strengere Prüfung der Eingaben, Sicherheitsverbesserungen'] },
       { v: '2026-11-18 offene-pulsieren', items: ['Noch nicht geprüfte Brunnen pulsieren auf der Karte (abschaltbar im Menü)', 'Umkreis-Kasten im Einsatzmodus schlichter'] },
       { v: '2026-11-16 sprache-briefkopf', items: ['Zahlen im Protokoll per Sprache eintragen (Mikrofon-Knopf)', 'Einsatzmodus zeigt die Löschwassermenge im Umkreis von 300 m', 'Ausdruck mit Briefkopf (Wehr, Logo, Titel mit Datum)'] },
