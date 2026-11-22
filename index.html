@@ -364,6 +364,13 @@
     <button onclick="document.getElementById('updBar').classList.add('hidden')" class="w-8 h-8 rounded-full bg-black/10 font-bold">✕</button>
   </div>
 
+  <!-- PRÜFUNG FÄLLIG -->
+  <div id="dueBar" class="hidden fixed top-14 inset-x-0 z-[470] bg-sky-100 text-slate-900 border-b border-sky-300 px-3 py-2 flex items-center gap-2 text-sm font-bold shadow">
+    <i class="fa-solid fa-calendar-check"></i><span id="dueTxt" class="flex-1"></span>
+    <button onclick="dueGo()" class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-extrabold">Zum Protokoll</button>
+    <button onclick="dueClose()" class="w-8 h-8 rounded-full bg-black/10 font-bold">✕</button>
+  </div>
+
   <!-- TAP ON MAP BANNER -->
   <div id="newPointBanner" class="hidden absolute top-20 left-1/2 -translate-x-1/2 z-[450] bg-red-600 text-white px-4 py-2 rounded-full shadow-2xl border-2 border-white flex items-center gap-3 animate-bounce">
     <i class="fa-solid fa-hand-pointer text-lg text-yellow-300"></i>
@@ -427,6 +434,19 @@
     <i class="fa-solid fa-battery-quarter"></i><span id="lowTxt" class="flex-1"></span>
     <button onclick="lowSave()" class="px-3 py-1.5 bg-white text-red-700 rounded-lg text-xs font-extrabold">Jetzt sichern</button>
     <button onclick="document.getElementById('lowBanner').classList.add('hidden')" class="w-8 h-8 rounded-full bg-black/20 font-bold">✕</button>
+  </div>
+
+  <!-- LEERES PRÜFFORMULAR (PAPIER) -->
+  <div id="blankModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 flex items-center justify-center p-2">
+    <div class="sheet bg-white text-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
+        <button onclick="printSheet('blankModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
+        <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="blankOt" onchange="renderBlank()" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
+        <span class="flex-1"></span>
+        <button onclick="toggleModal('blankModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
+      </div>
+      <div id="blankBody" class="overflow-auto p-3 text-xs"></div>
+    </div>
   </div>
 
   <!-- TOAST NOTIFICATION -->
@@ -523,6 +543,7 @@
       </div></div>
       <div><div class="msec">Listen und Karten</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openList()"><i class="fa-solid fa-list"></i>Löschwasserliste und Karte A4</button>
+        <button class="mi" onclick="closeMenu();openBlank()"><i class="fa-solid fa-file-lines"></i>Leeres Prüfformular (Papier)</button>
         <label class="mi cursor-pointer"><i class="fa-solid fa-file-import"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();importPoints(event)"></label>
         <button class="mi" onclick="closeMenu();preloadTiles()"><i class="fa-solid fa-map-location-dot"></i>Karte für eigene Ortsteile offline laden</button>
         <button class="mi" onclick="closeMenu();openTrocken()"><i class="fa-solid fa-chart-column"></i>Trockenjahr-Übersicht (alle Brunnen)</button>
@@ -1046,7 +1067,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-22 protokoll-ruhiger';
+    const APP_VERSION = '2026-11-22 formular-faellig';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1505,6 +1526,40 @@
       protoFocus = uid; map.closePopup(); closeSheet();
       toggleModal('protoModal', true); await loadProtocol(ortsteilOf(pt));
       const row = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (row) row.scrollIntoView({ block: 'center' });
+    }
+
+    // ---- Hinweis „Prüfung fällig“ ----
+    let dueOt = '';
+    function checkDue(){
+      const s = dueSeason(), w = currentWehr(); if (!s || !w) return;
+      try { if (localStorage.getItem('ffw_due_dismiss') === dayKey(Date.now())) return; } catch(e){}
+      testedMap = buildTested();
+      const own = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) && ownsPoint(p, w)), open = own.filter(p => !isTestedNow(p.uid));
+      if (!own.length || !open.length) return;
+      dueOt = ortsteilOf(open[0]);
+      document.getElementById('dueTxt').textContent = s + 'prüfung fällig: ' + open.length + ' von ' + own.length + ' Brunnen offen';
+      document.getElementById('dueBar').classList.remove('hidden');
+    }
+    function dueClose(){ document.getElementById('dueBar').classList.add('hidden'); try { localStorage.setItem('ffw_due_dismiss', dayKey(Date.now())); } catch(e){} }
+    function dueGo(){ dueClose(); if (dueOt) openProtocolOt(dueOt); }
+    setTimeout(checkDue, 7000); setTimeout(checkDue, 25000);
+    // ---- Leeres Prüfformular zum Ausdrucken ----
+    function openBlank(){
+      const ots = [...new Set(existingWaterPoints.filter(isShallow).map(ortsteilOf))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'de')), own = ots.filter(o => ownsName(o)), list = own.length ? own : ots;
+      document.getElementById('blankOt').innerHTML = '<option value="">Ohne Brunnenliste (leer)</option>' + list.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+      if (list.length) document.getElementById('blankOt').value = list[0];
+      toggleModal('blankModal', true); renderBlank();
+    }
+    function renderBlank(){
+      const ot = document.getElementById('blankOt').value, w = currentWehr() || {}, lg = document.getElementById('headerLogo');
+      const wells = ot ? existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot).sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat) : [];
+      const nm = String(w.name || 'FFW').replace(/^FFW\s*/i, 'Freiwillige Feuerwehr ').trim(), c = 'border:1px solid #475569;padding:4px;height:34px;vertical-align:top';
+      const head = ['Nr.', 'Brunnen / Ortsangabe', 'Datum', 'Pumpe', 'Aufbau (Strahlrohre)', 'Prüfzeit (min)', 'Leistung (l/min)', 'Eingang (bar)', 'Ausgang (bar)', 'Prüfer', 'Anmerkung'];
+      const rows = wells.length ? wells.length + 3 : 15;
+      let t = '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#e2e8f0;text-align:left">' + head.map(x => `<th style="border:1px solid #475569;padding:4px">${x}</th>`).join('') + '</tr></thead><tbody>';
+      for (let i = 0; i < rows; i++) { const p = wells[i]; t += `<tr><td style="${c};text-align:center">${i + 1}</td><td style="${c}">${p ? '<b>' + esc(wellLabel(p)) + '</b>' + (getLoc(p) ? '<br>' + esc(getLoc(p)) : '') : ''}</td>` + '<td style="' + c + '"></td>'.repeat(9) + '</tr>'; }
+      t += '</tbody></table>';
+      document.getElementById('blankBody').innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #000"><div style="width:64px;height:64px;flex:none">${lg ? lg.innerHTML : ''}</div><div style="flex:1;text-align:center"><div style="font-size:15px">${esc(nm)} im Amt Burg (Spreewald)</div><div style="font-size:20px;font-weight:800">BRUNNENPRÜFPROTOKOLL vom ____________</div><div style="font-size:12px">Ortsteil ${esc(ot || '____________')}</div></div><div style="width:64px;flex:none"></div></div>${t}<p style="margin-top:6px;font-size:11px">Aufbau: B oder C, m = mit Mundstück, o = ohne Mundstück (z. B. Bm + Co). Eingangsdruck am Brunnen negativ (Unterdruck).</p><div style="margin-top:18px;display:flex;gap:40px"><div style="flex:1;border-top:1px solid #475569;font-size:11px;padding-top:2px">F.d.R.d.A. Unterschrift (Maschinist / Gruppenführer)</div><div style="width:160px;border-top:1px solid #475569;font-size:11px;padding-top:2px">Datum</div></div>`;
     }
     function protoMore(btn){ const tr = btn.closest('tr'); btn.textContent = tr.classList.toggle('pmore') ? 'Weniger' : 'Mehr'; }
     function protoSwitch(ot){ protoFocus = ''; loadProtocol(ot); }
@@ -2137,7 +2192,7 @@
     }
     function checkAllDone(){
       if (!protoWells.length || !protoWells.every(p => isTestedNow(p.uid))) return;
-      const k = 'ffw_sum_' + protoOt + '_' + thisYear();
+      const k = 'ffw_sum_' + protoOt + '_' + seasonStart();
       try { if (localStorage.getItem(k)) return; localStorage.setItem(k, '1'); } catch(e){}
       showToast('Alle Brunnen geprüft', 'fa-flag-checkered'); setTimeout(openSummary, 900);
     }
@@ -2348,6 +2403,7 @@
       { i: 'fa-shield-halved', t: 'Gut zu wissen', b: 'Die App sichert sich selbst (Menü → Automatische Sicherungen). Die <b>Karte</b> kannst du vorher offline laden. Unter dem Protokoll unterschreibst du mit dem Finger. Hilfe, Datenschutz und diese Einführung stehen im Menü.' }
     ];
     const CHANGES = [
+      { v: '2026-11-22 formular-faellig', items: ['Leeres Prüfformular zum Ausdrucken (Menü → Listen und Karten)', 'Hinweis „Prüfung fällig“ im Frühjahr (März bis Juni) und Herbst (September bis November); Frühjahr und Herbst zählen getrennt'] },
       { v: '2026-11-22 protokoll-ruhiger', items: ['Prüfprotokoll übersichtlicher: Nebenfunktionen stehen hinter „Mehr“ (je Brunnen und in der Werkzeugleiste)'] },
       { v: '2026-11-22 sicherheit', items: ['Anmeldung läuft nach 12 Stunden ab, bitte einmal neu anmelden', 'Strengere Prüfung der Eingaben, Sicherheitsverbesserungen'] },
       { v: '2026-11-18 offene-pulsieren', items: ['Noch nicht geprüfte Brunnen pulsieren auf der Karte (abschaltbar im Menü)', 'Umkreis-Kasten im Einsatzmodus schlichter'] },
@@ -2778,7 +2834,11 @@
     }
     let testedMap = buildTested();
     const thisYear = () => String(new Date().getFullYear());
-    const isTestedNow = uid => !!testedMap[uid] && testedMap[uid].slice(0, 4) === thisYear();
+    // Prüfdurchgang: Frühjahr (März bis Juni) und Herbst (September bis November) zählen getrennt, sonst gilt das ganze Jahr
+    const seasonStart = () => { const d = new Date(), y = d.getFullYear(), m = d.getMonth() + 1; return m >= 9 && m <= 11 ? y + '-09-01' : m >= 3 && m <= 6 ? y + '-03-01' : y + '-01-01'; };
+    const dueSeason = () => { const m = new Date().getMonth() + 1; return m >= 9 && m <= 11 ? 'Herbst' : m >= 3 && m <= 6 ? 'Frühjahr' : ''; };
+    const seasonLabel = () => { const s = dueSeason(); return s ? s + ' ' + thisYear() : thisYear(); };
+    const isTestedNow = uid => !!testedMap[uid] && testedMap[uid] >= seasonStart();
     function statusText(pt){ const d = testedMap[pt.uid]; return d ? (isTestedNow(pt.uid) ? 'geprüft am ' : 'zuletzt geprüft am ') + d.split('-').reverse().join('.') : 'noch nicht geprüft'; }
     function ringOpts(pt, style){
       if (style.title !== 'Flachspiegelbrunnen') return isOut(pt, style) ? { color: '#64748B', weight: 1.5, opacity: 0.6 } : { color: '#1E293B', weight: 3 };
@@ -2792,7 +2852,7 @@
     }
     function protoHeader(){ try { navUpdate(); renderLetter(); } catch(e){}
       const gem = (protoWells[0] || {}).gemeinde, n = protoWells.filter(p => isTestedNow(p.uid)).length, t = document.getElementById('protoTitle');
-      if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + thisYear() + ' geprüft';
+      if (t) t.textContent = 'Ortsteil ' + (protoOt || '(ohne Zuordnung)') + (gem ? ' (Gemeinde ' + gem + ')' : '') + ' | ' + n + ' von ' + protoWells.length + ' ' + seasonLabel() + ' geprüft';
     }
 
     function shrinkImage(file, max = 900, q = 0.65, stamp = ''){
@@ -3214,7 +3274,7 @@
       document.getElementById('menuWehr').textContent = w ? w.name : 'Keine Feuerwehr gewählt';
       document.getElementById('menuOt').textContent = w ? 'Ortsteile: ' + ((w.ortsteile || []).join(', ') || 'alle') : '';
       document.getElementById('menuQ').textContent = offlineQueue.length ? '(' + offlineQueue.length + ')' : '';
-      document.getElementById('menuProtoTitle').textContent = 'Prüfprotokolle | ' + thisYear() + ' geprüft';
+      document.getElementById('menuProtoTitle').textContent = 'Prüfprotokolle | ' + seasonLabel() + ' geprüft';
       testedMap = buildTested(); renderVerInfo();
       const groups = {};
       existingWaterPoints.filter(isShallow).forEach(p => { const o = ortsteilOf(p); (groups[o] = groups[o] || []).push(p); });
