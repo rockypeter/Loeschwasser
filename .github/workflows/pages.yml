@@ -162,7 +162,14 @@ jobs:
         run: |
           set -e
           mkdir /tmp/b && cd /tmp/b
-          cp "$GITHUB_WORKSPACE/build/package.json" .
+          if [ -f "$GITHUB_WORKSPACE/build/package.json" ]; then
+            cp "$GITHUB_WORKSPACE/build/package.json" .
+          else
+            echo "::notice::build/package.json fehlt, nutze eingebaute Versionen"
+            cat > package.json <<'PKG'
+          {"name":"ffw-build","private":true,"dependencies":{"tailwindcss":"3.4.17","leaflet":"1.9.4","@fortawesome/fontawesome-free":"6.4.0","qrcode-generator":"1.4.4"}}
+          PKG
+          fi
           if [ -f "$GITHUB_WORKSPACE/build/package-lock.json" ]; then
             cp "$GITHUB_WORKSPACE/build/package-lock.json" .
             npm ci --ignore-scripts --no-audit --no-fund
