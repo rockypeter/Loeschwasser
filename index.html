@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de" class="h-full w-full overflow-hidden select-none">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://maps.mail.ru https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://tile.openstreetmap.org https://overpass-api.de https://overpass.private.coffee https://api.openstreetmap.org https://api.web3forms.com https://www.gstatic.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self'; object-src 'none'; base-uri 'self'; frame-src 'none'; form-action 'self'">
   <meta charset="UTF-8">
   <script>try { var _t = localStorage.getItem('ffw_theme'); if (_t) document.documentElement.classList.add(_t); var _f = localStorage.getItem('ffw_fs'); if (_f) document.documentElement.classList.add('fs' + _f); } catch(e){} window.__csp = []; addEventListener('securitypolicyviolation', e => { if (window.__csp.length < 8) window.__csp.push((e.violatedDirective || '') + ' ' + String(e.blockedURI || '').slice(0, 70)); });</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1034,7 +1034,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-18 offene-pulsieren';
+    const APP_VERSION = '2026-11-22 sicherheit';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1201,11 +1201,12 @@
     }
 
     // ==================== CACHE: SOFORT AUS SPEICHER, UPDATE IM HINTERGRUND ====================
-    const OVERPASS_MIRRORS = ['https://overpass-api.de/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter','https://overpass.private.coffee/api/interpreter'];
+    const OVERPASS_MIRRORS = ['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
     const [BB_S,BB_W,BB_N,BB_E] = BBOX_AMT_BURG_DRACHHAUSEN.split(',').map(Number);
     const markerByUid = new Map();
     let saveTimer = null, fullLoadDone = false;
 
+    const okKey = k => !['__proto__', 'constructor', 'prototype'].includes(k);
     const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     // Sicher in Inline-Handler: JSON-String, danach HTML-escaped (verhindert Ausbruch aus dem Attribut und aus dem JS-String)
     const jq = v => esc(JSON.stringify(String(v ?? '')));
@@ -1776,7 +1777,7 @@
       if (window.qrcode) return draw();
       box.textContent = 'Lade…';
             const load = (src, fail) => { const sc = document.createElement('script'); sc.src = src; sc.onload = draw; sc.onerror = fail; document.head.appendChild(sc); };
-      load('qrcode.js', () => load('https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js', () => { box.textContent = 'QR-Code braucht Netz, Link abtippen'; }));
+      load('qrcode.js', () => { box.textContent = 'QR-Code nicht verfügbar, Link abtippen'; });
     }
     // ==================== LEISTUNG AUF DER KARTE, VERSORGUNG, EINSATZ, TROCKENJAHR ====================
     const PERF_SOLL = 800, COVER_M = 300;
@@ -2334,6 +2335,7 @@
       { i: 'fa-shield-halved', t: 'Gut zu wissen', b: 'Die App sichert sich selbst (Menü → Automatische Sicherungen). Die <b>Karte</b> kannst du vorher offline laden. Unter dem Protokoll unterschreibst du mit dem Finger. Hilfe, Datenschutz und diese Einführung stehen im Menü.' }
     ];
     const CHANGES = [
+      { v: '2026-11-22 sicherheit', items: ['Anmeldung läuft nach 12 Stunden ab, bitte einmal neu anmelden', 'Strengere Prüfung der Eingaben, Sicherheitsverbesserungen'] },
       { v: '2026-11-18 offene-pulsieren', items: ['Noch nicht geprüfte Brunnen pulsieren auf der Karte (abschaltbar im Menü)', 'Umkreis-Kasten im Einsatzmodus schlichter'] },
       { v: '2026-11-16 sprache-briefkopf', items: ['Zahlen im Protokoll per Sprache eintragen (Mikrofon-Knopf)', 'Einsatzmodus zeigt die Löschwassermenge im Umkreis von 300 m', 'Ausdruck mit Briefkopf (Wehr, Logo, Titel mit Datum)'] },
       { v: '2026-11-15 prueftag', items: ['Brunnen nach Entfernung sortieren und Zusammenfassung zum Prüftag-Ende', 'Stoppuhr je Brunnen, Foto direkt am Brunnen, „Zuletzt angesehen“ im Einsatzmodus', 'Karte: Änderung zum Vorjahr in Prozent, Akku- und Speicherwarnung, Zufahrtshinweise im Sync'] },
@@ -3052,14 +3054,14 @@
       rd.onload = () => {
         try {
           const b = JSON.parse(rd.result); if (!b || b.v !== 1) throw new Error('keine Sicherungsdatei');
-          Object.keys(b.proto || {}).forEach(k => {
-            if (k.startsWith('ffw_hist_')) { const hi = JSON.parse(b.proto[k] || '{}'), hc = JSON.parse(localStorage.getItem(k) || '{}'); Object.keys(hi).forEach(u => { hc[u] = Object.assign({}, hi[u], hc[u] || {}); }); localStorage.setItem(k, JSON.stringify(hc)); return; }
+          Object.keys(b.proto || {}).filter(okKey).forEach(k => {
+            if (k.startsWith('ffw_hist_')) { const hi = JSON.parse(b.proto[k] || '{}'), hc = JSON.parse(localStorage.getItem(k) || '{}'); Object.keys(hi).filter(okKey).forEach(u => { hc[u] = Object.assign({}, hi[u], hc[u] || {}); }); localStorage.setItem(k, JSON.stringify(hc)); return; }
             if (!k.startsWith('ffw_proto_')) return;
             const inc = JSON.parse(b.proto[k] || '{}'), cur = JSON.parse(localStorage.getItem(k) || '{}');
-            Object.keys(inc).forEach(u => { if (!cur[u] || (inc[u].date || '') > (cur[u].date || '')) cur[u] = inc[u]; });
+            Object.keys(inc).filter(okKey).forEach(u => { if (!cur[u] || (inc[u].date || '') > (cur[u].date || '')) cur[u] = inc[u]; });
             localStorage.setItem(k, JSON.stringify(cur));
           });
-          const lm = locMap(); Object.keys(b.loc || {}).forEach(k => { if (!(k in lm)) lm[k] = b.loc[k]; }); localStorage.setItem(LOC_KEY, JSON.stringify(lm));
+          const lm = locMap(); Object.keys(b.loc || {}).filter(okKey).forEach(k => { if (!(k in lm)) lm[k] = b.loc[k]; }); localStorage.setItem(LOC_KEY, JSON.stringify(lm));
           const au = auditList(), key = e => e.t + e.a + (e.u || '') + e.d, seen = new Set(au.map(key));
           (b.audit || []).forEach(e => { if (!seen.has(key(e))) au.push(e); });
           au.sort((x, y) => x.t < y.t ? -1 : 1); localStorage.setItem(AUDIT_KEY, JSON.stringify(au.slice(-500)));

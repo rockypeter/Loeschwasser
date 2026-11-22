@@ -5,9 +5,9 @@ sondern nur als GitHub-Secret. Auf der fertigen Seite sind sie technisch bedingt
 (das ist bei Firebase so vorgesehen). Geschützt sind die Daten durch PIN-Anmeldung und die Regeln unten.
 
 ## 1. Firebase-Konsole
-1. **Authentication → Anmeldemethode → E-Mail/Passwort** aktivieren.
+1. **Authentication → Anmeldemethode → E-Mail/Passwort** aktivieren, öffentliche Registrierung deaktivieren, E-Mail-Aufzählungsschutz und Passwortrichtlinie (mind. 12 Zeichen) einschalten.
 2. **Authentication → Nutzer → Nutzer hinzufügen**, je Feuerwehr ein Konto:
-   E-Mail `<id>@ffw-loeschwasser.de`, Passwort = PIN (mindestens 6 Zeichen, besser 8).
+   E-Mail `<id>@ffw-loeschwasser.de`, Passwort = zufälliges Passwort mit mindestens 12 Zeichen (z. B. `openssl rand -base64 12`), über einen Passwortmanager verteilen, nicht per E-Mail oder Messenger.
    IDs: `briesen`, `burg`, `burg-kauper`, `dissen`, `fehrow`, `mueschen`, `ruben`, `schmogrow`, `striesow`, `werben`
    (Es werden keine E-Mails verschickt, die Adressen müssen nicht existieren.)
 3. **Realtime Database → Regeln**: Inhalt von `database.rules.json` einfügen, **Veröffentlichen**.
@@ -38,3 +38,9 @@ Fotos bleiben auf dem jeweiligen Gerät.
 Wenn sich `database.rules.json` ändert (zuletzt für Anmerkung, Anwesenheit und „Wird gerade geprüft“), den Inhalt in Realtime Database → Regeln
 einfügen und **Veröffentlichen**. Ohne die neuen Regeln läuft der Sync weiter, nur die Historie wird nicht zwischen den
 Geräten abgeglichen.
+
+## Sicherheit
+- Anmeldungen laufen nach 12 Stunden ab. Geräte mit Bildschirmsperre sichern, auf dem Gerät liegen Protokolle, Fotos und Unterschriften unverschlüsselt.
+- Sicherungsdateien (`Sicherung_*.json`) enthalten Prüfernamen und Koordinaten: nicht ins Repository, nicht unverschlüsselt mailen.
+- Der Web3Forms-Schlüssel steht zwangsläufig im Client. Bei Missbrauch im Web3Forms-Dashboard rotieren und `wehren.json` sowie `index.html` anpassen.
+- `build/package-lock.json` einmalig erzeugen: `cd build && npm install --package-lock-only`, dann committen.

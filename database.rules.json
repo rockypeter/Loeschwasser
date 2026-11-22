@@ -1,0 +1,134 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "zugang": {
+      ".read": false,
+      ".write": false
+    },
+    "benutzer": {
+      ".read": false,
+      ".write": false
+    },
+    "protokolle": {
+      "$ot": {
+        ".read": "auth != null && root.child('zugang').child(root.child('benutzer').child(auth.uid).child('wehr').val()).child($ot).val() === true",
+        "$uid": {
+          ".write": "auth != null && root.child('zugang').child(root.child('benutzer').child(auth.uid).child('wehr').val()).child($ot).val() === true",
+          ".validate": "$uid.matches(/^(node|way|relation)_[0-9]+$/) && newData.hasChildren()",
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() == now"
+          },
+          "loc": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "pump": {
+            ".validate": "newData.isString() && newData.val().length <= 60"
+          },
+          "pumpOther": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "aufbau": {
+            ".validate": "newData.isString() && newData.val().matches(/^((B[mo]|C[mo]|S[0-9]{0,5}(\\.[0-9])?)(\\+(B[mo]|C[mo]|S[0-9]{0,5}(\\.[0-9])?)){0,2})?$/)"
+          },
+          "pruefer": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "date": {
+            ".validate": "newData.isString() && newData.val().matches(/^([0-9]{4}-[0-9]{2}-[0-9]{2})?$/)"
+          },
+          "zeit": {
+            ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+          },
+          "leistung": {
+            ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+          },
+          "eingang": {
+            ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+          },
+          "ausgang": {
+            ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+          },
+          "anm": {
+            ".validate": "newData.isString() && newData.val().length <= 300"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "historie": {
+      "$ot": {
+        ".read": "auth != null && root.child('zugang').child(root.child('benutzer').child(auth.uid).child('wehr').val()).child($ot).val() === true",
+        "$uid": {
+          ".validate": "$uid.matches(/^(node|way|relation)_[0-9]+$/)",
+          "$year": {
+            ".write": "auth != null && root.child('zugang').child(root.child('benutzer').child(auth.uid).child('wehr').val()).child($ot).val() === true && !data.exists()",
+            ".validate": "$year.matches(/^20[0-9]{2}$/) && newData.hasChildren()",
+            "pump": {
+              ".validate": "newData.isString() && newData.val().length <= 120"
+            },
+            "pumpOther": {
+              ".validate": "newData.isString() && newData.val().length <= 120"
+            },
+            "aufbau": {
+              ".validate": "newData.isString() && newData.val().matches(/^((B[mo]|C[mo]|S[0-9]{0,5}(\\.[0-9])?)(\\+(B[mo]|C[mo]|S[0-9]{0,5}(\\.[0-9])?)){0,2})?$/)"
+            },
+            "pruefer": {
+              ".validate": "newData.isString() && newData.val().length <= 120"
+            },
+            "date": {
+              ".validate": "newData.isString() && newData.val().matches(/^([0-9]{4}-[0-9]{2}-[0-9]{2})?$/)"
+            },
+            "zeit": {
+              ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+            },
+            "leistung": {
+              ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+            },
+            "eingang": {
+              ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+            },
+            "ausgang": {
+              ".validate": "newData.isString() && newData.val().matches(/^-?[0-9]{0,6}(\\.[0-9]{1,4})?$/)"
+            },
+            "anm": {
+              ".validate": "newData.isString() && newData.val().length <= 300"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    },
+    "praesenz": {
+      "$wehr": {
+        ".read": "auth != null && root.child('benutzer').child(auth.uid).child('wehr').val() === $wehr",
+        "$dev": {
+          ".write": "auth != null && root.child('benutzer').child(auth.uid).child('wehr').val() === $wehr",
+          ".validate": "$dev.matches(/^[a-z0-9]{6,32}$/) && newData.isNumber()"
+        }
+      }
+    },
+    "aktiv": {
+      "$ot": {
+        ".read": "auth != null && root.child('zugang').child(root.child('benutzer').child(auth.uid).child('wehr').val()).child($ot).val() === true",
+        "$uid": {
+          ".write": "auth != null && root.child('zugang').child(root.child('benutzer').child(auth.uid).child('wehr').val()).child($ot).val() === true",
+          ".validate": "$uid.matches(/^(node|way|relation)_[0-9]+$/) && newData.hasChildren(['d', 't'])",
+          "d": {
+            ".validate": "newData.isString() && newData.val().length <= 32"
+          },
+          "t": {
+            ".validate": "newData.isNumber() && newData.val() == now"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    }
+  }
+}
