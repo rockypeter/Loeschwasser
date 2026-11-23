@@ -259,6 +259,17 @@
     }
     @media screen and (min-width:721px) { #protoBody tr:not(.pmore) [data-step] { display:none !important; } }
     @media print { .pdist::before { content:" | "; } }
+    /* Druck: Protokoll und leeres Formular passen auf A4 quer */
+    @media print {
+      #protoSheet.print-open, .print-open#protoModal #protoSheet, #protoSheet, #blankModal .sheet { max-width:none !important; width:100% !important; }
+      #protoSheet h2 { display:none !important; }
+      #protoSheet table { min-width:0 !important; width:100% !important; table-layout:fixed; font-size:9px !important; }
+      #protoSheet th, #protoSheet td { padding:3px !important; overflow-wrap:anywhere; }
+      #protoSheet :is(input,select,textarea) { font-size:9px !important; min-height:0 !important; padding:0 !important; min-width:0 !important; width:100% !important; }
+      #protoSheet th:nth-child(1) { width:4%; } #protoSheet th:nth-child(2) { width:17%; } #protoSheet th:nth-child(3) { width:8%; } #protoSheet th:nth-child(4) { width:8%; }
+      #protoSheet th:nth-child(5) { width:14%; } #protoSheet th:nth-child(6) { width:6%; } #protoSheet th:nth-child(7) { width:7%; } #protoSheet th:nth-child(8) { width:6%; }
+      #protoSheet th:nth-child(9) { width:6%; } #protoSheet th:nth-child(10) { width:8%; } #protoSheet th:nth-child(11) { width:12%; } #protoSheet th:nth-child(12) { width:4%; }
+    }
   </style>
 </head>
 <body class="flex flex-col h-full w-full relative">
@@ -367,7 +378,7 @@
   <!-- PRÜFUNG FÄLLIG -->
   <div id="dueBar" class="hidden fixed top-14 inset-x-0 z-[470] bg-sky-100 text-slate-900 border-b border-sky-300 px-3 py-2 flex items-center gap-2 text-sm font-bold shadow">
     <i class="fa-solid fa-calendar-check"></i><span id="dueTxt" class="flex-1"></span>
-    <button onclick="dueGo()" class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-extrabold">Zum Protokoll</button>
+    <button onclick="nextOpen()" class="px-3 py-1.5 bg-slate-200 rounded-lg text-xs font-extrabold">Nächster</button><button onclick="dueGo()" class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-extrabold">Protokoll</button>
     <button onclick="dueClose()" class="w-8 h-8 rounded-full bg-black/10 font-bold">✕</button>
   </div>
 
@@ -446,6 +457,19 @@
         <button onclick="toggleModal('blankModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
       </div>
       <div id="blankBody" class="overflow-auto p-3 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- AUSWERTUNG / BERICHT -->
+  <div id="reportModal" class="hidden fixed inset-0 z-[565] bg-slate-950/80 flex items-center justify-center p-2">
+    <div class="sheet bg-white text-slate-900 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="no-print flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100 border-b border-slate-300 shrink-0">
+        <button onclick="printSheet('reportModal')" class="px-3 py-1.5 bg-red-600 text-white rounded-lg font-bold text-xs flex items-center gap-1.5"><i class="fa-solid fa-print"></i>Drucken / PDF</button>
+        <label class="text-xs font-bold flex items-center gap-1.5">Ortsteil <select id="reportOt" onchange="renderReport()" class="border border-slate-300 rounded px-2 py-1 bg-white font-normal"></select></label>
+        <span class="flex-1"></span>
+        <button onclick="toggleModal('reportModal')" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold">✕</button>
+      </div>
+      <div id="reportBody" class="overflow-auto p-3 text-sm"></div>
     </div>
   </div>
 
@@ -543,12 +567,14 @@
       </div></div>
       <div><div class="msec">Listen und Karten</div><div class="space-y-1.5">
         <button class="mi" onclick="closeMenu();openList()"><i class="fa-solid fa-list"></i>Löschwasserliste und Karte A4</button>
+        <button class="mi" onclick="closeMenu();openReport()"><i class="fa-solid fa-chart-pie"></i>Auswertung und Bericht</button>
         <button class="mi" onclick="closeMenu();openBlank()"><i class="fa-solid fa-file-lines"></i>Leeres Prüfformular (Papier)</button>
         <label class="mi cursor-pointer"><i class="fa-solid fa-file-import"></i>Punkte aus Datei importieren<input type="file" accept=".json,application/json" class="hidden" onchange="closeMenu();importPoints(event)"></label>
         <button class="mi" onclick="closeMenu();preloadTiles()"><i class="fa-solid fa-map-location-dot"></i>Karte für eigene Ortsteile offline laden</button>
         <button class="mi" onclick="closeMenu();openTrocken()"><i class="fa-solid fa-chart-column"></i>Trockenjahr-Übersicht (alle Brunnen)</button>
       </div></div>
       <div><div class="msec">Werkzeuge</div><div class="space-y-1.5">
+        <button class="mi" onclick="closeMenu();nextOpen()"><i class="fa-solid fa-forward"></i>Nächster offener Brunnen</button>
         <button class="mi" onclick="closeMenu();swShow()"><i class="fa-solid fa-stopwatch"></i>Stoppuhr</button>
         <button class="mi" onclick="cycleFont()"><i class="fa-solid fa-text-height"></i><span class="flex-1">Schriftgröße</span><span id="fsLabel" class="text-xs font-mono text-slate-500"></span></button>
         <button class="mi" onclick="cycleTheme()"><i class="fa-solid fa-circle-half-stroke"></i><span class="flex-1">Darstellung</span><span id="themeLabel" class="text-xs font-mono text-slate-500"></span></button>
@@ -1067,7 +1093,7 @@
     let offlineQueue = JSON.parse(localStorage.getItem('ffw_schmogrow_queue') || '[]');
     let sentNotes = JSON.parse(localStorage.getItem('ffw_schmogrow_sent') || '[]');
     function saveQueue(){ try { localStorage.setItem('ffw_schmogrow_queue', JSON.stringify(offlineQueue)); return true; } catch(e){ showToast('Speicher voll – bitte zuerst senden oder exportieren','fa-triangle-exclamation'); return false; } }
-    const APP_VERSION = '2026-11-22 formular-faellig';
+    const APP_VERSION = '2026-11-23 auswertung';
     const reportKey = () => (currentWehr() || {}).reportKey || '';
     const OSMW = 'https://www.openstreetmap.org/';
     let digestLog = JSON.parse(localStorage.getItem('ffw_schmogrow_digest') || '[]');
@@ -1528,6 +1554,44 @@
       const row = document.querySelector(`#protoBody tr[data-uid="${uid}"]`); if (row) row.scrollIntoView({ block: 'center' });
     }
 
+
+    // ---- Nächster offener Brunnen ----
+    async function nextOpen(){
+      const w = currentWehr(); if (!w) { openWehrDialog(); return; }
+      testedMap = buildTested();
+      const open = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) && ownsPoint(p, w) && !isTestedNow(p.uid));
+      if (!open.length) { showToast('Alle Brunnen sind geprüft', 'fa-flag-checkered'); return; }
+      const pos = await getPosition(5000); let best = open[0], bd = Infinity;
+      if (pos) open.forEach(p => { const d = haversineDistance(pos.lat, pos.lng, p.lat, p.lon); if (d < bd) { bd = d; best = p; } });
+      dueClose(); einsatzGo(best.uid);
+      showToast('Nächster offener: ' + wellLabel(best) + (pos ? ' (' + Math.round(bd) + ' m)' : ''), 'fa-forward');
+    }
+    // ---- Auswertung und Bericht (auffällige Brunnen, Mängelliste, Druck) ----
+    const maengelGet = () => { try { return JSON.parse(localStorage.getItem('ffw_maengel') || '{}'); } catch(e) { return {}; } };
+    function maengelToggle(k){ const m = maengelGet(); if (m[k]) delete m[k]; else m[k] = todayISO(); try { localStorage.setItem('ffw_maengel', JSON.stringify(m)); } catch(e){} renderReport(); }
+    function openReport(){
+      const ots = [...new Set(existingWaterPoints.filter(isShallow).map(ortsteilOf))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'de')), own = ots.filter(o => ownsName(o)), list = own.length ? own : ots;
+      if (!list.length) { showToast('Keine Brunnen geladen', 'fa-info-circle'); return; }
+      document.getElementById('reportOt').innerHTML = list.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+      toggleModal('reportModal', true); renderReport();
+    }
+    function renderReport(){
+      const ot = document.getElementById('reportOt').value, w = currentWehr() || {}, lg = document.getElementById('headerLogo'); testedMap = buildTested();
+      let dd = {}; try { dd = JSON.parse(localStorage.getItem(protoKey(ot)) || '{}'); } catch(e){}
+      const wells = existingWaterPoints.filter(p => isShallow(p) && ortsteilOf(p) === ot).sort((a, b) => (wellLabel(a) + ' ' + getLoc(a)).localeCompare(wellLabel(b) + ' ' + getLoc(b), 'de', { numeric: true }) || a.lat - b.lat);
+      const nm = p => esc(wellLabel(p) + (getLoc(p) ? ' (' + getLoc(p) + ')' : '')), fm = n => Math.round(n).toLocaleString('de-DE');
+      const info = wells.map(p => { const s = stSeries(p.uid, ot).filter(r => parseFloat(r.leistung) > 0), a = s[s.length - 1], b = s[s.length - 2], q = a ? parseFloat(a.leistung) : null, pq = b ? parseFloat(b.leistung) : null; return { p, q, pq, ch: q != null && pq ? Math.round((q - pq) / pq * 100) : null, anm: (dd[p.uid] || {}).anm || '' }; });
+      const vals = info.filter(i => i.q != null).map(i => i.q), done = wells.filter(p => isTestedNow(p.uid)).length, avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      const weak = info.filter(i => i.q != null && (i.q < PERF_SOLL || (i.ch != null && i.ch <= -25))), issues = info.filter(i => i.anm), mg = maengelGet();
+      const th = 'border:1px solid #475569;padding:4px;text-align:left', td = 'border:1px solid #475569;padding:4px', tab = (heads, rows) => `<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:#e2e8f0">${heads.map(x => `<th style="${th}">${x}</th>`).join('')}</tr>${rows}</table>`;
+      const nmx = String(w.name || 'FFW').replace(/^FFW\s*/i, 'Freiwillige Feuerwehr ').trim();
+      let b = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #000"><div style="width:56px;height:56px;flex:none">${lg ? lg.innerHTML : ''}</div><div style="flex:1;text-align:center"><div style="font-size:14px">${esc(nmx)} im Amt Burg (Spreewald)</div><div style="font-size:18px;font-weight:800">BERICHT BRUNNENPRÜFUNG ${esc(seasonLabel())}</div><div style="font-size:12px">Ortsteil ${esc(ot)} · Stand ${new Date().toLocaleDateString('de-DE')}</div></div><div style="width:56px;flex:none"></div></div>`;
+      b += `<p style="margin:6px 0"><b>${done} von ${wells.length}</b> Brunnen im aktuellen Durchgang geprüft. Durchschnitt: <b>${avg == null ? '-' : fm(avg) + ' l/min'}</b>${vals.length ? ' (niedrigster ' + fm(Math.min(...vals)) + ', höchster ' + fm(Math.max(...vals)) + ')' : ''}. Richtwert ${PERF_SOLL} l/min.</p>`;
+      b += '<h3 style="font-weight:800;margin:10px 0 4px">Auffällige Brunnen (unter Richtwert oder −25 % und mehr)</h3>' + (weak.length ? tab(['Brunnen', 'Leistung l/min', 'Zuvor', 'Änderung'], weak.map(i => `<tr><td style="${td}">${nm(i.p)}</td><td style="${td}">${fm(i.q)}</td><td style="${td}">${i.pq ? fm(i.pq) : '-'}</td><td style="${td}">${i.ch == null ? '-' : (i.ch > 0 ? '+' : '') + i.ch + ' %'}</td></tr>`).join('')) : '<p>Keine auffälligen Brunnen.</p>');
+      b += '<h3 style="font-weight:800;margin:10px 0 4px">Mängel und Anmerkungen</h3>' + (issues.length ? tab(['Erledigt', 'Brunnen', 'Anmerkung'], issues.map(i => { const k = i.p.uid + '|' + i.anm, d = mg[k]; return `<tr><td style="${td};white-space:nowrap"><input type="checkbox" class="no-print" ${d ? 'checked' : ''} onchange="maengelToggle(${jq(k)})" style="width:20px;height:20px"> ${d ? esc(d.split('-').reverse().join('.')) : ''}</td><td style="${td}">${nm(i.p)}</td><td style="${td}">${esc(i.anm)}</td></tr>`; }).join('')) : '<p>Keine Anmerkungen.</p>');
+      b += '<div style="margin-top:22px;width:300px;border-top:1px solid #475569;font-size:11px;padding-top:2px">F.d.R.d.A. Unterschrift (Maschinist / Gruppenführer)</div>';
+      document.getElementById('reportBody').innerHTML = b;
+    }
     // ---- Hinweis „Prüfung fällig“ ----
     let dueOt = '';
     function checkDue(){
@@ -2403,6 +2467,8 @@
       { i: 'fa-shield-halved', t: 'Gut zu wissen', b: 'Die App sichert sich selbst (Menü → Automatische Sicherungen). Die <b>Karte</b> kannst du vorher offline laden. Unter dem Protokoll unterschreibst du mit dem Finger. Hilfe, Datenschutz und diese Einführung stehen im Menü.' }
     ];
     const CHANGES = [
+      { v: '2026-11-23 auswertung', items: ['Auswertung und Bericht je Ortsteil: auffällige Brunnen, Mängelliste mit Haken, Druck als Bericht', 'Nächster offener Brunnen (Menü oder Hinweisbalken)'] },
+      { v: '2026-11-23 druck-korrigiert', items: ['Druck des Prüfprotokolls passt jetzt auf A4 quer, nichts ist mehr verschoben'] },
       { v: '2026-11-22 formular-faellig', items: ['Leeres Prüfformular zum Ausdrucken (Menü → Listen und Karten)', 'Hinweis „Prüfung fällig“ im Frühjahr (März bis Juni) und Herbst (September bis November); Frühjahr und Herbst zählen getrennt'] },
       { v: '2026-11-22 protokoll-ruhiger', items: ['Prüfprotokoll übersichtlicher: Nebenfunktionen stehen hinter „Mehr“ (je Brunnen und in der Werkzeugleiste)'] },
       { v: '2026-11-22 sicherheit', items: ['Anmeldung läuft nach 12 Stunden ab, bitte einmal neu anmelden', 'Strengere Prüfung der Eingaben, Sicherheitsverbesserungen'] },
