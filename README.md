@@ -33,8 +33,11 @@ Menü → Prüfprotokolle → Ortsteil. Am Handy eine Karte pro Brunnen (Wischen
 - **Zeit:** Stoppuhr je Brunnen (Start/Stopp trägt die Prüfzeit ein), dazu eine globale Stoppuhr mit Zielzeit-Signal.
 - **Mehr:** Hinter „Mehr“ (je Brunnen und in der Werkzeugleiste) liegen Steckbrief, „Ich prüfe diesen“, Sprachein­gabe,
   Namens-Schnelltasten, CSV, E-Mail, Sortierung nach Entfernung und Zusammenfassung.
-- **Vorjahre:** Graue Zahlen zeigen die letzte Messung, Trendpfeil und Diagramm den Verlauf. Beim ersten Eintrag im neuen
-  Jahr wandern die alten Werte in die Historie.
+- **Verlauf:** Graue Zahlen zeigen die letzte Messung, Trendpfeil und Diagramm den Verlauf. Beim ersten Eintrag in einem
+  neuen Durchgang (Januar bis Juni = Frühjahr, Juli bis Dezember = Herbst) wandern die alten Werte in die Historie. So bleiben
+  beide Durchgänge eines Jahres erhalten. Fotos erscheinen auf einer eigenen Seite im Ausdruck.
+- **Auswertung:** Menü → Listen und Karten → Auswertung und Bericht (auffällige Brunnen, Mängelliste, Druck). „Nächster offener
+  Brunnen“ im Menü springt zum nächsten ungeprüften Brunnen.
 - **Hinweise:** Auffällige Werte werden orange markiert, eingetragen werden kann trotzdem alles.
 - **Drucken:** „Drucken / PDF“ mit Briefkopf und Unterschriftszeile (Unterschrift mit dem Finger, bleibt auf dem Gerät).
   Menü → Listen und Karten → **Leeres Prüfformular (Papier)** druckt ein leeres Formular, wahlweise mit der Brunnenliste
